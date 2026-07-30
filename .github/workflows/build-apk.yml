@@ -34,9 +34,10 @@ jobs:
       - name: Build debug APK
         run: flutter build apk --debug
 
-      - name: Extract version from pubspec.yaml
-        id: version
-        run: echo "version=$(grep '^version: ' pubspec.yaml | sed 's/version: //')" >> $GITHUB_OUTPUT
+      - id: version
+        name: Extract version from pubspec.yaml
+        shell: bash
+        run: echo "version=$(awk '/^version: /{print $2}' pubspec.yaml)" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
