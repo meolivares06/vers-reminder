@@ -1,14 +1,14 @@
-name: Build APK
+name: Build and Release APK
 
 on:
   push:
-    branches: [master]
-  pull_request:
     branches: [master]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -34,8 +34,17 @@ jobs:
       - name: Build debug APK
         run: flutter build apk --debug
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Extract version from pubspec.yaml
+        id: version
+        run: echo "version=$(grep '^version: ' pubspec.yaml | sed 's/version: //')" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: app-debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          body: |
+            Build automático del branch master.
+            Versión: v${{ steps.version.outputs.version }}
+          files: build/app/outputs/flutter-apk/app-debug.apk
+          make_latest: true
