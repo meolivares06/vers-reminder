@@ -1,0 +1,110 @@
+{
+  "@@locale": "en",
+  "appTitle": "Vers Reminder",
+  "verseListTitle": "Verses",
+  "addVerse": "Add verse",
+  "editVerse": "Edit verse",
+  "newVerse": "New verse",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "confirmDelete": "Delete verse?",
+  "confirmDeleteBody": "Are you sure you want to delete this verse?",
+  "confirm": "Yes, delete",
+  "@confirmDeleteCitation": {
+    "description": "Delete confirmation with citation name",
+    "placeholders": {
+      "citation": {
+        "type": "String",
+        "example": "John 3:16"
+      }
+    }
+  },
+  "confirmDeleteCitation": "Delete \"{citation}\"?",
+  "citation": "Citation",
+  "text": "Text",
+  "textEs": "Text (Spanish)",
+  "textPt": "Text (Portuguese)",
+  "categoriesLabel": "Categories",
+  "categoryNameLabel": "Category name",
+  "@citationHint": {
+    "description": "Placeholder hint for citation input",
+    "placeholders": {}
+  },
+  "citationHint": "e.g. John 3:16",
+  "selectCategory": "Select category",
+  "addCategory": "Add category",
+  "newCategoryName": "New category name",
+  "selectAtLeastOneCategory": "Select at least one category",
+  "noVerses": "No verses yet",
+  "settings": "Settings",
+  "language": "Language",
+  "spanish": "Spanish",
+  "portuguese": "Portuguese",
+  "autoChange": "Auto change wallpaper",
+  "freq15min": "15 min",
+  "freq30min": "30 min",
+  "freq1h": "1 hour",
+  "freq3h": "3 hours",
+  "freq6h": "6 hours",
+  "freq12h": "12 hours",
+  "freq24h": "24 hours",
+  "topAlign": "Top",
+  "centerAlign": "Center",
+  "bottomAlign": "Bottom",
+  "leftOffset": "Left",
+  "rightOffset": "Right",
+  "fontSize": "Font size",
+  "changeNow": "Change now",
+  "calibrateButton": "Calibrate text centering",
+  "permissionTitle": "Wallpaper permission",
+  "permissionMessage": "This app needs permission to set wallpaper on your device.\n\nIt will only be used when you activate \"Change now\" or automatic updates.",
+  "@generating": {
+    "description": "Status message while wallpaper is being generated",
+    "placeholders": {}
+  },
+  "generating": "Generating...",
+  "@wallpaperUpdated": {
+    "description": "Status message after wallpaper is updated successfully",
+    "placeholders": {
+      "citation": {
+        "type": "String",
+        "example": "John 3:16"
+      }
+    }
+  },
+  "wallpaperUpdated": "Wallpaper updated: {citation}",
+  "generatingError": "Error generating wallpaper",
+  "selectCategoryStatus": "Select at least one category",
+  "calibrationTitle": "Calibrate",
+  "calibrationInstructions": "Adjust the slider to crop the image edges, then apply and verify on your home screen.",
+  "cropInsetLabel": "Crop inset",
+  "cropInsetDesc": "Adjust the crop area until the text is centered.",
+  "@applyVerify": {
+    "description": "Button label to apply and verify wallpaper calibration",
+    "placeholders": {}
+  },
+  "applyVerify": "Apply & verify",
+  "saveCalibration": "Save calibration",
+  "reset": "Reset to 0",
+  "create": "Create",
+  "categoryCreateTitle": "Create category",
+  "nameRequired": "Name cannot be empty",
+  "citationRequired": "Citation is required",
+  "textRequired": "Text is required",
+  "sectionScheduling": "Scheduling",
+  "sectionSchedulingSub": "Set how often the wallpaper updates automatically",
+  "sectionAppearance": "Appearance",
+  "sectionAppearanceSub": "Adjust text position on the wallpaper",
+  "sectionCategoriesSub": "Choose which verses to display",
+  "sectionActions": "Actions",
+  "sectionActionsSub": "Change wallpaper or calibrate centering",
+  "selectAll": "Select all",
+  "clearAll": "Clear all",
+  "sectionAbout": "About",
+  "aboutDescription": "Vers Reminder helps you memorize Bible verses by displaying them as wallpaper on your home screen.",
+  "aboutContact": "Contact",
+  "aboutVersion": "Version 1.0.0",
+  "homeTab": "Home",
+  "noWallpaper": "No wallpaper yet. Tap to generate your first one."
+}

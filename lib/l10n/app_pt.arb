@@ -1,0 +1,114 @@
+{
+  "@@locale": "pt",
+  "appTitle": "Vers Reminder",
+  "verseListTitle": "Versículos",
+  "addVerse": "Adicionar versículo",
+  "editVerse": "Editar versículo",
+  "newVerse": "Novo versículo",
+  "save": "Salvar",
+  "cancel": "Cancelar",
+  "delete": "Excluir",
+  "confirmDelete": "Excluir versículo?",
+  "confirmDeleteBody": "Tem certeza de que deseja excluir este versículo?",
+  "confirm": "Sim, excluir",
+  "@confirmDeleteCitation": {
+    "description": "Delete confirmation with citation name",
+    "placeholders": {
+      "citation": {
+        "type": "String",
+        "example": "João 3:16"
+      }
+    }
+  },
+  "confirmDeleteCitation": "Excluir \"{citation}\"?",
+  "citation": "Citação",
+  "text": "Texto",
+  "textEs": "Texto (Espanhol)",
+  "textPt": "Texto (Português)",
+  "categoriesLabel": "Categorias",
+  "categoryNameLabel": "Nome da categoria",
+  "@citationHint": {
+    "description": "Placeholder hint for citation input",
+    "placeholders": {}
+  },
+  "citationHint": "Ex: João 3:16",
+  "selectCategory": "Selecionar categoria",
+  "addCategory": "Adicionar categoria",
+  "newCategoryName": "Nome da nova categoria",
+  "selectAtLeastOneCategory": "Selecione pelo menos uma categoria",
+  "noVerses": "Nenhum versículo ainda",
+  "settings": "Configurações",
+  "language": "Idioma",
+  "spanish": "Espanhol",
+  "portuguese": "Português",
+  "autoChange": "Troca automática de wallpaper",
+  "freq15min": "15 min",
+  "freq30min": "30 min",
+  "freq1h": "1 hora",
+  "freq3h": "3 horas",
+  "freq6h": "6 horas",
+  "freq12h": "12 horas",
+  "freq24h": "24 horas",
+  "topAlign": "Topo",
+  "centerAlign": "Centro",
+  "bottomAlign": "Fundo",
+  "leftOffset": "Esq",
+  "rightOffset": "Dir",
+  "fontSize": "Tamanho da fonte",
+  "changeNow": "Trocar agora",
+  "calibrateButton": "Calibrar centralização do texto",
+  "permissionTitle": "Permissão para alterar o wallpaper",
+  "permissionMessage": "O Vers Reminder precisa alterar seu wallpaper para mostrar versículos bíblicos na tela inicial.\n\nSó será usado quando você ativar \"Trocar agora\" ou a atualização automática.",
+  "@generating": {
+    "description": "Status message while wallpaper is being generated",
+    "placeholders": {}
+  },
+  "generating": "Gerando...",
+  "@wallpaperUpdated": {
+    "description": "Status message after wallpaper is updated successfully",
+    "placeholders": {
+      "citation": {
+        "type": "String",
+        "example": "João 3:16"
+      }
+    }
+  },
+  "wallpaperUpdated": "Wallpaper atualizado: {citation}",
+  "generatingError": "Erro ao gerar o wallpaper",
+  "selectCategoryStatus": "Selecione pelo menos uma categoria",
+  "calibrationTitle": "Calibrar wallpaper",
+  "@calibrationInstructions": {
+    "description": "Instructions text for calibration screen",
+    "placeholders": {}
+  },
+  "calibrationInstructions": "Ajuste o slider para cortar as bordas da imagem, depois aplique e verifique na tela inicial.",
+  "cropInsetLabel": "Crop inset",
+  "cropInsetDesc": "Ajuste o corte até que o texto fique centralizado.",
+  "@applyVerify": {
+    "description": "Button label to apply and verify wallpaper calibration",
+    "placeholders": {}
+  },
+  "applyVerify": "Aplicar e verificar",
+  "saveCalibration": "Salvar calibração",
+  "reset": "Resetar para 0",
+  "create": "Criar",
+  "categoryCreateTitle": "Nova categoria",
+  "nameRequired": "O nome não pode estar vazio",
+  "citationRequired": "A citação é obrigatória",
+  "textRequired": "O texto é obrigatório",
+  "sectionScheduling": "Agendamento",
+  "sectionSchedulingSub": "Configure com que frequência o wallpaper é atualizado automaticamente",
+  "sectionAppearance": "Aparência",
+  "sectionAppearanceSub": "Ajuste a posição do texto no wallpaper",
+  "sectionCategoriesSub": "Escolha quais versículos exibir",
+  "sectionActions": "Ações",
+  "sectionActionsSub": "Troque o wallpaper ou calibre o centralização",
+  "selectAll": "Selecionar tudo",
+  "clearAll": "Limpar",
+  "sectionAbout": "Sobre",
+  "aboutDescription": "O Vers Reminder ajuda você a memorizar versículos bíblicos exibindo-os como wallpaper na tela inicial.",
+  "aboutContact": "Contato",
+  "aboutVersion": "Versão 1.0.0",
+  "homeTab": "Início",
+  "noWallpaper": "Sem wallpaper ainda. Toque para gerar o primeiro."
+}

@@ -1,0 +1,358 @@
+{
+  "categories": [
+    {
+      "name": "Salvación",
+      "isSeed": true
+    },
+    {
+      "name": "Seguridad Eterna",
+      "isSeed": true
+    },
+    {
+      "name": "Bautismo",
+      "isSeed": true
+    },
+    {
+      "name": "Espíritu Santo",
+      "isSeed": true
+    },
+    {
+      "name": "Palabra de Dios",
+      "isSeed": true
+    },
+    {
+      "name": "Oración",
+      "isSeed": true
+    },
+    {
+      "name": "Voluntad de Dios",
+      "isSeed": true
+    },
+    {
+      "name": "Iglesia Local",
+      "isSeed": true
+    },
+    {
+      "name": "Otros Cristianos",
+      "isSeed": true
+    },
+    {
+      "name": "Mayordomía",
+      "isSeed": true
+    },
+    {
+      "name": "Dinero y Posesiones",
+      "isSeed": true
+    },
+    {
+      "name": "Pecado",
+      "isSeed": true
+    },
+    {
+      "name": "En Cristo",
+      "isSeed": true
+    },
+    {
+      "name": "Trabajo y Patrón",
+      "isSeed": true
+    },
+    {
+      "name": "Inconverso",
+      "isSeed": true
+    },
+    {
+      "name": "Tribunal de Cristo",
+      "isSeed": true
+    }
+  ],
+  "verses": [
+    {
+      "citation": "Juan 3:36",
+      "textEs": "El que cree en el Hijo tiene vida eterna; pero el que rehúsa creer en el Hijo no verá la vida, sino que la ira de Dios está sobre él.",
+      "textPt": "Aquele que crê no Filho tem a vida eterna, mas aquele que não crê no Filho não verá a vida, mas a ira de Deus sobre ele permanece.",
+      "categoryName": "Salvación"
+    },
+    {
+      "citation": "Romanos 5:12",
+      "textEs": "Por tanto, como el pecado entró en el mundo por un hombre, y por el pecado la muerte, así la muerte pasó a todos los hombres, por cuanto todos pecaron.",
+      "textPt": "Por um homem vieram o pecado e a morte; por um homem também veio a graça - Pelo que, como por um homem entrou o pecado no mundo, e pelo pecado, a morte, assim também a morte passou a todos os homens, por isso que todos pecaram.",
+      "categoryName": "Salvación"
+    },
+    {
+      "citation": "1 Juan 1:9",
+      "textEs": "Si confesamos nuestros pecados, él es fiel y justo para perdonar nuestros pecados, y limpiarnos de toda maldad.",
+      "textPt": "Se confessarmos os nossos pecados, ele é fiel e justo para nos perdoar os pecados e nos purificar de toda injustiça.",
+      "categoryName": "Salvación"
+    },
+    {
+      "citation": "Efesios 2:8-9",
+      "textEs": "Porque por gracia sois salvos por medio de la fe; y esto no de vosotros, pues es don de Dios; no por obras, para que nadie se gloríe.",
+      "textPt": "Porque pela graça sois salvos, por meio da fé; e isso não vem de vós; é dom de Deus. Não vem das obras, para que ninguém se glorie.",
+      "categoryName": "Seguridad Eterna"
+    },
+    {
+      "citation": "1 Juan 2:25",
+      "textEs": "Y esta es la promesa que él nos hizo, la vida eterna.",
+      "textPt": "E esta é a promessa que ele nos fez: a vida eterna.",
+      "categoryName": "Seguridad Eterna"
+    },
+    {
+      "citation": "1 Juan 5:13",
+      "textEs": "Estas cosas os he escrito a vosotros que creéis en el nombre del Hijo de Dios, para que sepáis que tenéis vida eterna, y para que creáis en el nombre del Hijo de Dios.",
+      "textPt": "Estas coisas vos escrevi, para que saibais que tendes a vida eterna e para que creiais no nome do Filho de Deus.",
+      "categoryName": "Seguridad Eterna"
+    },
+    {
+      "citation": "Mateo 3:13-17",
+      "textEs": "Entonces Jesús vino de Galilea a Juan al Jordán, para ser bautizado por él. Mas Juan se le oponía, diciendo: Yo necesito ser bautizado por ti, ¿y tú vienes a mí? Pero Jesús le respondió: Deja ahora, porque así conviene que cumplamos toda justicia. Entonces le dejó. Y Jesús, después que fue bautizado, subió luego del agua; y he aquí los cielos le fueron abiertos, y vio al Espíritu de Dios que descendía como paloma, y venía sobre él. Y hubo una voz de los cielos, que decía: Este es mi Hijo amado, en quien tengo complacencia.",
+      "textPt": "Eu careço de ser batizado por ti, e vens tu a mim? Jesus, porém, respondendo, disse-lhe: Deixa por agora, porque assim nos convém cumprir toda a justiça. Então, ele o permitiu. E, sendo Jesus batizado, saiu logo da água, e eis que se lhe abriram os céus, e viu o Espírito de Deus descendo como pomba e vindo sobre ele. E eis que uma voz dos céus dizia: Este é o meu Filho amado, em quem me comprazo.",
+      "categoryName": "Bautismo"
+    },
+    {
+      "citation": "Hechos 8:36-39",
+      "textEs": "Y yendo por el camino, llegaron a cierta agua, y dijo el eunuco: Aquí hay agua; ¿qué impide que yo sea bautizado? Felipe dijo: Si crees de todo corazón, bien puedes. Y respondiendo, dijo: Creo que Jesucristo es el Hijo de Dios. Y mandó parar el carro; y descendieron ambos al agua, Felipe y el eunuco, y le bautizó. Cuando subieron del agua, el Espíritu del Señor arrebató a Felipe; y el eunuco no le vio más, y siguió gozoso su camino.",
+      "textPt": "Eis aqui água; que impede que eu seja batizado? E disse Filipe: É lícito, se crês de todo o coração. E, respondendo ele, disse: Creio que Jesus Cristo é o Filho de Deus. E mandou parar o carro, e desceram ambos à água, tanto Filipe como o eunuco, e o batizou. E, quando saíram da água, o Espírito do Senhor arrebatou a Filipe, e não o viu mais o eunuco; e, jubiloso, continuou o seu caminho.",
+      "categoryName": "Bautismo"
+    },
+    {
+      "citation": "Romanos 6:1-7",
+      "textEs": "¿Qué, pues, diremos? ¿Perseveraremos en el pecado para que la gracia abunde? En ninguna manera. Porque los que hemos muerto al pecado, ¿cómo viviremos aún en él? ¿O no sabéis que todos los que hemos sido bautizados en Cristo Jesús, hemos sido bautizados en su muerte? Porque somos sepultados juntamente con él para muerte por el bautismo, a fin de que como Cristo resucitó de los muertos por la gloria del Padre, así también nosotros andemos en vida nueva. Porque si fuimos plantados juntamente con él en la semejanza de su muerte, así también lo seremos en la de su resurrección; sabiendo esto, que nuestro viejo hombre fue crucificado juntamente con él, para que el cuerpo del pecado sea destruido, a fin de que no sirvamos más al pecado. Porque el que ha muerto, ha sido justificado del pecado.",
+      "textPt": "6 Que diremos, pois? Permaneceremos no pecado, para que a graça seja mais abundante? 2 De modo nenhum! Nós que estamos mortos para o pecado, como viveremos ainda nele? 3 Ou não sabeis que todos quantos fomos batizados em Jesus Cristo fomos batizados na sua morte? 4 De sorte que fomos sepultados com ele pelo batismo na morte; para que, como Cristo ressuscitou dos mortos pela glória do Pai, assim andemos nós também em novidade de vida. 5 Porque, se fomos plantados juntamente com ele na semelhança da sua morte, também o seremos na da sua ressurreição; 6 sabendo isto: que o nosso velho homem foi com ele crucificado, para que o corpo do pecado seja desfeito, a fim de que não sirvamos mais ao pecado. 7 Porque aquele que está morto está justificado do pecado.",
+      "categoryName": "Bautismo"
+    },
+    {
+      "citation": "1 Corintios 6:19-20",
+      "textEs": "¿O ignoráis que vuestro cuerpo es templo del Espíritu Santo, el cual está en vosotros, el cual tenéis de Dios, y que no sois vuestros? Porque habéis sido comprados por precio; glorificad, pues, a Dios en vuestro cuerpo y en vuestro espíritu, los cuales son de Dios.",
+      "textPt": "Ou não sabeis que o nosso corpo é o templo do Espírito Santo, que habita em vós, proveniente de Deus, e que não sois de vós mesmos? Porque fostes comprados por bom preço; glorificai, pois, a Deus no vosso corpo e no vosso espírito, os quais pertencem a Deus.",
+      "categoryName": "Espíritu Santo"
+    },
+    {
+      "citation": "Gálatas 5:16",
+      "textEs": "Digo, pues: Andad en el Espíritu, y no satisfagáis los deseos de la carne.",
+      "textPt": "Andai em Espírito e não cumprireis a concupiscência da carne.",
+      "categoryName": "Espíritu Santo"
+    },
+    {
+      "citation": "Gálatas 5:22-23",
+      "textEs": "Mas el fruto del Espíritu es amor, gozo, paz, paciencia, benignidad, bondad, fe, mansedumbre, templanza; contra tales cosas no hay ley.",
+      "textPt": "amor, gozo, paz, longanimidade, benignidade, bondade, fé, mansidão, temperança. Contra essas coisas não há lei.",
+      "categoryName": "Espíritu Santo"
+    },
+    {
+      "citation": "Salmo 119:9",
+      "textEs": "¿Con qué limpiará el joven su camino? Con guardar tu palabra.",
+      "textPt": "Bete. Como purificará o jovem o seu caminho? Observando-o conforme a tua palavra.",
+      "categoryName": "Palabra de Dios"
+    },
+    {
+      "citation": "2 Timoteo 3:16-17",
+      "textEs": "Toda la Escritura es inspirada por Dios, y útil para enseñar, para redargüir, para corregir, para instruir en justicia, a fin de que el hombre de Dios sea perfecto, enteramente preparado para toda buena obra.",
+      "textPt": "Toda Escritura divinamente inspirada é proveitosa para ensinar, para redarguir, para corrigir, para instruir em justiça, para que o homem de Deus seja perfeito e perfeitamente instruído para toda boa obra.",
+      "categoryName": "Palabra de Dios"
+    },
+    {
+      "citation": "2 Pedro 1:19-21",
+      "textEs": "Tenemos también la palabra profética más segura, a la cual hacéis bien en estar atentos como a una antorcha que alumbra en lugar oscuro, hasta que el día esclarezca y el lucero de la mañana salga en vuestros corazones; entendiendo primero esto, que ninguna profecía de la Escritura es de interpretación privada, porque nunca la profecía fue traída por voluntad humana, sino que los santos hombres de Dios hablaron siendo inspirados por el Espíritu Santo.",
+      "textPt": "que nenhuma profecia da Escritura é de particular interpretação; porque a profecia nunca foi produzida por vontade de homem algum, mas os homens santos de Deus falaram inspirados pelo Espírito Santo.",
+      "categoryName": "Palabra de Dios"
+    },
+    {
+      "citation": "1 Timoteo 2:8",
+      "textEs": "Quiero, pues, que los hombres oren en todo lugar, levantando manos santas, sin ira ni contienda.",
+      "textPt": "Quero, pois, que os homens orem em todo o lugar, levantando mãos santas, sem ira nem contenda.",
+      "categoryName": "Oración"
+    },
+    {
+      "citation": "1 Timoteo 2:5",
+      "textEs": "Porque hay un solo Dios, y un solo mediador entre Dios y los hombres, Jesucristo hombre.",
+      "textPt": "Porque há um só Deus e um só mediador entre Deus e os homens, Jesus Cristo, homem,",
+      "categoryName": "Oración"
+    },
+    {
+      "citation": "Salmo 66:18",
+      "textEs": "Si en mi corazón hubiese yo mirado a la iniquidad, el Señor no me habría escuchado.",
+      "textPt": "Se eu atender à iniquidade no meu coração, o Senhor não me ouvirá;",
+      "categoryName": "Oración"
+    },
+    {
+      "citation": "Romanos 12:1-2",
+      "textEs": "Así que, hermanos, os ruego por las misericordias de Dios, que presentéis vuestros cuerpos en sacrificio vivo, santo, agradable a Dios, que es vuestro culto racional. No os conforméis a este siglo, sino transformaos por medio de la renovación de vuestro entendimiento, para que comprobéis cuál sea la buena voluntad de Dios, agradable y perfecta.",
+      "textPt": "12 Rogo-vos, pois, irmãos, pela compaixão de Deus, que apresenteis o vosso corpo em sacrifício vivo, santo e agradável a Deus, que é o vosso culto racional. 2 E não vos conformeis com este mundo, mas transformai-vos pela renovação do vosso entendimento, para que experimenteis qual seja a boa, agradável e perfeita vontade de Deus.",
+      "categoryName": "Voluntad de Dios"
+    },
+    {
+      "citation": "1 Pedro 3:17",
+      "textEs": "Porque mejor es que padezcáis haciendo el bien, si la voluntad de Dios así lo quiere, que haciendo el mal.",
+      "textPt": "porque melhor é que padeçais fazendo o bem (se a vontade de Deus assim o quer) do que fazendo o mal.",
+      "categoryName": "Voluntad de Dios"
+    },
+    {
+      "citation": "2 Pedro 3:9",
+      "textEs": "El Señor no retarda su promesa, según algunos la tienen por tardanza, sino que es paciente para con nosotros, no queriendo que ninguno perezca, sino que todos procedan al arrepentimiento.",
+      "textPt": "O Senhor não retarda a sua promessa, ainda que alguns a têm por tardia; mas é longânimo para convosco, não querendo que alguns se percam, senão que todos venham a arrepender-se.",
+      "categoryName": "Voluntad de Dios"
+    },
+    {
+      "citation": "Efesios 4:11-12",
+      "textEs": "Y él mismo constituyó a unos, apóstoles; a otros, profetas; a otros, evangelistas; a otros, pastores y maestros, a fin de perfeccionar a los santos para la obra del ministerio, para la edificación del cuerpo de Cristo.",
+      "textPt": "E ele mesmo deu uns para apóstolos, e outros para profetas, e outros para evangelistas, e outros para pastores e doutores, querendo o aperfeiçoamento dos santos, para a obra do ministério, para edificação do corpo de Cristo,",
+      "categoryName": "Iglesia Local"
+    },
+    {
+      "citation": "1 Corintios 12:27",
+      "textEs": "Vosotros, pues, sois el cuerpo de Cristo, y miembros cada uno en particular.",
+      "textPt": "Ora, vós sois o corpo de Cristo e seus membros em particular.",
+      "categoryName": "Iglesia Local"
+    },
+    {
+      "citation": "2 Timoteo 2:2",
+      "textEs": "Lo que has oído de mí ante muchos testigos, esto encarga a hombres fieles que sean idóneos para enseñar también a otros.",
+      "textPt": "E o que de mim, entre muitas testemunhas, ouviste, confia-o a homens fiéis, que sejam idôneos para também ensinarem os outros.",
+      "categoryName": "Iglesia Local"
+    },
+    {
+      "citation": "Efesios 4:32",
+      "textEs": "Antes sed benignos unos con otros, misericordiosos, perdonándoos unos a otros, como Dios también os perdonó a vosotros en Cristo.",
+      "textPt": "Antes, sede uns para com os outros benignos, misericordiosos, perdoando-vos uns aos outros, como também Deus vos perdoou em Cristo.",
+      "categoryName": "Otros Cristianos"
+    },
+    {
+      "citation": "1 Juan 1:7",
+      "textEs": "Pero si andamos en luz, como él está en luz, tenemos comunión unos con otros, y la sangre de Jesucristo su Hijo nos limpia de todo pecado.",
+      "textPt": "Mas, se andarmos na luz, como ele na luz está, temos comunhão uns com os outros, e o sangue de Jesus Cristo, seu Filho, nos purifica de todo pecado.",
+      "categoryName": "Otros Cristianos"
+    },
+    {
+      "citation": "1 Juan 3:14-15",
+      "textEs": "Nosotros sabemos que hemos pasado de muerte a vida, en que amamos a los hermanos. El que no ama a su hermano, permanece en muerte. Todo aquel que aborrece a su hermano es homicida; y sabéis que ningún homicida tiene vida eterna permanente en él.",
+      "textPt": "Nós sabemos que passamos da morte para a vida, porque amamos os irmãos; quem não ama a seu irmão permanece na morte. Qualquer que aborrece a seu irmão é homicida. E vós sabeis que nenhum homicida tem permanente nele a vida eterna.",
+      "categoryName": "Otros Cristianos"
+    },
+    {
+      "citation": "2 Corintios 8:9",
+      "textEs": "Porque ya conocéis la gracia de nuestro Señor Jesucristo, que por amor a vosotros se hizo pobre, siendo rico, para que vosotros con su pobreza fueseis enriquecidos.",
+      "textPt": "porque já sabeis a graça de nosso Senhor Jesus Cristo, que, sendo rico, por amor de vós se fez pobre, para que, pela sua pobreza, enriquecêsseis.",
+      "categoryName": "Mayordomía"
+    },
+    {
+      "citation": "2 Corintios 9:7",
+      "textEs": "Cada uno dé como propuso en su corazón: no con tristeza, ni por necesidad, porque Dios ama al dador alegre.",
+      "textPt": "Cada um contribua segundo propôs no seu coração, não com tristeza ou por necessidade; porque Deus ama ao que dá com alegria.",
+      "categoryName": "Mayordomía"
+    },
+    {
+      "citation": "Mateo 6:21",
+      "textEs": "Porque donde esté vuestro tesoro, allí estará también vuestro corazón.",
+      "textPt": "Porque onde estiver o vosso tesouro, aí estará também o vosso coração.",
+      "categoryName": "Mayordomía"
+    },
+    {
+      "citation": "Filipenses 4:11",
+      "textEs": "No lo digo porque tenga escasez, pues he aprendido a contentarme, cualquiera que sea mi situación.",
+      "textPt": "Não digo isto como por necessidade, porque já aprendi a contentar-me com o que tenho.",
+      "categoryName": "Dinero y Posesiones"
+    },
+    {
+      "citation": "Filipenses 4:19",
+      "textEs": "Mi Dios, pues, suplirá todo lo que os falta conforme a sus riquezas en gloria en Cristo Jesús.",
+      "textPt": "O meu Deus, segundo as suas riquezas, suprirá todas as vossas necessidades em glória, por Cristo Jesus.",
+      "categoryName": "Dinero y Posesiones"
+    },
+    {
+      "citation": "Colosenses 3:2",
+      "textEs": "Poned la mira en las cosas de arriba, no en las de la tierra.",
+      "textPt": "Pensai nas coisas que são de cima e não nas que são da terra;",
+      "categoryName": "Dinero y Posesiones"
+    },
+    {
+      "citation": "Salmo 119:11",
+      "textEs": "En mi corazón he guardado tus dichos, para no pecar contra ti.",
+      "textPt": "Escondi a tua palavra no meu coração, para eu não pecar contra ti.",
+      "categoryName": "Pecado"
+    },
+    {
+      "citation": "Romanos 6:11",
+      "textEs": "Así también vosotros consideraos muertos al pecado, pero vivos para Dios en Cristo Jesús, Señor nuestro.",
+      "textPt": "Assim também vós considerai-vos como mortos para o pecado, mas vivos para Deus, em Cristo Jesus, nosso Senhor.",
+      "categoryName": "Pecado"
+    },
+    {
+      "citation": "1 Juan 3:4",
+      "textEs": "Todo aquel que comete pecado, infringe también la ley; pues el pecado es infracción de la ley.",
+      "textPt": "Qualquer que pratica o pecado também pratica iniquidade, porque o pecado é iniquidade.",
+      "categoryName": "Pecado"
+    },
+    {
+      "citation": "Romanos 15:1",
+      "textEs": "Así que, los que somos fuertes debemos soportar las flaquezas de los débiles, y no agradarnos a nosotros mismos.",
+      "textPt": "Cristo dá-nos o exemplo da abnegação - Mas nós que somos fortes devemos suportar as fraquezas dos fracos e não agradar a nós mesmos.",
+      "categoryName": "En Cristo"
+    },
+    {
+      "citation": "1 Corintios 10:31",
+      "textEs": "Si, pues, coméis o bebéis, o hacéis otra cosa, hacedlo todo para la gloria de Dios.",
+      "textPt": "Portanto, quer comais, quer bebais ou façais outra qualquer coisa, fazei tudo para a glória de Deus.",
+      "categoryName": "En Cristo"
+    },
+    {
+      "citation": "Gálatas 5:13",
+      "textEs": "Porque vosotros, hermanos, a libertad fuisteis llamados; solamente que no uséis la libertad como ocasión para la carne, sino servíos por amor los unos a los otros.",
+      "textPt": "Porque vós, irmãos, fostes chamados à liberdade. Não useis, então, da liberdade para dar ocasião à carne, mas servi-vos uns aos outros pelo amor.",
+      "categoryName": "En Cristo"
+    },
+    {
+      "citation": "Colosenses 3:22-23",
+      "textEs": "Siervos, obedeced en todo a vuestros amos terrenales, no sirviendo al ojo, como los que quieren agradar a los hombres, sino con corazón sincero, temiendo a Dios. Y todo lo que hagáis, hacedlo de corazón, como para el Señor y no para los hombres.",
+      "textPt": "Vós, servos, obedecei em tudo a vosso senhor segundo a carne, não servindo só na aparência, como para agradar aos homens, mas em simplicidade de coração, temendo a Deus. E, tudo quanto fizerdes, fazei-o de todo o coração, como ao Senhor e não aos homens,",
+      "categoryName": "Trabajo y Patrón"
+    },
+    {
+      "citation": "2 Timoteo 3:12",
+      "textEs": "Y también todos los que quieren vivir piadosamente en Cristo Jesús padecerán persecución.",
+      "textPt": "E também todos os que piamente querem viver em Cristo Jesus padecerão perseguições.",
+      "categoryName": "Trabajo y Patrón"
+    },
+    {
+      "citation": "1 Juan 2:15-16",
+      "textEs": "No améis al mundo, ni las cosas que están en el mundo. Si alguno ama al mundo, el amor del Padre no está en él. Porque todo lo que hay en el mundo, los deseos de la carne, los deseos de los ojos, y la vanagloria de la vida, no proviene del Padre, sino del mundo.",
+      "textPt": "Não ameis o mundo, nem o que no mundo há. Se alguém ama o mundo, o amor do Pai não está nele. Porque tudo o que há no mundo, a concupiscência da carne, a concupiscência dos olhos e a soberba da vida, não é do Pai, mas do mundo.",
+      "categoryName": "Trabajo y Patrón"
+    },
+    {
+      "citation": "Lucas 16:15",
+      "textEs": "Entonces les dijo: Vosotros sois los que os justificáis a vosotros mismos delante de los hombres; mas Dios conoce vuestros corazones; porque lo que los hombres tienen por sublime, delante de Dios es abominación.",
+      "textPt": "Vós sois os que vos justificais a vós mesmos diante dos homens, mas Deus conhece o vosso coração, porque o que entre os homens é elevado perante Deus é abominação.",
+      "categoryName": "Inconverso"
+    },
+    {
+      "citation": "2 Corintios 5:9-10",
+      "textEs": "Por tanto procuramos también, o ausentes o presentes, serle agradables. Porque es necesario que todos nosotros comparezcamos ante el tribunal de Cristo, para que cada uno reciba según lo que haya hecho mientras estaba en el cuerpo, sea bueno o sea malo.",
+      "textPt": "Pelo que muito desejamos também ser-lhe agradáveis, quer presentes, quer ausentes. Porque todos devemos comparecer ante o tribunal de Cristo, para que cada um receba segundo o que tiver feito por meio do corpo, ou bem ou mal.",
+      "categoryName": "Inconverso"
+    },
+    {
+      "citation": "Juan 3:18",
+      "textEs": "El que en él cree, no es condenado; pero el que no cree, ya ha sido condenado, porque no ha creído en el nombre del unigénito Hijo de Dios.",
+      "textPt": "Quem crê nele não é condenado; mas quem não crê já está condenado, porquanto não crê no nome do unigênito Filho de Deus.",
+      "categoryName": "Inconverso"
+    },
+    {
+      "citation": "Lucas 16:15",
+      "textEs": "Entonces les dijo: Vosotros sois los que os justificáis a vosotros mismos delante de los hombres; mas Dios conoce vuestros corazones; porque lo que los hombres tienen por sublime, delante de Dios es abominación.",
+      "textPt": "Vós sois os que vos justificais a vós mesmos diante dos homens, mas Deus conhece o vosso coração, porque o que entre os homens é elevado perante Deus é abominação.",
+      "categoryName": "Tribunal de Cristo"
+    },
+    {
+      "citation": "2 Corintios 5:9-10",
+      "textEs": "Por tanto procuramos también, o ausentes o presentes, serle agradables. Porque es necesario que todos nosotros comparezcamos ante el tribunal de Cristo, para que cada uno reciba según lo que haya hecho mientras estaba en el cuerpo, sea bueno o sea malo.",
+      "textPt": "Pelo que muito desejamos também ser-lhe agradáveis, quer presentes, quer ausentes. Porque todos devemos comparecer ante o tribunal de Cristo, para que cada um receba segundo o que tiver feito por meio do corpo, ou bem ou mal.",
+      "categoryName": "Tribunal de Cristo"
+    },
+    {
+      "citation": "1 Juan 2:28",
+      "textEs": "Y ahora, hijitos, permaneced en él, para que cuando se manifieste, tengamos confianza, y no sea avergonzados delante de él en su venida.",
+      "textPt": "E agora, filhinhos, permanecei nele, para que, quando ele se manifestar, tenhamos confiança e não sejamos confundidos por ele na sua vinda.",
+      "categoryName": "Tribunal de Cristo"
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "@@locale": "es",
+  "appTitle": "Vers Reminder",
+  "verseListTitle": "Versículos",
+  "addVerse": "Agregar versículo",
+  "editVerse": "Editar versículo",
+  "newVerse": "Nuevo versículo",
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "confirmDelete": "¿Eliminar versículo?",
+  "confirmDeleteBody": "¿Estás seguro de que deseas eliminar este versículo?",
+  "confirm": "Sí, eliminar",
+  "@confirmDeleteCitation": {
+    "description": "Delete confirmation with citation name",
+    "placeholders": {
+      "citation": {
+        "type": "String",
+        "example": "Juan 3:16"
+      }
+    }
+  },
+  "confirmDeleteCitation": "¿Eliminar \"{citation}\"?",
+  "citation": "Cita",
+  "text": "Texto",
+  "textEs": "Texto (Español)",
+  "textPt": "Texto (Portugués)",
+  "categoriesLabel": "Categorías",
+  "categoryNameLabel": "Nombre de la categoría",
+  "@citationHint": {
+    "description": "Placeholder hint for citation input",
+    "placeholders": {}
+  },
+  "citationHint": "Ej: Juan 3:16",
+  "selectCategory": "Seleccionar categoría",
+  "addCategory": "Agregar categoría",
+  "newCategoryName": "Nombre de la nueva categoría",
+  "selectAtLeastOneCategory": "Selecciona al menos una categoría",
+  "noVerses": "No hay versículos aún",
+  "settings": "Configuración",
+  "language": "Idioma",
+  "spanish": "Español",
+  "portuguese": "Portugués",
+  "autoChange": "Cambio automático",
+  "freq15min": "15 min",
+  "freq30min": "30 min",
+  "freq1h": "1 hora",
+  "freq3h": "3 horas",
+  "freq6h": "6 horas",
+  "freq12h": "12 horas",
+  "freq24h": "24 horas",
+  "topAlign": "Arriba",
+  "centerAlign": "Centro",
+  "bottomAlign": "Abajo",
+  "leftOffset": "Izq",
+  "rightOffset": "Der",
+  "fontSize": "Tamaño de letra",
+  "changeNow": "Cambiar ahora",
+  "calibrateButton": "Calibrar centrado del texto",
+  "permissionTitle": "Permiso para cambiar el wallpaper",
+  "permissionMessage": "Vers Reminder necesita cambiar tu wallpaper para mostrarte versículos bíblicos en la pantalla de inicio.\n\nSolo se usará cuando actives \"Cambiar ahora\" o la actualización automática.",
+  "@generating": {
+    "description": "Status message while wallpaper is being generated",
+    "placeholders": {}
+  },
+  "generating": "Generando...",
+  "@wallpaperUpdated": {
+    "description": "Status message after wallpaper is updated successfully",
+    "placeholders": {
+      "citation": {
+        "type": "String",
+        "example": "Juan 3:16"
+      }
+    }
+  },
+  "wallpaperUpdated": "Wallpaper actualizado: {citation}",
+  "generatingError": "Error al generar el wallpaper",
+  "selectCategoryStatus": "Selecciona al menos una categoría",
+  "calibrationTitle": "Calibrar wallpaper",
+  "@calibrationInstructions": {
+    "description": "Instructions text for calibration screen",
+    "placeholders": {}
+  },
+  "calibrationInstructions": "Ajustá el slider para recortar los bordes de la imagen, luego aplicá y verificá en tu pantalla de inicio.",
+  "cropInsetLabel": "Crop inset",
+  "cropInsetDesc": "Ajustá el recorte hasta que el texto quede centrado.",
+  "@applyVerify": {
+    "description": "Button label to apply and verify wallpaper calibration",
+    "placeholders": {}
+  },
+  "applyVerify": "Aplicar y verificar",
+  "saveCalibration": "Guardar calibración",
+  "reset": "Resetear a 0",
+  "create": "Crear",
+  "categoryCreateTitle": "Nueva categoría",
+  "nameRequired": "El nombre no puede estar vacío",
+  "citationRequired": "La cita es requerida",
+  "textRequired": "El texto es requerido",
+  "sectionScheduling": "Programación",
+  "sectionSchedulingSub": "Configurá cada cuánto se actualiza el wallpaper automáticamente",
+  "sectionAppearance": "Apariencia",
+  "sectionAppearanceSub": "Ajustá la posición del texto en el wallpaper",
+  "sectionCategoriesSub": "Elegí qué versículos mostrar",
+  "sectionActions": "Acciones",
+  "sectionActionsSub": "Cambiá el wallpaper o calibrá el centrado",
+  "selectAll": "Seleccionar todo",
+  "clearAll": "Limpiar",
+  "sectionAbout": "Acerca de",
+  "aboutDescription": "Vers Reminder te ayuda a memorizar versículos bíblicos mostrándolos como wallpaper en tu pantalla de inicio.",
+  "aboutContact": "Contacto",
+  "aboutVersion": "Versión 1.0.0",
+  "homeTab": "Inicio",
+  "noWallpaper": "Sin wallpaper aún. Tocá para generar el primero."
+}
