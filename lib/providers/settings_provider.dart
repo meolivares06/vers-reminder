@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../database/database_service.dart';
 import '../models/wallpaper_result.dart';
 import '../models/wallpaper_status.dart';
+import '../services/wallpaper_backup_service.dart';
 import '../services/wallpaper_generator.dart';
 import '../services/wallpaper_scheduler.dart';
 import 'verse_provider.dart';
@@ -25,6 +26,9 @@ class SettingsProvider extends ChangeNotifier {
   int _calibratedInset = 0;
   double _fontScale = 1.0;
   String? _lastWallpaperPath;
+  bool _hasBackup = false;
+  bool _useMyWallpaper = false;
+  String? _userBackgroundPath;
 
   bool get isEnabled => _isEnabled;
   int get frequencyMinutes => _frequencyMinutes;
@@ -38,6 +42,35 @@ class SettingsProvider extends ChangeNotifier {
   int get calibratedInset => _calibratedInset;
   double get fontScale => _fontScale;
   String? get lastWallpaperPath => _lastWallpaperPath;
+  bool get hasBackup => _hasBackup;
+  bool get useMyWallpaper => _useMyWallpaper;
+  String? get userBackgroundPath => _userBackgroundPath;
+
+  /// Exposed for widget tests only — allows setting backup state without
+  /// calling [init], which requires a real database.
+  @visibleForTesting
+  void setHasBackup(bool value) {
+    _hasBackup = value;
+    notifyListeners();
+  }
+
+  Future<void> setUseMyWallpaper(bool value) async {
+    _useMyWallpaper = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('use_my_wallpaper', value);
+    notifyListeners();
+  }
+
+  Future<void> setUserBackgroundPath(String? path) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (path != null) {
+      await prefs.setString('user_background_path', path);
+    } else {
+      await prefs.remove('user_background_path');
+    }
+    _userBackgroundPath = path;
+    notifyListeners();
+  }
 
   Future<void> init() async {
     _isLoading = true;
@@ -58,10 +91,15 @@ class SettingsProvider extends ChangeNotifier {
     _calibratedInset = prefs.getInt('calibrated_inset') ?? 0;
     _fontScale = prefs.getDouble('font_scale') ?? 1.0;
     _lastWallpaperPath = prefs.getString('last_wallpaper_path');
+    _hasBackup = prefs.getBool(WallpaperBackupService.backupFlagKey) ?? false;
+    _useMyWallpaper = prefs.getBool('use_my_wallpaper') ?? false;
+    _userBackgroundPath = prefs.getString('user_background_path');
 
     // Re-register WorkManager task if enabled (survives reboot)
     if (_isEnabled && _activeCategoryIds.isNotEmpty) {
       await WallpaperScheduler.registerPeriodic(_frequencyMinutes);
+      // Pre-generate wallpapers for background scheduler to use
+      await _preGenerateFutureWallpapers(locale: 'es');
     }
 
     _isLoading = false;
@@ -105,6 +143,10 @@ class SettingsProvider extends ChangeNotifier {
 
     if (enabled && _activeCategoryIds.isNotEmpty) {
       await WallpaperScheduler.registerPeriodic(_frequencyMinutes);
+      // Pre-generate wallpapers for the background scheduler
+      final prefs = await SharedPreferences.getInstance();
+      final locale = prefs.getString('locale_override') ?? 'es';
+      await _preGenerateFutureWallpapers(locale: locale);
     } else {
       await WallpaperScheduler.cancel();
     }
@@ -178,6 +220,15 @@ class SettingsProvider extends ChangeNotifier {
       return;
     }
 
+    // Auto-backup original wallpaper on first trigger
+    if (!_hasBackup) {
+      final saved = await WallpaperBackupService.instance.backupCurrent();
+      if (saved) {
+        _hasBackup = true;
+        notifyListeners();
+      }
+    }
+
     final verse = verses[0];
     final result = await WallpaperGenerator.instance.generateAndSetWallpaper(
       verse: verse,
@@ -186,6 +237,7 @@ class SettingsProvider extends ChangeNotifier {
       verticalAlignment: _verticalAlignment,
       fontScale: _fontScale,
       calibratedInset: _calibratedInset,
+      useMyWallpaper: _useMyWallpaper,
     );
 
     switch (result) {
@@ -195,6 +247,9 @@ class SettingsProvider extends ChangeNotifier {
         _lastWallpaperPath = wallpaperPath;
         SharedPreferences.getInstance().then(
             (prefs) => prefs.setString('last_wallpaper_path', wallpaperPath));
+        // Pre-generate future wallpapers for the background scheduler
+        // after a successful foreground generation.
+        await _preGenerateFutureWallpapers(locale: locale);
       case WallpaperResultError(:final reason):
         _status = WallpaperStatus.error;
         _statusPayload = reason.name;
@@ -202,5 +257,38 @@ class SettingsProvider extends ChangeNotifier {
         print('WallpaperGenerator error: $reason');
     }
     notifyListeners();
+  }
+
+  /// Pre-generates wallpapers for the WorkManager background scheduler.
+  ///
+  /// Picks random verses from active categories and generates [_preGenCount]
+  /// wallpapers that the background callback can set without needing Flutter
+  /// rendering APIs. Called after [triggerNow] and on app init.
+  Future<void> _preGenerateFutureWallpapers({required String locale}) async {
+    if (_activeCategoryIds.isEmpty) return;
+
+    final randomVerses = await _db.getRandomVerses(
+      _activeCategoryIds.toList(),
+      locale,
+      WallpaperGenerator.preGenCount,
+    );
+
+    if (randomVerses.isEmpty) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final screenWidth = prefs.getInt('screen_width') ?? 1080;
+    final screenHeight = prefs.getInt('screen_height') ?? 1920;
+
+    await WallpaperGenerator.instance.preGenerateWallpapers(
+      verses: randomVerses,
+      locale: locale,
+      screenWidth: screenWidth,
+      screenHeight: screenHeight,
+      horizontalOffset: _horizontalOffset,
+      verticalAlignment: _verticalAlignment,
+      fontScale: _fontScale,
+      calibratedInset: _calibratedInset,
+      useMyWallpaper: _useMyWallpaper,
+    );
   }
 }

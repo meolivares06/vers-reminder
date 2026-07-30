@@ -5,9 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/generated/app_localizations.dart';
+import '../models/wallpaper_status.dart';
 import '../providers/locale_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/verse_provider.dart';
+import 'backoffice/verse_form_screen.dart';
 import 'backoffice/verse_list_screen.dart';
 import 'settings/settings_screen.dart';
 
@@ -20,12 +22,43 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  WallpaperStatus _previousWallpaperStatus = WallpaperStatus.idle;
+
+  Future<void> _openVerseForm(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const VerseFormScreen(),
+      ),
+    );
+    if (mounted) {
+      context.read<VerseProvider>().loadVerses(
+            context.read<LocaleProvider>().locale.languageCode,
+          );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
     final locale = context.watch<LocaleProvider>().locale.languageCode;
+
+    // Show Snackbar when wallpaper generation fails
+    if (settings.status == WallpaperStatus.error &&
+        _previousWallpaperStatus != WallpaperStatus.error) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${l10n.generatingError}: ${settings.statusPayload ?? ''}',
+              ),
+            ),
+          );
+        }
+      });
+    }
+    _previousWallpaperStatus = settings.status;
 
     return Scaffold(
       appBar: AppBar(
@@ -47,6 +80,12 @@ class _HomeScreenState extends State<HomeScreen> {
           const VerseListScreen(),
         ],
       ),
+      floatingActionButton: _currentIndex == 1
+          ? FloatingActionButton(
+              onPressed: () => _openVerseForm(context),
+              child: const Icon(Icons.add),
+            )
+          : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (i) => setState(() => _currentIndex = i),

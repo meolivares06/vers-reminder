@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -10,6 +13,7 @@ import '../../providers/locale_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/verse_provider.dart';
 import '../../services/image_cache_service.dart';
+import '../../services/wallpaper_backup_service.dart';
 import '../../services/wallpaper_generator.dart';
 // TODO: restore when calibration is re-evaluated
 // import '../calibration/calibration_screen.dart';
@@ -46,7 +50,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _schedulePreview());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _schedulePreview();
+    });
   }
 
   @override
@@ -98,10 +104,101 @@ class _SettingsScreenState extends State<SettingsScreen> {
       fontScale: settings.fontScale,
       calibratedInset: settings.calibratedInset,
       previewImagePath: _previewImagePath,
+      useMyWallpaper: settings.useMyWallpaper,
     );
 
     if (!mounted || generation != _previewGeneration) return;
     setState(() => _cachedPreview = bytes);
+  }
+
+  Future<void> _onMioSelected() async {
+    final settings = context.read<SettingsProvider>();
+    final l10n = AppLocalizations.of(context)!;
+
+    if (settings.userBackgroundPath == null) {
+      // No image stored — open picker automatically
+      try {
+        final picker = ImagePicker();
+        final XFile? pickedImage =
+            await picker.pickImage(source: ImageSource.gallery);
+
+        if (pickedImage == null) {
+          // User cancelled — revert to App
+          await settings.setUseMyWallpaper(false);
+          return;
+        }
+
+        final appDir = await getApplicationDocumentsDirectory();
+        final destPath = '${appDir.path}/user_background.png';
+        await File(pickedImage.path).copy(destPath);
+        await settings.setUserBackgroundPath(destPath);
+        await settings.setUseMyWallpaper(true);
+        _previewImagePath = null;
+        _schedulePreview();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.backgroundSelected),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.backgroundPickFailed),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        await settings.setUseMyWallpaper(false);
+      }
+    } else {
+      // Image already stored — just toggle
+      await settings.setUseMyWallpaper(true);
+      _previewImagePath = null;
+      _schedulePreview();
+    }
+  }
+
+  Future<void> _onReplaceImage() async {
+    final settings = context.read<SettingsProvider>();
+    final l10n = AppLocalizations.of(context)!;
+
+    try {
+      final picker = ImagePicker();
+      final XFile? pickedImage =
+          await picker.pickImage(source: ImageSource.gallery);
+
+      if (pickedImage == null) return;
+
+      final appDir = await getApplicationDocumentsDirectory();
+      final destPath = '${appDir.path}/user_background.png';
+      await File(pickedImage.path).copy(destPath);
+      await settings.setUserBackgroundPath(destPath);
+      _previewImagePath = null;
+      _schedulePreview();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.backgroundSelected),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.backgroundPickFailed),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _showWallpaperPermissionDialog(
@@ -135,6 +232,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(l10n.changeNow),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _showRestoreDialog(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.restoreConfirmTitle),
+        content: Text(l10n.restoreConfirmMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.restoreConfirmCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.restoreConfirmOk),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final success = await WallpaperBackupService.instance.restoreOriginal();
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? l10n.restoreSuccess : l10n.restoreError),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -209,6 +341,72 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       settings.setVerticalAlignment(sel.first);
                       _schedulePreview();
                     },
+                  ),
+                ),
+                // Background source — always visible
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text(l10n.backgroundSourceLabel,
+                            style: Theme.of(context).textTheme.bodySmall),
+                      ),
+                      SegmentedButton<bool>(
+                        segments: [
+                          ButtonSegment(
+                              value: false, label: Text(l10n.backgroundSourceApp)),
+                          ButtonSegment(
+                              value: true, label: Text(l10n.backgroundSourceMine)),
+                        ],
+                        selected: {settings.useMyWallpaper},
+                        onSelectionChanged: (sel) {
+                          final value = sel.first;
+                          if (value) {
+                            _onMioSelected();
+                          } else {
+                            settings.setUseMyWallpaper(false);
+                            _previewImagePath = null;
+                            _schedulePreview();
+                          }
+                        },
+                      ),
+                      // Thumbnail + Replace button when Mío is selected and image exists
+                      if (settings.useMyWallpaper &&
+                          settings.userBackgroundPath != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 12),
+                          child: Column(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: SizedBox(
+                                  width: 100,
+                                  height: 150,
+                                  child: Image.file(
+                                    File(settings.userBackgroundPath!),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .surfaceContainerHighest,
+                                      child: const Icon(Icons.broken_image),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextButton.icon(
+                                icon: const Icon(Icons.swap_horiz),
+                                label: Text(l10n.replaceBackgroundImage),
+                                onPressed: _onReplaceImage,
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 // Horizontal offset
@@ -288,6 +486,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           ),
                   ),
+                ),
+
+                // ── Restore original wallpaper ──
+                const Divider(),
+                _SectionHeader(
+                  title: l10n.restoreOriginalWallpaper,
+                  subtitle: l10n.restoreOriginalWallpaperSubtitle,
+                ),
+                Consumer<SettingsProvider>(
+                  builder: (context, settings, _) {
+                    if (!settings.hasBackup) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.restore),
+                        label: Text(l10n.restoreOriginalWallpaper),
+                        onPressed: () => _showRestoreDialog(context, l10n),
+                      ),
+                    );
+                  },
                 ),
 
                 // ── Categories ──

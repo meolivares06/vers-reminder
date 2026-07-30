@@ -26,6 +26,30 @@ void main() {
   });
 
   group('SettingsProvider', () {
+    test('init loads useMyWallpaper default false when key absent', () async {
+      final provider = SettingsProvider();
+      await provider.init();
+
+      expect(provider.useMyWallpaper, false,
+          reason: 'default should be false when key is absent');
+    });
+
+    test('useMyWallpaper persists across provider recreation', () async {
+      final p1 = SettingsProvider();
+      await p1.init();
+
+      expect(p1.useMyWallpaper, false);
+      await p1.setUseMyWallpaper(true);
+      expect(p1.useMyWallpaper, true);
+
+      // Recreate provider (SharedPreferences mock persists)
+      final p2 = SettingsProvider();
+      await p2.init();
+
+      expect(p2.useMyWallpaper, true,
+          reason: 'recreated provider should load persisted true');
+    });
+
     test('init loads defaults', () async {
       final provider = SettingsProvider();
       await provider.init();
@@ -93,6 +117,43 @@ void main() {
 
       provider.toggleCategory(1);
       expect(provider.activeCategoryIds, {2});
+    });
+
+    test('userBackgroundPath persists across provider recreation', () async {
+      final p1 = SettingsProvider();
+      await p1.init();
+
+      expect(p1.userBackgroundPath, isNull,
+          reason: 'default should be null when key is absent');
+
+      const testPath = '/test/path/user_background.png';
+      await p1.setUserBackgroundPath(testPath);
+      expect(p1.userBackgroundPath, testPath);
+
+      // Recreate provider (SharedPreferences mock persists)
+      final p2 = SettingsProvider();
+      await p2.init();
+
+      expect(p2.userBackgroundPath, testPath,
+          reason: 'recreated provider should load persisted path');
+    });
+
+    test('setUserBackgroundPath with null removes key', () async {
+      final p1 = SettingsProvider();
+      await p1.init();
+
+      await p1.setUserBackgroundPath('/some/path.png');
+      expect(p1.userBackgroundPath, isNotNull);
+
+      await p1.setUserBackgroundPath(null);
+      expect(p1.userBackgroundPath, isNull);
+
+      // Recreate and verify removal persisted
+      final p2 = SettingsProvider();
+      await p2.init();
+
+      expect(p2.userBackgroundPath, isNull,
+          reason: 'null path should be persisted as removed');
     });
 
     test('setFrequency updates value', () async {

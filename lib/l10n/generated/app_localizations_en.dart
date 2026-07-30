@@ -247,4 +247,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noWallpaper => 'No wallpaper yet. Tap to generate your first one.';
+
+  @override
+  String get restoreOriginalWallpaper => 'Restore original wallpaper';
+
+  @override
+  String get restoreOriginalWallpaperSubtitle =>
+      'Restore the wallpaper that was active before using Vers Reminder';
+
+  @override
+  String get restoreConfirmTitle => 'Restore wallpaper?';
+
+  @override
+  String get restoreConfirmMessage =>
+      'This will replace your current wallpaper with the original one.';
+
+  @override
+  String get restoreConfirmOk => 'Restore';
+
+  @override
+  String get restoreConfirmCancel => 'Cancel';
+
+  @override
+  String get restoreSuccess => 'Original wallpaper restored';
+
+  @override
+  String get restoreError => 'Could not restore wallpaper';
+
+  @override
+  String get noBackupAvailable => 'No backup available';
+
+  @override
+  String get backgroundSourceLabel => 'Background';
+
+  @override
+  String get backgroundSourceApp => 'App';
+
+  @override
+  String get backgroundSourceMine => 'Mine';
+
+  @override
+  String get pickBackgroundImage => 'Choose background image';
+
+  @override
+  String get replaceBackgroundImage => 'Replace image';
+
+  @override
+  String get backgroundSelected => 'Background image selected';
+
+  @override
+  String get backgroundPickFailed => 'Could not open image picker';
 }

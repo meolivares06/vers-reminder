@@ -561,6 +561,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No wallpaper yet. Tap to generate your first one.'**
   String get noWallpaper;
+
+  /// No description provided for @restoreOriginalWallpaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore original wallpaper'**
+  String get restoreOriginalWallpaper;
+
+  /// No description provided for @restoreOriginalWallpaperSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore the wallpaper that was active before using Vers Reminder'**
+  String get restoreOriginalWallpaperSubtitle;
+
+  /// No description provided for @restoreConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore wallpaper?'**
+  String get restoreConfirmTitle;
+
+  /// No description provided for @restoreConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will replace your current wallpaper with the original one.'**
+  String get restoreConfirmMessage;
+
+  /// No description provided for @restoreConfirmOk.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get restoreConfirmOk;
+
+  /// No description provided for @restoreConfirmCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get restoreConfirmCancel;
+
+  /// No description provided for @restoreSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Original wallpaper restored'**
+  String get restoreSuccess;
+
+  /// No description provided for @restoreError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not restore wallpaper'**
+  String get restoreError;
+
+  /// No description provided for @noBackupAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No backup available'**
+  String get noBackupAvailable;
+
+  /// No description provided for @backgroundSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get backgroundSourceLabel;
+
+  /// No description provided for @backgroundSourceApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get backgroundSourceApp;
+
+  /// No description provided for @backgroundSourceMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Mine'**
+  String get backgroundSourceMine;
+
+  /// No description provided for @pickBackgroundImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose background image'**
+  String get pickBackgroundImage;
+
+  /// No description provided for @replaceBackgroundImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace image'**
+  String get replaceBackgroundImage;
+
+  /// No description provided for @backgroundSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Background image selected'**
+  String get backgroundSelected;
+
+  /// No description provided for @backgroundPickFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open image picker'**
+  String get backgroundPickFailed;
 }
 
 class _AppLocalizationsDelegate

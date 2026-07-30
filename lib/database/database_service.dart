@@ -219,6 +219,26 @@ class DatabaseService {
     return rows.map((row) => Verse.fromMap(row)).toList();
   }
 
+  /// Returns up to [limit] random verses from the selected categories.
+  Future<List<Verse>> getRandomVerses(
+      List<int> categoryIds, String locale, int limit) async {
+    if (categoryIds.isEmpty || limit <= 0) return [];
+
+    final db = await database;
+    final textField = locale == 'pt' ? 'v.textPt' : 'v.textEs';
+    final placeholders = categoryIds.map((_) => '?').join(',');
+
+    final rows = await db.rawQuery('''
+      SELECT v.* FROM verses v
+      INNER JOIN verse_categories vc ON v.id = vc.verseId
+      WHERE vc.categoryId IN ($placeholders)
+      AND $textField IS NOT NULL AND $textField != ''
+      ORDER BY RANDOM() LIMIT $limit
+    ''', categoryIds);
+
+    return rows.map((row) => Verse.fromMap(row)).toList();
+  }
+
   // --- Seed ---
 
   Future<bool> isVerseTableEmpty() async {

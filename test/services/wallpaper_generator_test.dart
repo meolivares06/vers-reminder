@@ -320,6 +320,117 @@ void main() {
           reason: 'empty bytes should return null (no image to decode)');
     });
   });
+
+  group('_getBackgroundBytes', () {
+  setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  test(
+      'useMyWallpaper: true + file exists with valid bytes → bytes returned',
+      () async {
+    // Create a temp PNG and set its path in SharedPreferences.
+    // _createTestImage with the same dimensions returns the same filename,
+    // so use a single file for both the user background and nature fallback.
+    final imagePath = _createTestImage(100, 200);
+    SharedPreferences.setMockInitialValues({
+      'user_background_path': imagePath,
+    });
+
+    final generator = WallpaperGenerator.instance;
+    final verse = Verse(textEs: 'Test verse', citation: 'Test 1:1');
+
+    final result = await generator.renderPreview(
+      verse: verse,
+      locale: 'es',
+      previewWidth: 50,
+      previewHeight: 100,
+      previewImagePath: imagePath,
+      useMyWallpaper: true,
+    );
+
+    expect(result, isNotNull,
+        reason: 'should return composited bytes from user background file');
+
+    File(imagePath).deleteSync();
+  });
+
+  test(
+      'useMyWallpaper: true + file missing → falls back to nature',
+      () async {
+    // Set a path that does NOT exist
+    SharedPreferences.setMockInitialValues({
+      'user_background_path': '/nonexistent/path/user_background.png',
+    });
+
+    final generator = WallpaperGenerator.instance;
+    final verse = Verse(textEs: 'Test verse', citation: 'Test 1:1');
+    final testImage = _createTestImage(100, 200);
+
+    final result = await generator.renderPreview(
+      verse: verse,
+      locale: 'es',
+      previewWidth: 50,
+      previewHeight: 100,
+      previewImagePath: testImage,
+      useMyWallpaper: true,
+    );
+
+    // Falls back to previewImagePath when user background file is missing
+    expect(result, isNotNull,
+        reason: 'should fall back to nature image when user file missing');
+
+    File(testImage).deleteSync();
+  });
+
+  test(
+      'useMyWallpaper: true + path null → falls back to nature',
+      () async {
+    // No user_background_path in SharedPreferences
+    SharedPreferences.setMockInitialValues({});
+
+    final generator = WallpaperGenerator.instance;
+    final verse = Verse(textEs: 'Test verse', citation: 'Test 1:1');
+    final testImage = _createTestImage(100, 200);
+
+    final result = await generator.renderPreview(
+      verse: verse,
+      locale: 'es',
+      previewWidth: 50,
+      previewHeight: 100,
+      previewImagePath: testImage,
+      useMyWallpaper: true,
+    );
+
+    expect(result, isNotNull,
+        reason:
+            'should fall back to nature image when user_background_path is null');
+
+    File(testImage).deleteSync();
+  });
+
+  test('useMyWallpaper: false → uses nature path from previewImagePath',
+      () async {
+    final generator = WallpaperGenerator.instance;
+    final verse = Verse(textEs: 'Test verse', citation: 'Test 1:1');
+    final testImage = _createTestImage(100, 200);
+
+    final result = await generator.renderPreview(
+      verse: verse,
+      locale: 'es',
+      previewWidth: 50,
+      previewHeight: 100,
+      previewImagePath: testImage,
+      useMyWallpaper: false,
+    );
+
+    expect(result, isNotNull,
+        reason: 'should render from nature path when useMyWallpaper is false');
+
+    File(testImage).deleteSync();
+  });
+  });
 }
 
 /// Creates a synthetic image in memory and returns its PNG bytes.

@@ -106,5 +106,21 @@
   "aboutContact": "Contact",
   "aboutVersion": "Version 1.0.0",
   "homeTab": "Home",
-  "noWallpaper": "No wallpaper yet. Tap to generate your first one."
+  "noWallpaper": "No wallpaper yet. Tap to generate your first one.",
+  "restoreOriginalWallpaper": "Restore original wallpaper",
+  "restoreOriginalWallpaperSubtitle": "Restore the wallpaper that was active before using Vers Reminder",
+  "restoreConfirmTitle": "Restore wallpaper?",
+  "restoreConfirmMessage": "This will replace your current wallpaper with the original one.",
+  "restoreConfirmOk": "Restore",
+  "restoreConfirmCancel": "Cancel",
+  "restoreSuccess": "Original wallpaper restored",
+  "restoreError": "Could not restore wallpaper",
+  "noBackupAvailable": "No backup available",
+  "backgroundSourceLabel": "Background",
+  "backgroundSourceApp": "App",
+  "backgroundSourceMine": "Mine",
+  "pickBackgroundImage": "Choose background image",
+  "replaceBackgroundImage": "Replace image",
+  "backgroundSelected": "Background image selected",
+  "backgroundPickFailed": "Could not open image picker"
 }

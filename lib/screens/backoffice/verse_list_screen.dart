@@ -6,7 +6,6 @@ import '../../providers/verse_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../widgets/verse_tile.dart';
 import '../../widgets/confirm_delete_dialog.dart';
-import '../settings/settings_screen.dart';
 import 'verse_form_screen.dart';
 
 class VerseListScreen extends StatefulWidget {
@@ -34,60 +33,31 @@ class _VerseListScreenState extends State<VerseListScreen> {
       });
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.verseListTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const SettingsScreen(),
-                ),
+    return Consumer<VerseProvider>(
+      builder: (context, provider, _) {
+        if (provider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (provider.groupedVerses.isEmpty) {
+          return Center(child: Text(l10n.noVerses));
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => provider.loadVerses(locale),
+          child: ListView(
+            children: provider.groupedVerses.entries.map((entry) {
+              return _CategoryGroup(
+                categoryName: entry.key,
+                verses: entry.value,
+                onVerseTap: (verse) => _openForm(context, verse: verse),
+                onVerseDelete: (verse) =>
+                    _confirmDelete(context, provider, verse),
               );
-            },
+            }).toList(),
           ),
-          IconButton(
-            icon: const Icon(Icons.language),
-            onPressed: () {
-              final newLocale =
-                  locale == 'es' ? const Locale('pt') : const Locale('es');
-              localeProvider.setLocale(newLocale);
-            },
-          ),
-        ],
-      ),
-      body: Consumer<VerseProvider>(
-        builder: (context, provider, _) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (provider.groupedVerses.isEmpty) {
-            return Center(child: Text(l10n.noVerses));
-          }
-
-          return RefreshIndicator(
-            onRefresh: () => provider.loadVerses(locale),
-            child: ListView(
-              children: provider.groupedVerses.entries.map((entry) {
-                return _CategoryGroup(
-                  categoryName: entry.key,
-                  verses: entry.value,
-                  onVerseTap: (verse) => _openForm(context, verse: verse),
-                  onVerseDelete: (verse) =>
-                      _confirmDelete(context, provider, verse),
-                );
-              }).toList(),
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openForm(context),
-        child: const Icon(Icons.add),
-      ),
+        );
+      },
     );
   }
 

@@ -110,5 +110,21 @@
   "aboutContact": "Contacto",
   "aboutVersion": "Versión 1.0.0",
   "homeTab": "Inicio",
-  "noWallpaper": "Sin wallpaper aún. Tocá para generar el primero."
+  "noWallpaper": "Sin wallpaper aún. Tocá para generar el primero.",
+  "restoreOriginalWallpaper": "Restaurar wallpaper original",
+  "restoreOriginalWallpaperSubtitle": "Restaurá el wallpaper que estaba activo antes de usar Vers Reminder",
+  "restoreConfirmTitle": "¿Restaurar wallpaper?",
+  "restoreConfirmMessage": "Esto va a reemplazar tu wallpaper actual por el original.",
+  "restoreConfirmOk": "Restaurar",
+  "restoreConfirmCancel": "Cancelar",
+  "restoreSuccess": "Wallpaper original restaurado",
+  "restoreError": "No se pudo restaurar el wallpaper",
+  "noBackupAvailable": "No hay copia de seguridad disponible",
+  "backgroundSourceLabel": "Fondo",
+  "backgroundSourceApp": "App",
+  "backgroundSourceMine": "Mío",
+  "pickBackgroundImage": "Elegí imagen de fondo",
+  "replaceBackgroundImage": "Reemplazar imagen",
+  "backgroundSelected": "Imagen de fondo seleccionada",
+  "backgroundPickFailed": "No se pudo abrir el selector"
 }

@@ -5,12 +5,10 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:workmanager/workmanager.dart';
 
-import '../models/verse.dart';
 import 'wallpaper_generator.dart';
 
 const String _taskName = 'wallpaperChange';
 const String _taskUnique = 'periodicWallpaperChange';
-const String _localePrefKey = 'locale_override';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -33,38 +31,14 @@ void callbackDispatcher() {
       if (catIds.isEmpty) return true;
 
       final prefs = await SharedPreferences.getInstance();
-      final locale = prefs.getString(_localePrefKey) ?? 'es';
       final screenWidth = prefs.getInt('screen_width') ?? 1080;
       final screenHeight = prefs.getInt('screen_height') ?? 1920;
-      final horizontalOffset = prefs.getInt('horizontal_offset') ?? 0;
-      final verticalAlignment =
-          prefs.getString('vertical_alignment') ?? 'center';
-      final calibratedInset = prefs.getInt('calibrated_inset') ?? 0;
-      final fontScale = prefs.getDouble('font_scale') ?? 1.0;
 
-      final textField = locale == 'pt' ? 'v.textPt' : 'v.textEs';
-      final placeholders = catIds.map((id) => '?').join(',');
-      final verses = await db.rawQuery('''
-        SELECT v.* FROM verses v
-        INNER JOIN verse_categories vc ON v.id = vc.verseId
-        WHERE vc.categoryId IN ($placeholders)
-        AND $textField IS NOT NULL AND $textField != ''
-        ORDER BY RANDOM() LIMIT 1
-      ''', catIds);
-
-      if (verses.isEmpty) return true;
-
-      final verse = Verse.fromMap(verses.first);
-      await WallpaperGenerator.instance.generateAndSetWallpaper(
-        verse: verse,
-        locale: locale,
-        screenWidth: screenWidth,
-        screenHeight: screenHeight,
-        horizontalOffset: horizontalOffset,
-        verticalAlignment: verticalAlignment,
-        calibratedInset: calibratedInset,
-        fontScale: fontScale,
-      );
+      // Cannot generate wallpaper in background isolate (no Flutter
+      // rendering). Instead, set the next pre-generated wallpaper that was
+      // cached during a previous foreground session (triggerNow, app init).
+      await WallpaperGenerator.instance
+          .setNextPreGenerated(screenWidth, screenHeight);
     } finally {
       await db.close();
     }

@@ -44,6 +44,12 @@ app.*.map.json
 tmp_gen_images.dart
 .vscode/
 
+# Node.js (used for sharp icon generation)
+node_modules/
+package-lock.json
+package.json
+test_output.png
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile

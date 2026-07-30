@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallpaper_manager_flutter/wallpaper_manager_flutter.dart';
 
 import '../models/verse.dart';
@@ -12,7 +15,7 @@ import '../models/wallpaper_result.dart';
 import 'image_cache_service.dart';
 
 /// Generates and optionally sets wallpapers composed of verse text
-/// over a nature background with dark overlay.
+/// over a background with dark overlay.
 ///
 /// Architecture (hybrid rendering):
 /// 1. [image] package loads JPG, applies dark overlay, encodes PNG
@@ -49,15 +52,19 @@ class WallpaperGenerator {
     String verticalAlignment = 'center',
     double fontScale = 1.0,
     int calibratedInset = 0,
+    bool useMyWallpaper = false,
   }) async {
     try {
-      final imagePath = await ImageCacheService.instance.getNextRandomImage();
-      if (imagePath == null) {
-        return WallpaperResultError(WallpaperErrorReason.backgroundMissing);
+      String? imagePath;
+      if (!useMyWallpaper) {
+        imagePath = await ImageCacheService.instance.getNextRandomImage();
+        if (imagePath == null) {
+          return WallpaperResultError(WallpaperErrorReason.backgroundMissing);
+        }
       }
 
       final outputPath = await _render(
-        backgroundPath: imagePath,
+        backgroundPath: imagePath ?? '',
         verse: verse,
         locale: locale,
         screenWidth: screenWidth,
@@ -66,6 +73,7 @@ class WallpaperGenerator {
         verticalAlignment: verticalAlignment,
         fontScale: fontScale,
         calibratedInset: calibratedInset,
+        useMyWallpaper: useMyWallpaper,
       );
       if (outputPath == null) {
         return WallpaperResultError(WallpaperErrorReason.renderFailed);
@@ -73,9 +81,6 @@ class WallpaperGenerator {
 
       if (defaultTargetPlatform == TargetPlatform.android) {
         try {
-          if (screenWidth != null && screenHeight != null) {
-            await _suggestDesiredDimensions(screenWidth, screenHeight);
-          }
           await _setWallpaper(outputPath, screenWidth ?? 0, screenHeight ?? 0);
         } catch (e) {
           // Wallpaper was generated successfully; set failure is logged.
@@ -110,13 +115,28 @@ class WallpaperGenerator {
     String verticalAlignment = 'center',
     double fontScale = 1.0,
     int calibratedInset = 0,
+    bool useMyWallpaper = false,
   }) async {
     try {
-      final imagePath = await ImageCacheService.instance.getNextRandomImage();
-      if (imagePath == null) return null;
-
+      if (!useMyWallpaper) {
+        final imagePath =
+            await ImageCacheService.instance.getNextRandomImage();
+        if (imagePath == null) return null;
+        return await _render(
+          backgroundPath: imagePath,
+          verse: verse,
+          locale: locale,
+          screenWidth: screenWidth,
+          screenHeight: screenHeight,
+          horizontalOffset: horizontalOffset,
+          verticalAlignment: verticalAlignment,
+          fontScale: fontScale,
+          calibratedInset: calibratedInset,
+          useMyWallpaper: false,
+        );
+      }
       return await _render(
-        backgroundPath: imagePath,
+        backgroundPath: '',
         verse: verse,
         locale: locale,
         screenWidth: screenWidth,
@@ -125,6 +145,7 @@ class WallpaperGenerator {
         verticalAlignment: verticalAlignment,
         fontScale: fontScale,
         calibratedInset: calibratedInset,
+        useMyWallpaper: true,
       );
     } catch (_) {
       return null;
@@ -325,15 +346,60 @@ class WallpaperGenerator {
       // Yield before rasterization — PNG encode is CPU-heavy
       await Future<void>.delayed(Duration.zero);
 
-      // --- 6. Rasterize to PNG ---
+      // --- 6. Rasterize to PNG via background isolate ---
       final picture = recorder.endRecording();
-      final result = await picture.toImage(screenWidth, screenHeight);
+      final image = await picture.toImage(screenWidth, screenHeight);
       picture.dispose();
-      final byteData = await result.toByteData(format: ui.ImageByteFormat.png);
-      result.dispose();
-      return byteData?.buffer.asUint8List();
+      // rawRgba is fast — GPU readback without PNG encoding
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      image.dispose();
+      if (byteData == null) return null;
+      final rawBytes = byteData.buffer.asUint8List();
+      // PNG encode in isolate to avoid blocking the UI thread.
+      // Falls back to synchronous encoding if isolate is unavailable
+      // (e.g., in test environments or constrained runtimes).
+      try {
+        return await compute(
+          _encodePngWorker,
+          (rawBytes, screenWidth, screenHeight),
+        );
+      } catch (_) {
+        // Fallback: encode synchronously on main thread
+        return _encodePngWorker((rawBytes, screenWidth, screenHeight));
+      }
     } finally {
       bg.dispose();
+    }
+  }
+
+  /// Resolves background image bytes based on the source selection.
+  ///
+  /// When [useMyWallpaper] is `false`: reads a random cached nature image
+  /// via [ImageCacheService] and returns its bytes. May return null if no
+  /// cached image is available.
+  ///
+  /// When [useMyWallpaper] is `true`: reads the user's picked background
+  /// image from `{appDir}/user_background.png` via [File.readAsBytes].
+  /// The path is stored in SharedPreferences under `user_background_path`.
+  /// Returns null if the path is missing, the file doesn't exist, or the
+  /// read fails — the caller should fall back to nature images.
+  Future<Uint8List?> _getBackgroundBytes({required bool useMyWallpaper}) async {
+    if (!useMyWallpaper) {
+      final path = await ImageCacheService.instance.getNextRandomImage();
+      if (path == null) return null;
+      return await File(path).readAsBytes();
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final path = prefs.getString('user_background_path');
+    if (path == null) return null;
+    try {
+      final file = File(path);
+      if (!await file.exists()) return null;
+      return await file.readAsBytes();
+    } catch (e) {
+      // ignore: avoid_print
+      print('WallpaperGenerator: read user background failed: $e');
+      return null;
     }
   }
 
@@ -418,13 +484,31 @@ class WallpaperGenerator {
     String verticalAlignment = 'center',
     double fontScale = 1.0,
     int calibratedInset = 0,
+    bool useMyWallpaper = false,
   }) async {
     final w = screenWidth ?? 1080;
     final h = screenHeight ?? 2400;
 
     // 1. Load background image bytes
-    final file = File(backgroundPath);
-    final bytes = await file.readAsBytes();
+    late Uint8List bytes;
+    if (useMyWallpaper) {
+      final bgBytes = await _getBackgroundBytes(useMyWallpaper: true);
+      if (bgBytes != null) {
+        bytes = bgBytes;
+      } else {
+        // Fallback to nature
+        // ignore: avoid_print
+        print(
+            'WallpaperGenerator: user background not available in _render, falling back to nature');
+        final fallbackPath =
+            await ImageCacheService.instance.getNextRandomImage();
+        if (fallbackPath == null) return null;
+        bytes = await File(fallbackPath).readAsBytes();
+      }
+    } else {
+      final file = File(backgroundPath);
+      bytes = await file.readAsBytes();
+    }
 
     // 2. Composite via Canvas pipeline
     final pngBytes = await _compositeCanvas(
@@ -469,14 +553,23 @@ class WallpaperGenerator {
     double fontScale = 1.0,
     int calibratedInset = 0,
     String? previewImagePath,
+    bool useMyWallpaper = false,
   }) async {
     try {
-      final imagePath =
-          previewImagePath ?? await ImageCacheService.instance.getNextRandomImage();
-      if (imagePath == null) return null;
+      Uint8List? bytes;
+      if (useMyWallpaper) {
+        bytes = await _getBackgroundBytes(useMyWallpaper: true);
+      }
 
-      final file = File(imagePath);
-      final bytes = await file.readAsBytes();
+      if (bytes == null) {
+        final imagePath =
+            previewImagePath ??
+            await ImageCacheService.instance.getNextRandomImage();
+        if (imagePath == null) return null;
+
+        final file = File(imagePath);
+        bytes = await file.readAsBytes();
+      }
 
       return await _compositeCanvas(
         backgroundBytes: bytes,
@@ -537,4 +630,225 @@ class WallpaperGenerator {
       throw Exception('Failed to set wallpaper: $e');
     }
   }
+
+  // ── Pre-generated wallpaper cache ──
+
+  /// Number of wallpapers to pre-generate for the background scheduler.
+  static const int preGenCount = 5;
+  static const String _preGenDirName = 'pre_generated';
+
+  /// Generates up to [_preGenCount] wallpapers with random verses and
+  /// background images, saved to a cache directory for the WorkManager
+  /// callback to use (which cannot run Flutter rendering APIs).
+  ///
+  /// Each wallpaper uses the current layout settings. Clears old pre-generated
+  /// files first. Stores the count and a starting index in SharedPreferences
+  /// under keys `pregen_count` and `pregen_index`.
+  Future<int> preGenerateWallpapers({
+    required List<Verse> verses,
+    required String locale,
+    required int screenWidth,
+    required int screenHeight,
+    int horizontalOffset = 0,
+    String verticalAlignment = 'center',
+    double fontScale = 1.0,
+    int calibratedInset = 0,
+    bool useMyWallpaper = false,
+  }) async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final preGenDir = Directory(p.join(appDir.path, _preGenDirName));
+    if (!await preGenDir.exists()) {
+      await preGenDir.create(recursive: true);
+    }
+
+    // Clean old pre-generated files
+    await for (final entry in preGenDir.list()) {
+      if (entry is File) await entry.delete();
+    }
+
+    // Resolve background bytes once for the entire batch when using
+    // the user's wallpaper — ensures visual consistency across all
+    // pre-generated PNGs and avoids repeated MethodChannel calls.
+    Uint8List? batchBytes;
+    if (useMyWallpaper) {
+      batchBytes = await _getBackgroundBytes(useMyWallpaper: true);
+      if (batchBytes == null) {
+        // ignore: avoid_print
+        print(
+            'WallpaperGenerator: user background not available in preGenerate, '
+            'falling back to nature per wallpaper');
+      }
+    }
+
+    final rng = Random();
+    int count = 0;
+    for (int i = 0; i < preGenCount && i < verses.length; i++) {
+      final verse = verses[i];
+
+      Uint8List backgroundBytes;
+      if (batchBytes != null) {
+        backgroundBytes = batchBytes;
+      } else {
+        final imagePath =
+            await ImageCacheService.instance.getNextRandomImage();
+        if (imagePath == null) continue;
+        backgroundBytes = await File(imagePath).readAsBytes();
+      }
+
+      final pngBytes = await _compositeCanvas(
+        backgroundBytes: backgroundBytes,
+        verse: verse,
+        locale: locale,
+        screenWidth: screenWidth,
+        screenHeight: screenHeight,
+        horizontalOffset: rng.nextBool() ? horizontalOffset : 0,
+        verticalAlignment: verticalAlignment,
+        fontScale: fontScale,
+        calibratedInset: calibratedInset,
+      );
+
+      if (pngBytes == null) continue;
+
+      await File(p.join(preGenDir.path, 'pregen_$i.png'))
+          .writeAsBytes(pngBytes);
+      count++;
+    }
+
+    // Reset index for next consumption round
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('pregen_index', 0);
+    await prefs.setInt('pregen_count', count);
+
+    return count;
+  }
+
+  /// Tries to set the next available pre-generated wallpaper.
+  ///
+  /// Safe to call from WorkManager background isolate because it does not
+  /// use Flutter rendering APIs — only file I/O, SharedPreferences, and
+  /// the [wallpaper_manager_flutter] plugin's method channel (which works
+  /// from background via PluginRegistrant).
+  ///
+  /// Returns true if a wallpaper was set, false if no pre-generated files
+  /// remain or any step fails.
+  Future<bool> setNextPreGenerated(int screenWidth, int screenHeight) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final preGenDir = Directory(p.join(appDir.path, _preGenDirName));
+      if (!await preGenDir.exists()) return false;
+
+      final prefs = await SharedPreferences.getInstance();
+      final index = prefs.getInt('pregen_index') ?? 0;
+      final count = prefs.getInt('pregen_count') ?? 0;
+
+      if (index >= count) return false;
+
+      final filePath = p.join(preGenDir.path, 'pregen_$index.png');
+      final file = File(filePath);
+      if (!await file.exists()) return false;
+
+      // This calls wallpaper_manager_flutter's plugin channel which is
+      // registered for background isolates via PluginRegistrant.
+      // _suggestDesiredDimensions will fail silently (channel not in
+      // background) — that's fine, the wallpaper is already at the correct
+      // resolution.
+      final manager = WallpaperManagerFlutter();
+      await manager.setWallpaper(file, WallpaperManagerFlutter.bothScreens);
+
+      // Advance index for the next scheduled run
+      await prefs.setInt('pregen_index', index + 1);
+
+      return true;
+    } catch (e) {
+      // ignore: avoid_print
+      print('WallpaperGenerator: setNextPreGenerated failed: $e');
+      return false;
+    }
+  }
+}
+
+// ── Background isolate: PNG encode from raw RGBA bytes ──
+
+/// Encodes raw RGBA bytes into a PNG image in a background isolate.
+///
+/// Receives raw RGBA data (from [ui.ImageByteFormat.rawRgba]), width, and
+/// height. Writes a valid PNG with IHDR/IDAT/IEND chunks using zlib
+/// compression. Runs via [compute] so the UI thread is not blocked.
+@pragma('vm:entry-point')
+Uint8List _encodePngWorker((Uint8List, int, int) params) {
+  final (rawRgba, width, height) = params;
+  final bytes = <int>[];
+
+  void writeBe32(int v) {
+    bytes.addAll([
+      (v >> 24) & 0xFF,
+      (v >> 16) & 0xFF,
+      (v >> 8) & 0xFF,
+      v & 0xFF,
+    ]);
+  }
+
+  void writeChunk(String type, List<int> data) {
+    writeBe32(data.length);
+    bytes.addAll(type.codeUnits);
+    bytes.addAll(data);
+    writeBe32(_crc32([...type.codeUnits, ...data]));
+  }
+
+  // PNG signature
+  bytes.addAll([137, 80, 78, 71, 13, 10, 26, 10]);
+
+  // IHDR chunk: width, height, 8-bit RGBA
+  final ihdr = Uint8List(13);
+  _be32(ihdr, 0, width);
+  _be32(ihdr, 4, height);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 6; // color type RGBA
+  ihdr[10] = 0; // compression
+  ihdr[11] = 0; // filter
+  ihdr[12] = 0; // interlace
+  writeChunk('IHDR', ihdr);
+
+  // Build filtered scanlines (filter None = 0x00 per row)
+  final stride = width * 4;
+  final scanlines = Uint8List(height * (1 + stride));
+  for (int y = 0; y < height; y++) {
+    final offset = y * (1 + stride);
+    scanlines[offset] = 0; // filter byte: None
+    scanlines.setRange(offset + 1, offset + 1 + stride,
+        rawRgba.sublist(y * stride, (y + 1) * stride));
+  }
+
+  // IDAT chunk: zlib-compressed scanlines
+  final zlib = ZLibCodec(level: 6);
+  writeChunk('IDAT', zlib.encoder.convert(scanlines));
+
+  // IEND chunk
+  writeChunk('IEND', []);
+
+  return Uint8List.fromList(bytes);
+}
+
+/// Writes a 32-bit big-endian integer into [target] at [offset].
+void _be32(Uint8List target, int offset, int value) {
+  target[offset] = (value >> 24) & 0xFF;
+  target[offset + 1] = (value >> 16) & 0xFF;
+  target[offset + 2] = (value >> 8) & 0xFF;
+  target[offset + 3] = value & 0xFF;
+}
+
+/// CRC-32 checksum used by PNG chunk validation.
+int _crc32(List<int> data) {
+  int crc = 0xFFFFFFFF;
+  for (final byte in data) {
+    crc ^= byte;
+    for (int i = 0; i < 8; i++) {
+      if (crc & 1 != 0) {
+        crc = (crc >> 1) ^ 0xEDB88320;
+      } else {
+        crc >>= 1;
+      }
+    }
+  }
+  return crc ^ 0xFFFFFFFF;
 }
