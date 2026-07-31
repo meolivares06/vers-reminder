@@ -4,8 +4,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/wallpaper_status.dart';
@@ -46,13 +48,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _previewImagePath;
   Uint8List? _cachedPreview;
   int _previewGeneration = 0;
+  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
+    _loadVersion();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _schedulePreview();
     });
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() => _appVersion = 'v${info.version}+${info.buildNumber}');
+    }
   }
 
   @override
@@ -619,7 +630,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: Text(l10n.aboutVersion),
+                  title: Text(_appVersion.isNotEmpty
+                      ? _appVersion
+                      : l10n.aboutVersion),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.share),
+                  title: Text(l10n.aboutShare),
+                  onTap: () {
+                    Share.share(
+                      'Descargá Vers Reminder: '
+                      'https://github.com/meolivares06/vers-reminder/releases/latest',
+                    );
+                  },
                 ),
                 ListTile(
                   leading: const Icon(Icons.email_outlined),

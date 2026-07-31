@@ -242,6 +242,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get aboutContact => 'Contato';
 
   @override
+  String get aboutShare => 'Compartilhar app';
+
+  @override
   String get aboutVersion => 'Versão 1.0.0';
 
   @override

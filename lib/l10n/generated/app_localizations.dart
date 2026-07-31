@@ -544,6 +544,12 @@ abstract class AppLocalizations {
   /// **'Contact'**
   String get aboutContact;
 
+  /// No description provided for @aboutShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share app'**
+  String get aboutShare;
+
   /// No description provided for @aboutVersion.
   ///
   /// In en, this message translates to:

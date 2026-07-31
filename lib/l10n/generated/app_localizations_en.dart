@@ -240,6 +240,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutContact => 'Contact';
 
   @override
+  String get aboutShare => 'Share app';
+
+  @override
   String get aboutVersion => 'Version 1.0.0';
 
   @override
