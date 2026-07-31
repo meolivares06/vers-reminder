@@ -31,6 +31,18 @@ jobs:
       - name: Run tests
         run: flutter test
 
+      - name: Decode signing keystore
+        run: |
+          mkdir -p android/app
+          echo "${{ secrets.SIGNING_KEYSTORE_B64 }}" | base64 -d > android/app/vers-reminder-release.jks
+
+      - name: Write key.properties
+        run: |
+          echo "storePassword=${{ secrets.SIGNING_STORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.SIGNING_KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.SIGNING_KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=$GITHUB_WORKSPACE/android/app/vers-reminder-release.jks" >> android/key.properties
+
       - name: Build release APK (arm64-v8a)
         run: flutter build apk --release --target-platform android-arm64
 
