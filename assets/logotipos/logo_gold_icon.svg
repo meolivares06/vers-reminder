@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%"><defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE8A3"/>
+      <stop offset="35%" stop-color="#E5B75A"/>
+      <stop offset="70%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#997A15"/>
+    </linearGradient>
+  </defs>
+  <!-- Scale 0.919 to fit content within 67% safe zone.
+       Content bounds: x=70-442, y=70-440 (372w x 370h)
+       Safe zone: 342px centered (x=85-427, y=85-427) -->
+  <g transform="translate(20.7, 21.7) scale(0.919)" stroke="url(#gold)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Rayos de luz -->
+    <g stroke-width="4">
+      <line x1="256" y1="320" x2="90" y2="240" />
+      <line x1="256" y1="320" x2="120" y2="170" />
+      <line x1="256" y1="320" x2="180" y2="130" />
+      <line x1="256" y1="320" x2="422" y2="240" />
+      <line x1="256" y1="320" x2="392" y2="170" />
+      <line x1="256" y1="320" x2="332" y2="130" />
+    </g>
+    
+    <!-- Marco del Teléfono (estrecho y base abierta) -->
+    <path d="M 166 350 L 166 94 A 24 24 0 0 1 190 70 L 322 70 A 24 24 0 0 1 346 94 L 346 350" stroke-width="10" />
+    
+    <!-- Espada -->
+    <circle cx="256" cy="100" r="10" stroke-width="8" />
+    <path d="M 256 110 L 256 160" stroke-width="10" />
+    <path d="M 216 160 L 296 160" stroke-width="12" />
+    
+    <!-- Hoja de la espada -->
+    <path d="M 236 170 L 236 290 L 256 370 L 276 290 L 276 170 Z" fill="url(#gold)" stroke="none" />
+    <path d="M 256 170 L 256 350" stroke="#000000" opacity="0.3" stroke-width="3" />
+    
+    <!-- Biblia -->
+    <path d="M 80 370 Q 168 315 256 380 Q 344 315 432 370" stroke-width="12" />
+    <path d="M 100 400 Q 178 350 256 410 Q 334 350 412 400" stroke-width="12" />
+    <path d="M 70 430 Q 163 375 256 440 Q 349 375 442 430" stroke-width="14" />
+    <path d="M 256 380 L 256 440" stroke-width="12" />
+  </g>
+</svg>
