@@ -31,14 +31,19 @@ jobs:
       - name: Run tests
         run: flutter test
 
-      - name: Build debug APK
-        run: flutter build apk --debug
+      - name: Build release APK (arm64-v8a)
+        run: flutter build apk --release --target-platform android-arm64
 
       - id: version
         name: Extract version from pubspec.yaml
         run: |
           VERSION=$(grep "^version: " pubspec.yaml | cut -d" " -f2)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Rename APK with version
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/vers-reminder-v${{ steps.version.outputs.version }}-arm64.apk
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -48,5 +53,6 @@ jobs:
           body: |
             Build automático del branch master.
             Versión: v${{ steps.version.outputs.version }}
-          files: build/app/outputs/flutter-apk/app-debug.apk
+            Arquitectura: arm64-v8a
+          files: build/app/outputs/flutter-apk/vers-reminder-v${{ steps.version.outputs.version }}-arm64.apk
           make_latest: true
