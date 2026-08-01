@@ -109,7 +109,50 @@
   "aboutDescription": "Vers Reminder te ayuda a memorizar versículos bíblicos mostrándolos como wallpaper en tu pantalla de inicio.",
   "aboutContact": "Contacto",
   "aboutShare": "Compartir app",
-  "aboutVersion": "Versión 1.0.0",
+  "checkForUpdates": "Buscar actualizaciones",
+  "@updateAvailable": {
+    "description": "Subtitle shown when an update is available",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "v1.2.0+4"
+      }
+    }
+  },
+  "updateAvailable": "Actualización disponible: {version}",
+  "@downloadUpdateConfirm": {
+    "description": "Confirmation before downloading an update",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "v1.2.0+4"
+      },
+      "size": {
+        "type": "String",
+        "example": "12.4 MB"
+      }
+    }
+  },
+  "downloadUpdateConfirm": "Hay una versión nueva ({version}). ¿Descargar (aprox. {size})? Preserva tus wallpapers y ajustes.",
+  "downloadUpdate": "Descargar",
+  "installNow": "Instalar",
+  "upToDate": "Estás al día",
+  "updateCheckFailed": "No se pudo buscar actualizaciones",
+  "updateDownloadFailed": "No se pudo descargar la actualización",
+  "updateInstallFailed": "No se pudo instalar la actualización",
+  "retry": "Reintentar",
+  "downloadingUpdate": "Descargando actualización...",
+  "@updateDownloadProgress": {
+    "description": "Progress percentage while downloading an update",
+    "placeholders": {
+      "percentage": {
+        "type": "String",
+        "example": "42"
+      }
+    }
+  },
+  "updateDownloadProgress": "Descargando actualización... {percentage}%",
+  "downloadComplete": "Descarga completa. ¿Instalás la actualización ahora?",
   "homeTab": "Inicio",
   "noWallpaper": "Sin wallpaper aún. Tocá para generar el primero.",
   "restoreOriginalWallpaper": "Restaurar wallpaper original",

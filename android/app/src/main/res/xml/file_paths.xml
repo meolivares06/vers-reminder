@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Exposes the APK downloads directory (getApplicationSupportDirectory()/updates)
+     to the FileProvider so the system package installer can read downloaded APKs. -->
+<paths>
+    <files-path name="updates" path="updates/"/>
+</paths>

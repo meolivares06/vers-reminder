@@ -109,7 +109,50 @@
   "aboutDescription": "O Vers Reminder ajuda você a memorizar versículos bíblicos exibindo-os como wallpaper na tela inicial.",
   "aboutContact": "Contato",
   "aboutShare": "Compartilhar app",
-  "aboutVersion": "Versão 1.0.0",
+  "checkForUpdates": "Verificar atualizações",
+  "@updateAvailable": {
+    "description": "Subtitle shown when an update is available",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "v1.2.0+4"
+      }
+    }
+  },
+  "updateAvailable": "Atualização disponível: {version}",
+  "@downloadUpdateConfirm": {
+    "description": "Confirmation before downloading an update",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "v1.2.0+4"
+      },
+      "size": {
+        "type": "String",
+        "example": "12.4 MB"
+      }
+    }
+  },
+  "downloadUpdateConfirm": "Há uma nova versão ({version}). Baixar (aprox. {size})? Preserva seus wallpapers e configurações.",
+  "downloadUpdate": "Baixar",
+  "installNow": "Instalar",
+  "upToDate": "Você está atualizado",
+  "updateCheckFailed": "Não foi possível verificar atualizações",
+  "updateDownloadFailed": "Não foi possível baixar a atualização",
+  "updateInstallFailed": "Não foi possível instalar a atualização",
+  "retry": "Tentar novamente",
+  "downloadingUpdate": "Baixando atualização...",
+  "@updateDownloadProgress": {
+    "description": "Progress percentage while downloading an update",
+    "placeholders": {
+      "percentage": {
+        "type": "String",
+        "example": "42"
+      }
+    }
+  },
+  "updateDownloadProgress": "Baixando atualização... {percentage}%",
+  "downloadComplete": "Download concluído. Instalar a atualização agora?",
   "homeTab": "Início",
   "noWallpaper": "Sem wallpaper ainda. Toque para gerar o primeiro.",
   "restoreOriginalWallpaper": "Restaurar wallpaper original",

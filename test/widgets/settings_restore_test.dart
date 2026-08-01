@@ -6,9 +6,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vers_reminder/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/providers/locale_provider.dart';
 import 'package:vers_reminder/providers/settings_provider.dart';
+import 'package:vers_reminder/widgets/async_action_button.dart';
 
-/// Minimal widget that replicates the restore section from SettingsScreen
-/// to allow widget-level testing without the full screen's DB dependencies.
+/// Minimal widget that replicates the restore tile from SettingsScreen to
+/// allow widget-level testing without the full screen's DB dependencies.
 class _RestoreSection extends StatelessWidget {
   const _RestoreSection();
 
@@ -26,15 +27,13 @@ class _RestoreSection extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium),
           Text(l10n.restoreOriginalWallpaperSubtitle,
               style: Theme.of(context).textTheme.bodySmall),
-          if (settings.hasBackup)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: TextButton.icon(
-                icon: const Icon(Icons.restore),
-                label: Text(l10n.restoreOriginalWallpaper),
-                onPressed: () {},
-              ),
-            ),
+          AsyncActionButton(
+            icon: Icons.restore,
+            label: l10n.restoreOriginalWallpaper,
+            style: AsyncActionButtonStyle.tile,
+            enabled: settings.hasBackup,
+            onPressed: () async {/* restore handler */},
+          ),
         ],
       ),
     );
@@ -42,7 +41,7 @@ class _RestoreSection extends StatelessWidget {
 }
 
 void main() {
-  testWidgets('restore button hidden when hasBackup is false',
+  testWidgets('restore tile disabled and not tappable when hasBackup is false',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
 
@@ -66,13 +65,15 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('Restaurar wallpaper original'), findsOneWidget,
-        reason: 'Section header visible, button hidden');
-    expect(find.byType(TextButton), findsNothing,
-        reason: 'Restore button should be absent');
+    // The tile is rendered (visible) but disabled — no tap action available.
+    expect(find.text('Restaurar wallpaper original'), findsAtLeastNWidgets(2),
+        reason: 'Section header + tile label visible');
+    final tile = tester.widget<ListTile>(find.byType(ListTile));
+    expect(tile.onTap, isNull,
+        reason: 'restore tile is disabled (onTap null) when no backup');
   });
 
-  testWidgets('restore button visible when hasBackup is true',
+  testWidgets('restore tile is tappable when hasBackup is true',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
 
@@ -99,8 +100,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.text('Restaurar wallpaper original'), findsAtLeastNWidgets(2),
-        reason: 'Section header and button label');
-    expect(find.byType(TextButton), findsOneWidget,
-        reason: 'Restore button should be visible');
+        reason: 'Section header and tile label');
+    final tile = tester.widget<ListTile>(find.byType(ListTile));
+    expect(tile.onTap, isNotNull,
+        reason: 'restore tile is tappable when a backup exists');
   });
 }

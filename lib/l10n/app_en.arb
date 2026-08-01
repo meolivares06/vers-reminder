@@ -105,7 +105,50 @@
   "aboutDescription": "Vers Reminder helps you memorize Bible verses by displaying them as wallpaper on your home screen.",
   "aboutContact": "Contact",
   "aboutShare": "Share app",
-  "aboutVersion": "Version 1.0.0",
+  "checkForUpdates": "Check for updates",
+  "@updateAvailable": {
+    "description": "Subtitle shown when an update is available",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "v1.2.0+4"
+      }
+    }
+  },
+  "updateAvailable": "Update available: {version}",
+  "@downloadUpdateConfirm": {
+    "description": "Confirmation before downloading an update",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "v1.2.0+4"
+      },
+      "size": {
+        "type": "String",
+        "example": "12.4 MB"
+      }
+    }
+  },
+  "downloadUpdateConfirm": "A new version ({version}) is available. Download (approx. {size})? It preserves your wallpapers and settings.",
+  "downloadUpdate": "Download",
+  "installNow": "Install",
+  "upToDate": "You're up to date",
+  "updateCheckFailed": "Couldn't check for updates",
+  "updateDownloadFailed": "Couldn't download the update",
+  "updateInstallFailed": "Couldn't install the update",
+  "retry": "Retry",
+  "downloadingUpdate": "Downloading update...",
+  "@updateDownloadProgress": {
+    "description": "Progress percentage while downloading an update",
+    "placeholders": {
+      "percentage": {
+        "type": "String",
+        "example": "42"
+      }
+    }
+  },
+  "updateDownloadProgress": "Downloading update... {percentage}%",
+  "downloadComplete": "Download complete. Install the update now?",
   "homeTab": "Home",
   "noWallpaper": "No wallpaper yet. Tap to generate your first one.",
   "restoreOriginalWallpaper": "Restore original wallpaper",

@@ -245,7 +245,50 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aboutShare => 'Compartir app';
 
   @override
-  String get aboutVersion => 'Versión 1.0.0';
+  String get checkForUpdates => 'Buscar actualizaciones';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Actualización disponible: $version';
+  }
+
+  @override
+  String downloadUpdateConfirm(String version, String size) {
+    return 'Hay una versión nueva ($version). ¿Descargar (aprox. $size)? Preserva tus wallpapers y ajustes.';
+  }
+
+  @override
+  String get downloadUpdate => 'Descargar';
+
+  @override
+  String get installNow => 'Instalar';
+
+  @override
+  String get upToDate => 'Estás al día';
+
+  @override
+  String get updateCheckFailed => 'No se pudo buscar actualizaciones';
+
+  @override
+  String get updateDownloadFailed => 'No se pudo descargar la actualización';
+
+  @override
+  String get updateInstallFailed => 'No se pudo instalar la actualización';
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get downloadingUpdate => 'Descargando actualización...';
+
+  @override
+  String updateDownloadProgress(String percentage) {
+    return 'Descargando actualización... $percentage%';
+  }
+
+  @override
+  String get downloadComplete =>
+      'Descarga completa. ¿Instalás la actualización ahora?';
 
   @override
   String get homeTab => 'Inicio';

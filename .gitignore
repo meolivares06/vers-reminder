@@ -43,6 +43,8 @@ app.*.map.json
 /Bibliografia/
 tmp_gen_images.dart
 .vscode/
+/sdd/
+TODO.md
 
 # Node.js (used for sharp icon generation)
 node_modules/

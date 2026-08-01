@@ -550,11 +550,83 @@ abstract class AppLocalizations {
   /// **'Share app'**
   String get aboutShare;
 
-  /// No description provided for @aboutVersion.
+  /// No description provided for @checkForUpdates.
   ///
   /// In en, this message translates to:
-  /// **'Version 1.0.0'**
-  String get aboutVersion;
+  /// **'Check for updates'**
+  String get checkForUpdates;
+
+  /// Subtitle shown when an update is available
+  ///
+  /// In en, this message translates to:
+  /// **'Update available: {version}'**
+  String updateAvailable(String version);
+
+  /// Confirmation before downloading an update
+  ///
+  /// In en, this message translates to:
+  /// **'A new version ({version}) is available. Download (approx. {size})? It preserves your wallpapers and settings.'**
+  String downloadUpdateConfirm(String version, String size);
+
+  /// No description provided for @downloadUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get downloadUpdate;
+
+  /// No description provided for @installNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get installNow;
+
+  /// No description provided for @upToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re up to date'**
+  String get upToDate;
+
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check for updates'**
+  String get updateCheckFailed;
+
+  /// No description provided for @updateDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t download the update'**
+  String get updateDownloadFailed;
+
+  /// No description provided for @updateInstallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t install the update'**
+  String get updateInstallFailed;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @downloadingUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update...'**
+  String get downloadingUpdate;
+
+  /// Progress percentage while downloading an update
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading update... {percentage}%'**
+  String updateDownloadProgress(String percentage);
+
+  /// No description provided for @downloadComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Download complete. Install the update now?'**
+  String get downloadComplete;
 
   /// No description provided for @homeTab.
   ///

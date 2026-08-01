@@ -3,12 +3,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../models/wallpaper_status.dart';
 import '../providers/locale_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/verse_provider.dart';
+import '../widgets/app_version.dart';
+import '../widgets/async_action_button.dart';
 import 'backoffice/verse_form_screen.dart';
 import 'backoffice/verse_list_screen.dart';
 import 'settings/settings_screen.dart';
@@ -106,14 +109,41 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _HomeTab extends StatelessWidget {
+class _HomeTab extends StatefulWidget {
   final SettingsProvider settings;
   final String locale;
 
   const _HomeTab({required this.settings, required this.locale});
 
   @override
+  State<_HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<_HomeTab> {
+  String _appVersion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    try {
+      final version = await resolveAppVersionString();
+      if (mounted) {
+        setState(() => _appVersion = version);
+      }
+    } catch (_) {
+      // Leave the version field empty — the About tile renders no stale string
+      // when the platform lookup fails.
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final settings = widget.settings;
+    final locale = widget.locale;
     final l10n = AppLocalizations.of(context)!;
     final verseProvider = context.watch<VerseProvider>();
 
@@ -194,18 +224,28 @@ class _HomeTab extends StatelessWidget {
         // ── Change now button ──
         SizedBox(
           width: double.infinity,
-          child: FilledButton.icon(
-            icon: const Icon(Icons.refresh),
-            label: Text(l10n.changeNow),
-            onPressed: () {
+          child: AsyncActionButton(
+            icon: Icons.refresh,
+            label: l10n.changeNow,
+            style: AsyncActionButtonStyle.filled,
+            onPressed: () async {
               if (!settings.wallpaperPermissionGranted) {
                 _showPermissionDialog(context, settings, verseProvider, l10n);
               } else {
-                settings.triggerNow(
+                await settings.triggerNow(
                   verseProvider: verseProvider,
                   locale:
                       context.read<LocaleProvider>().locale.languageCode,
                 );
+                if (!mounted) return;
+                if (settings.status == WallpaperStatus.noCategories) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.selectCategoryStatus),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               }
             },
           ),
@@ -267,7 +307,17 @@ class _HomeTab extends StatelessWidget {
         ),
         ListTile(
           leading: const Icon(Icons.info_outline),
-          title: Text(l10n.aboutVersion),
+          title: Text(_appVersion),
+        ),
+        ListTile(
+          leading: const Icon(Icons.share),
+          title: Text(l10n.aboutShare),
+          onTap: () {
+            Share.share(
+              'Descargá Vers Reminder: '
+              'https://github.com/meolivares06/vers-reminder/releases/latest',
+            );
+          },
         ),
         ListTile(
           leading: const Icon(Icons.email_outlined),
