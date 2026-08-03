@@ -345,4 +345,46 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get backgroundPickFailed => 'Não foi possível abrir o seletor';
+
+  @override
+  String get currentWallpaperLabel => 'Wallpaper atual';
+
+  @override
+  String updatedAtLabel(String time) {
+    return 'Atualizado $time';
+  }
+
+  @override
+  String activeCategoriesCount(int count) {
+    return 'Ativas: $count';
+  }
+
+  @override
+  String shareApp(String url) {
+    return 'Baixe o Vers Reminder: $url';
+  }
+
+  @override
+  String get emailCopied => 'Email copiado para a área de transferência';
+
+  @override
+  String timeMinutes(int n) {
+    return '$n min';
+  }
+
+  @override
+  String timeHours(int n) {
+    return '$n h';
+  }
+
+  @override
+  String get previewLabel => 'Pré-visualização';
+
+  @override
+  String offsetLabel(String direction, String value) {
+    return 'Deslocamento: $direction $value';
+  }
+
+  @override
+  String get disabledLabel => 'Desativado';
 }

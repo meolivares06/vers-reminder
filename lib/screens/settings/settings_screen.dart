@@ -1,15 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../l10n/generated/app_localizations.dart';
-import '../../models/update_check_result.dart';
 import '../../models/wallpaper_status.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/settings_provider.dart';
@@ -18,8 +16,9 @@ import '../../services/image_cache_service.dart';
 import '../../services/update_service.dart';
 import '../../services/wallpaper_backup_service.dart';
 import '../../services/wallpaper_generator.dart';
-import '../../widgets/app_version.dart';
 import '../../widgets/async_action_button.dart';
+import '../../widgets/section_header.dart';
+import 'about_screen.dart';
 // TODO: restore when calibration is re-evaluated
 // import '../calibration/calibration_screen.dart';
 
@@ -33,17 +32,14 @@ String _frequencyLabel(int minutes, AppLocalizations l10n) {
     360 => l10n.freq6h,
     720 => l10n.freq12h,
     1440 => l10n.freq24h,
-    _ => '$minutes min',
+    _ => l10n.timeMinutes(minutes),
   };
 }
-
-/// The lifetime of the self-update flow in the About section.
-enum _UpdateCheckState { idle, checking, available, downloading, installing }
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, this.updateService});
 
-  /// Test seam — the update service used by the About flow. Defaults to
+  /// Test seam — the update service forwarded to the About screen. Defaults to
   /// [UpdateService.instance] when null.
   @visibleForTesting
   final UpdateService? updateService;
@@ -59,53 +55,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _previewImagePath;
   Uint8List? _cachedPreview;
   int _previewGeneration = 0;
-  String _appVersion = '';
-  _UpdateCheckState _updateState = _UpdateCheckState.idle;
-  UpdateCheckResult? _updateResult;
-  String? _downloadedApkPath;
-  double _downloadProgress = 0;
 
   /// True once a preview attempt produced nothing (no verse, no cached image,
   /// or a render error). Lets the mini-preview settle into a placeholder
   /// instead of showing an indeterminate spinner forever.
   bool _previewUnavailable = false;
 
-  /// Live-rebuild handle for the progress dialog. The progress dialog route is
-  /// a sibling on the root navigator, so the parent `setState` cannot rebuild
-  /// it; this callback (captured from the dialog's `StatefulBuilder`) is what
-  /// actually pushes progress updates into the dialog. Together with the
-  /// parent `setState`, both stay in sync.
-  StateSetter? _setDialogState;
-
-  /// Whether the cancelable progress dialog is currently presented. Guards the
-  /// completion/error `pop()` so a barrier-dismissed dialog is not double-popped
-  /// (which would otherwise pop whatever route is underneath — e.g. Settings
-  /// itself).
-  bool _progressDialogShowing = false;
-
-  /// The update service driving the About flow — injectable for tests.
-  late final UpdateService _updateService =
-      widget.updateService ?? UpdateService.instance;
-
   @override
   void initState() {
     super.initState();
-    _loadVersion();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _schedulePreview();
     });
-  }
-
-  Future<void> _loadVersion() async {
-    try {
-      final version = await resolveAppVersionString();
-      if (mounted) {
-        setState(() => _appVersion = version);
-      }
-    } catch (_) {
-      // Leave the version field empty — the About tile renders no stale string
-      // when the platform lookup fails.
-    }
   }
 
   @override
@@ -353,260 +314,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _checkForUpdate() async {
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _updateState = _UpdateCheckState.checking);
-
-    final result = await _updateService.checkForUpdate();
-
-    if (!mounted) return;
-
-    if (result.available) {
-      setState(() {
-        _updateState = _UpdateCheckState.available;
-        _updateResult = result;
-      });
-      _showUpdateConfirmDialog(l10n, result);
-    } else if (result.error != null) {
-      setState(() => _updateState = _UpdateCheckState.idle);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.updateCheckFailed),
-          behavior: SnackBarBehavior.floating,
-          action: SnackBarAction(label: l10n.retry, onPressed: _checkForUpdate),
-        ),
-      );
-    } else {
-      setState(() => _updateState = _UpdateCheckState.idle);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.upToDate),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _showUpdateConfirmDialog(
-      AppLocalizations l10n, UpdateCheckResult result) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.updateAvailable(_displayVersion(result.tagName))),
-        content: Text(l10n.downloadUpdateConfirm(
-          _displayVersion(result.tagName),
-          result.sizeBytes != null ? _formatSize(result.sizeBytes!) : '?',
-        )),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              // Re-enable the tile: cancelling the confirm dialog leaves no
-              // active download, so the state machine must return to idle
-              // instead of staying stuck in `available` with a disabled tile.
-              setState(() => _updateState = _UpdateCheckState.idle);
-            },
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _downloadAndInstall(l10n, result);
-            },
-            child: Text(l10n.downloadUpdate),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _downloadAndInstall(
-      AppLocalizations l10n, UpdateCheckResult result) async {
-    if (!mounted) return;
-    setState(() {
-      _updateState = _UpdateCheckState.downloading;
-      _downloadProgress = 0;
-    });
-
-    // Show the cancelable progress dialog. The dialog route is a sibling on
-    // the navigator, so the parent setState alone cannot rebuild it — the
-    // dialog must be driven through its own `setDialogState` handle (captured
-    // into [_setDialogState]) for live progress updates.
-    _progressDialogShowing = true;
-    final dialogFuture = showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          _setDialogState = setDialogState;
-          final percent = (_downloadProgress * 100).round();
-          return AlertDialog(
-            title: Text(l10n.downloadingUpdate),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(l10n.updateDownloadProgress('$percent')),
-                const SizedBox(height: 16),
-                LinearProgressIndicator(
-                    value: _downloadProgress > 0 ? _downloadProgress : null),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-    // Clear the guard whenever the route closes (barrier dismiss OR a
-    // programmatic pop) so a later close no-ops instead of popping whatever is
-    // underneath.
-    dialogFuture.whenComplete(() {
-      _progressDialogShowing = false;
-      _setDialogState = null;
-    });
-
-    try {
-      final apkPath = await _updateService.download(
-        result,
-        onProgress: (bytes, total) {
-          if (!mounted) return;
-          final progress = total > 0 ? bytes / total : 0.0;
-          // Update both the parent (tile subtitle / future dialog state) and
-          // the live dialog route.
-          setState(() => _downloadProgress = progress);
-          _setDialogState?.call(() => _downloadProgress = progress);
-        },
-      );
-      if (!mounted) return;
-      _closeProgressDialog();
-      setState(() {
-        _updateState = _UpdateCheckState.installing;
-        _downloadedApkPath = apkPath;
-      });
-      _showInstallAction(l10n);
-    } catch (e) {
-      debugPrint('Update download failed: $e');
-      if (!mounted) return;
-      _closeProgressDialog();
-      // Return to a fully recoverable state: the tile is re-enabled (idle)
-      // AND a Retry action immediately re-runs the download. Either path lets
-      // the user out of the failed-download stall.
-      setState(() => _updateState = _UpdateCheckState.idle);
-      if (ScaffoldMessenger.maybeOf(context) != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.updateDownloadFailed),
-            behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: l10n.retry,
-              onPressed: () => _downloadAndInstall(l10n, result),
-            ),
-          ),
-        );
-      }
-    }
-  }
-
-  /// Closes the progress dialog, but only if it is still presented (i.e. not
-  /// already dismissed via the barrier). Guards against popping whatever route
-  /// sits underneath the dialog on the navigator.
-  void _closeProgressDialog() {
-    if (!_progressDialogShowing) return;
-    _progressDialogShowing = false;
-    Navigator.of(context).pop();
-  }
-
-  void _showInstallAction(AppLocalizations l10n) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.updateAvailable(_displayVersion(_updateResult?.tagName))),
-        content: Text(l10n.downloadComplete),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              setState(() => _updateState = _UpdateCheckState.idle);
-            },
-            child: Text(l10n.cancel),
-          ),
-          FilledButton.icon(
-            icon: const Icon(Icons.system_update_alt),
-            label: Text(l10n.installNow),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _startInstall(l10n);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _startInstall(AppLocalizations l10n) async {
-    final apkPath = _downloadedApkPath;
-    if (apkPath == null) return;
-    if (!mounted) return;
-
-    try {
-      final fired = await _updateService.install(
-        apkPath,
-        // The browser fallback should land on a real release page (with the
-        // version tag), never the raw APK download URL. Fall back to the
-        // latest-release page when the tag is unknown.
-        releaseUrl: _releasePageUrl(_updateResult?.tagName),
-      );
-      // NOTE: a `false` return covers both "nothing fired" and "the system
-      // installer failed but the unknown-app-sources deep-link was opened".
-      // Either way no install happened here, so the accurate `updateInstallFailed`
-      // copy is shown.
-      if (!mounted) return;
-      setState(() => _updateState = _UpdateCheckState.idle);
-      if (!fired) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.updateInstallFailed),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Install failed: $e');
-      if (!mounted) return;
-      setState(() => _updateState = _UpdateCheckState.idle);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.updateInstallFailed),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  /// Builds the public release page URL for [tag] on the project repo.
-  ///
-  /// Falls back to the `releases/latest` page when the tag is unknown so the
-  /// browser fallback in [UpdateService.install] always lands on a page the
-  /// user can act on, never the raw APK download URL.
-  String _releasePageUrl(String? tag) {
-    if (tag == null || tag.trim().isEmpty) {
-      return 'https://github.com/meolivares06/vers-reminder/releases/latest';
-    }
-    return 'https://github.com/meolivares06/vers-reminder/releases/tag/$tag';
-  }
-
-  String _displayVersion(String? tag) => tag ?? '?';
-
-  String _formatSize(int bytes) {
-    const kb = 1024.0;
-    const mb = kb * 1024;
-    if (bytes >= mb) {
-      return '${(bytes / mb).toStringAsFixed(1)} MB';
-    }
-    return '${(bytes / kb).toStringAsFixed(0)} KB';
-  }
-
-  @override
+@override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
@@ -621,38 +329,66 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.all(16),
               children: [
                 // ── Appearance (wallpaper section, FIRST) ──
-                _SectionHeader(
+                SectionHeader(
                   title: l10n.sectionAppearance,
                   subtitle: l10n.sectionAppearanceSub,
                 ),
                 // Mini preview — shown at the top of the wallpaper section so
                 // the user sees the current composition before its params.
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    height: 150,
-                    width: double.infinity,
-                    child: _cachedPreview != null
-                        ? Image.memory(_cachedPreview!, fit: BoxFit.cover)
-                        : Container(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
-                            // Settles into a placeholder when a preview can't
-                            // be produced (empty cache/offline first run) so
-                            // the spinner never spins forever.
-                            child: _previewUnavailable
-                                ? const Center(
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      size: 32,
-                                    ),
-                                  )
-                                : const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
+                Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        height: 150,
+                        width: double.infinity,
+                        child: _cachedPreview != null
+                            ? Image.memory(_cachedPreview!, fit: BoxFit.cover)
+                            : Container(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest,
+                                // Settles into a placeholder when a preview can't
+                                // be produced (empty cache/offline first run) so
+                                // the spinner never spins forever.
+                                child: _previewUnavailable
+                                    ? const Center(
+                                        child: Icon(
+                                          Icons.broken_image_outlined,
+                                          size: 32,
+                                        ),
+                                      )
+                                    : const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                              ),
+                      ),
+                    ),
+                    // "Preview" caption (F7, UX-SET-003): distinguishes the
+                    // composition preview from the Home "Current wallpaper".
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          l10n.previewLabel,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
-                  ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 // Vertical alignment
                 Padding(
@@ -739,31 +475,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                 ),
-                // Horizontal offset
-                Row(
-                  children: [
-                    Text(l10n.leftOffset),
-                    Expanded(
-                      child: Slider(
-                        value: settings.horizontalOffset.toDouble(),
-                        min: -20,
-                        max: 20,
-                        divisions: 40,
-                        label: settings.horizontalOffset.toString(),
-                        onChanged: (v) {
-                          settings.setHorizontalOffset(v.round());
-                          _schedulePreview();
-                        },
-                      ),
-                    ),
-                    Text(l10n.rightOffset),
-                  ],
+                // Horizontal offset — rendered as ONE caption resolved from the value's
+                // sign (F6, UX-SET-002): no static left/right Row labels, no
+                // duplicate text node. Direction word comes from the localized
+                // offsetLabel(direction, value).
+                Slider(
+                  value: settings.horizontalOffset.toDouble(),
+                  min: -20,
+                  max: 20,
+                  divisions: 40,
+                  label: settings.horizontalOffset.toString(),
+                  onChanged: (v) {
+                    settings.setHorizontalOffset(v.round());
+                    _schedulePreview();
+                  },
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(
-                    '${l10n.leftOffset} ${settings.horizontalOffset} '
-                    '(${settings.horizontalOffset < 0 ? l10n.leftOffset : l10n.rightOffset})',
+                    l10n.offsetLabel(
+                      settings.horizontalOffset < 0
+                          ? l10n.leftOffset
+                          : l10n.rightOffset,
+                      '${settings.horizontalOffset}',
+                    ),
                     style: Theme.of(context).textTheme.bodySmall,
                     textAlign: TextAlign.center,
                   ),
@@ -816,7 +551,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // ── Scheduling ──
                 const Divider(),
-                _SectionHeader(
+                SectionHeader(
                   title: l10n.sectionScheduling,
                   subtitle: l10n.sectionSchedulingSub,
                 ),
@@ -836,11 +571,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       runSpacing: 4,
                       children: SettingsScreen.frequencyOptions
                           .map(
-                            (freq) => ChoiceChip(
+                            (freq) =>                             ChoiceChip(
                               label: Text(_frequencyLabel(freq, l10n)),
                               selected: settings.frequencyMinutes == freq,
+                              // F2: gold tint on the selected control via
+                              // colorScheme.secondary.
                               selectedColor:
-                                  Theme.of(context).colorScheme.primaryContainer,
+                                  Theme.of(context).colorScheme.secondary,
                               onSelected: (_) => settings.setFrequency(freq),
                             ),
                           )
@@ -850,7 +587,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // ── Categories ──
                 const Divider(),
-                _SectionHeader(
+                SectionHeader(
                   title: l10n.categoriesLabel,
                   subtitle: l10n.sectionCategoriesSub,
                 ),
@@ -890,7 +627,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // ── Actions ──
                 const Divider(),
-                _SectionHeader(
+                SectionHeader(
                   title: l10n.sectionActions,
                   subtitle: l10n.sectionActionsSub,
                 ),
@@ -910,6 +647,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       return;
                     }
                     final messenger = ScaffoldMessenger.of(context);
+                    // Resolve the theme error tint before the async gap so the
+                    // SnackBar text can use it without a post-await context use.
+                    final errorColor = Theme.of(context).colorScheme.error;
                     await settings.triggerNow(
                       verseProvider: verseProvider,
                       locale: locale,
@@ -932,7 +672,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       messenger.showSnackBar(
                         SnackBar(
                           content: Text(l10n.generatingError,
-                              style: const TextStyle(color: Colors.red)),
+                              style: TextStyle(color: errorColor)),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
@@ -961,47 +701,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // ── About ──
                 const Divider(),
-                _SectionHeader(
-                  title: l10n.sectionAbout,
-                  subtitle: l10n.aboutDescription,
-                ),
-                AsyncActionButton(
-                  icon: Icons.system_update_alt,
-                  label: l10n.checkForUpdates,
-                  style: AsyncActionButtonStyle.tile,
-                  enabled: _updateState == _UpdateCheckState.idle,
-                  subtitle: _updateState == _UpdateCheckState.available
-                      ? l10n.updateAvailable(
-                          _displayVersion(_updateResult?.tagName))
-                      : null,
-                  onPressed: _checkForUpdate,
-                ),
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: Text(_appVersion.isNotEmpty ? _appVersion : ''),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.share),
-                  title: Text(l10n.aboutShare),
+                  title: Text(l10n.sectionAbout),
+                  subtitle: Text(l10n.aboutDescription),
                   onTap: () {
-                    Share.share(
-                      'Descargá Vers Reminder: '
-                      'https://github.com/meolivares06/vers-reminder/releases/latest',
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.email_outlined),
-                  title: const Text('meolivares06@gmail.com'),
-                  subtitle: Text(l10n.aboutContact),
-                  onTap: () {
-                    Clipboard.setData(
-                      const ClipboardData(text: 'meolivares06@gmail.com'),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Email copiado al portapapeles'),
-                        duration: Duration(seconds: 2),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            AboutScreen(updateService: widget.updateService),
                       ),
                     );
                   },
@@ -1010,39 +718,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 32),
               ],
             ),
-    );
-  }
-}
-
-/// A section header with title and descriptive subtitle for settings groups.
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

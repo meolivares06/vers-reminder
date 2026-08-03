@@ -23,6 +23,7 @@ class AsyncActionButton extends StatefulWidget {
     this.style = AsyncActionButtonStyle.filled,
     this.enabled = true,
     this.subtitle,
+    this.backgroundColor,
   });
 
   /// The full async action to run when tapped. Result/errors flow through
@@ -46,6 +47,11 @@ class AsyncActionButton extends StatefulWidget {
   /// ([AsyncActionButtonStyle.tile]) style; ignored for button styles. The
   /// spinner replaces only the tile title, leaving the subtitle intact.
   final String? subtitle;
+
+  /// Optional [FilledButton] background override (only honored for the
+  /// [AsyncActionButtonStyle.filled] style). Used for the gold brand accent on
+  /// the active CTA without recoloring the rest of the palette.
+  final Color? backgroundColor;
 
   @override
   State<AsyncActionButton> createState() => _AsyncActionButtonState();
@@ -88,7 +94,12 @@ class _AsyncActionButtonState extends State<AsyncActionButton> {
   Widget build(BuildContext context) {
     switch (widget.style) {
       case AsyncActionButtonStyle.filled:
-        return FilledButton(onPressed: _interactive ? _handlePressed : null,
+        final bg = widget.backgroundColor;
+        return FilledButton(
+            onPressed: _interactive ? _handlePressed : null,
+            style: bg != null
+                ? FilledButton.styleFrom(backgroundColor: bg)
+                : null,
             child: _child());
       case AsyncActionButtonStyle.elevated:
         return ElevatedButton(

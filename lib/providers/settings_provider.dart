@@ -26,6 +26,7 @@ class SettingsProvider extends ChangeNotifier {
   int _calibratedInset = 0;
   double _fontScale = 1.0;
   String? _lastWallpaperPath;
+  DateTime? _lastWallpaperTimestamp;
   bool _hasBackup = false;
   bool _useMyWallpaper = false;
   String? _userBackgroundPath;
@@ -42,9 +43,32 @@ class SettingsProvider extends ChangeNotifier {
   int get calibratedInset => _calibratedInset;
   double get fontScale => _fontScale;
   String? get lastWallpaperPath => _lastWallpaperPath;
+  DateTime? get lastWallpaperTimestamp => _lastWallpaperTimestamp;
   bool get hasBackup => _hasBackup;
   bool get useMyWallpaper => _useMyWallpaper;
   String? get userBackgroundPath => _userBackgroundPath;
+
+  /// Exposed for widget tests only — lets Home render a deterministic
+  /// active-categories count without a real database.
+  @visibleForTesting
+  void setActiveCategoriesForTest(Set<int> ids) {
+    _activeCategoryIds = ids;
+    notifyListeners();
+  }
+
+  /// Exposed for widget tests only — allows setting the wallpaper-card state
+  /// without calling [init], which requires a real database.
+  @visibleForTesting
+  void setWallpaperCard({
+    String? path,
+    DateTime? timestamp,
+    bool permissionGranted = false,
+  }) {
+    _lastWallpaperPath = path;
+    _lastWallpaperTimestamp = timestamp;
+    _wallpaperPermissionGranted = permissionGranted;
+    notifyListeners();
+  }
 
   /// Exposed for widget tests only — allows setting backup state without
   /// calling [init], which requires a real database.
@@ -91,6 +115,9 @@ class SettingsProvider extends ChangeNotifier {
     _calibratedInset = prefs.getInt('calibrated_inset') ?? 0;
     _fontScale = prefs.getDouble('font_scale') ?? 1.0;
     _lastWallpaperPath = prefs.getString('last_wallpaper_path');
+    _lastWallpaperTimestamp = _parseTimestamp(
+      prefs.getString('last_wallpaper_timestamp'),
+    );
     _hasBackup = prefs.getBool(WallpaperBackupService.backupFlagKey) ?? false;
     _useMyWallpaper = prefs.getBool('use_my_wallpaper') ?? false;
     _userBackgroundPath = prefs.getString('user_background_path');
@@ -245,8 +272,17 @@ class SettingsProvider extends ChangeNotifier {
         _status = WallpaperStatus.updated;
         _statusPayload = citation;
         _lastWallpaperPath = wallpaperPath;
-        SharedPreferences.getInstance().then(
-            (prefs) => prefs.setString('last_wallpaper_path', wallpaperPath));
+        _lastWallpaperTimestamp = DateTime.now();
+        SharedPreferences.getInstance().then((prefs) {
+          prefs.setString('last_wallpaper_path', wallpaperPath);
+          // Write-only new key: old installs lack it and stay null until the
+          // next foreground generation (backwards-compatible with
+          // last_wallpaper_path, which still governs the empty/exists state).
+          prefs.setString(
+            'last_wallpaper_timestamp',
+            _lastWallpaperTimestamp!.toIso8601String(),
+          );
+        });
         // Pre-generate future wallpapers for the background scheduler
         // after a successful foreground generation.
         await _preGenerateFutureWallpapers(locale: locale);
@@ -257,6 +293,13 @@ class SettingsProvider extends ChangeNotifier {
         print('WallpaperGenerator error: $reason');
     }
     notifyListeners();
+  }
+
+  /// Parses a persisted ISO8601 [String] into a [DateTime], returning `null`
+  /// when the key is absent or malformed (old installs / corrupt values).
+  static DateTime? _parseTimestamp(String? value) {
+    if (value == null || value.isEmpty) return null;
+    return DateTime.tryParse(value);
   }
 
   /// Pre-generates wallpapers for the WorkManager background scheduler.

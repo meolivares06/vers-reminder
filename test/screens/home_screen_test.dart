@@ -10,7 +10,7 @@ import 'package:vers_reminder/providers/settings_provider.dart';
 import 'package:vers_reminder/providers/verse_provider.dart';
 import 'package:vers_reminder/screens/home_screen.dart';
 
-/// Channel used by `package_info_plus` — mocked so the Home About version tile
+/// Channel used by `package_info_plus` — mocked so onboarding to AboutScreen
 /// renders deterministically.
 const MethodChannel _packageInfoChannel =
     MethodChannel('dev.fluttercommunity.plus/package_info');
@@ -62,29 +62,23 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('Home About shows the dynamic installed version (no stale copy)',
-      (tester) async {
+  testWidgets('Home About is now a tile that opens AboutScreen', (tester) async {
     await pumpHome(tester);
 
-    // The About section sits below the fold in the Home ListView; scroll to it
-    // so its tiles are actually built.
-    await tester.scrollUntilVisible(find.text('Share app'), 200);
+    // The About tile sits below the fold in the Home ListView; scroll to it.
+    await tester.scrollUntilVisible(find.text('About'), 200);
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('v3.0.1+12'), findsOneWidget,
-        reason: 'version tile reflects installed v{version}+{build}');
-    expect(find.text('Version 1.0.0'), findsNothing,
-        reason: 'stale hardcoded aboutVersion must never render');
-  });
+    // No more inline share/version tiles — those moved to AboutScreen.
+    expect(find.text('Share app'), findsNothing,
+        reason: 'share tile moved to AboutScreen, not inlined on Home');
 
-  testWidgets('Home About provides a Share tile', (tester) async {
-    await pumpHome(tester);
+    // Tapping the About tile opens AboutScreen (which renders the update flow).
+    await tester.tap(find.widgetWithText(ListTile, 'About'));
+    await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(find.text('Share app'), 200);
-    await tester.pump();
-
-    expect(find.text('Share app'), findsOneWidget,
-        reason: 'Share action mirrors the Settings screen');
+    expect(find.text('Check for updates'), findsOneWidget,
+        reason: 'About tile navigates to AboutScreen');
   });
 }

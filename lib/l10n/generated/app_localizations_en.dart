@@ -342,4 +342,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backgroundPickFailed => 'Could not open image picker';
+
+  @override
+  String get currentWallpaperLabel => 'Current wallpaper';
+
+  @override
+  String updatedAtLabel(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String activeCategoriesCount(int count) {
+    return 'Active: $count';
+  }
+
+  @override
+  String shareApp(String url) {
+    return 'Download Vers Reminder: $url';
+  }
+
+  @override
+  String get emailCopied => 'Email copied to clipboard';
+
+  @override
+  String timeMinutes(int n) {
+    return '$n min';
+  }
+
+  @override
+  String timeHours(int n) {
+    return '$n h';
+  }
+
+  @override
+  String get previewLabel => 'Preview';
+
+  @override
+  String offsetLabel(String direction, String value) {
+    return 'Offset: $direction $value';
+  }
+
+  @override
+  String get disabledLabel => 'Disabled';
 }

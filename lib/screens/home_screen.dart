@@ -1,19 +1,18 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../models/wallpaper_status.dart';
 import '../providers/locale_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/verse_provider.dart';
-import '../widgets/app_version.dart';
 import '../widgets/async_action_button.dart';
+import '../widgets/section_header.dart';
 import 'backoffice/verse_form_screen.dart';
 import 'backoffice/verse_list_screen.dart';
+import 'settings/about_screen.dart';
 import 'settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -120,26 +119,6 @@ class _HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<_HomeTab> {
-  String _appVersion = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadVersion();
-  }
-
-  Future<void> _loadVersion() async {
-    try {
-      final version = await resolveAppVersionString();
-      if (mounted) {
-        setState(() => _appVersion = version);
-      }
-    } catch (_) {
-      // Leave the version field empty — the About tile renders no stale string
-      // when the platform lookup fails.
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final settings = widget.settings;
@@ -159,41 +138,63 @@ class _HomeTabState extends State<_HomeTab> {
             height: 200,
             child: settings.lastWallpaperPath != null &&
                     File(settings.lastWallpaperPath!).existsSync()
-                ? Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.file(
-                        File(settings.lastWallpaperPath!),
-                        fit: BoxFit.cover,
-                      ),
-                      Positioned(
-                        bottom: 12,
-                        left: 16,
-                        right: 16,
-                        child: Text(
-                          settings.statusPayload ?? '',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            shadows: [
-                              Shadow(blurRadius: 8, color: Colors.black87),
-                            ],
+                ? InkWell(
+                    onTap: _triggerNow(settings, verseProvider, l10n),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.file(
+                          File(settings.lastWallpaperPath!),
+                          fit: BoxFit.cover,
+                        ),
+                        Positioned(
+                          bottom: 12,
+                          left: 16,
+                          right: 16,
+                          // Black54 scrim guarantees the caption stays legible over
+                          // the image in both light and dark themes (UX-THEME-005).
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.currentWallpaperLabel,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                if (settings
+                                    .lastWallpaperTimestamp
+                                    case final DateTime ts)
+                                  Text(
+                                    l10n.updatedAtLabel(
+                                      _relativeTime(ts, l10n),
+                                    ),
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   )
                 : InkWell(
-                    onTap: () {
-                      if (settings.wallpaperPermissionGranted) {
-                        settings.triggerNow(
-                          verseProvider: verseProvider,
-                          locale:
-                              context.read<LocaleProvider>().locale.languageCode,
-                        );
-                      }
-                    },
+                    onTap: _triggerNow(settings, verseProvider, l10n),
                     child: Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -228,6 +229,8 @@ class _HomeTabState extends State<_HomeTab> {
             icon: Icons.refresh,
             label: l10n.changeNow,
             style: AsyncActionButtonStyle.filled,
+            // F2: gold brand accent on the active CTA via colorScheme.secondary.
+            backgroundColor: Theme.of(context).colorScheme.secondary,
             onPressed: () async {
               if (!settings.wallpaperPermissionGranted) {
                 _showPermissionDialog(context, settings, verseProvider, l10n);
@@ -254,7 +257,7 @@ class _HomeTabState extends State<_HomeTab> {
         const SizedBox(height: 24),
 
         // ── Status section ──
-        _SectionHeader(
+        SectionHeader(
           title: l10n.sectionScheduling,
           subtitle: l10n.sectionSchedulingSub,
         ),
@@ -264,7 +267,9 @@ class _HomeTabState extends State<_HomeTab> {
               ? '${l10n.autoChange}: ${_formatMinutes(settings.frequencyMinutes, l10n)}'
               : l10n.autoChange),
           subtitle: Text(
-              settings.isEnabled ? l10n.sectionSchedulingSub : 'Desactivado'),
+              settings.isEnabled
+                  ? l10n.sectionSchedulingSub
+                  : l10n.disabledLabel),
           trailing: Switch(
             value: settings.isEnabled,
             onChanged: (v) => settings.setEnabled(v),
@@ -275,7 +280,14 @@ class _HomeTabState extends State<_HomeTab> {
         ListTile(
           leading: const Icon(Icons.category_outlined),
           title: Text(l10n.categoriesLabel),
-          subtitle: Text('${settings.activeCategoryIds.length} activas'),
+          subtitle: Text(
+            l10n.activeCategoriesCount(settings.activeCategoryIds.length),
+          ),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsScreen()),
+            );
+          },
         ),
 
         // Language
@@ -301,50 +313,55 @@ class _HomeTabState extends State<_HomeTab> {
         const SizedBox(height: 8),
 
         // ── About ──
-        _SectionHeader(
-          title: l10n.sectionAbout,
-          subtitle: l10n.aboutDescription,
-        ),
+        const Divider(),
         ListTile(
           leading: const Icon(Icons.info_outline),
-          title: Text(_appVersion),
-        ),
-        ListTile(
-          leading: const Icon(Icons.share),
-          title: Text(l10n.aboutShare),
+          title: Text(l10n.sectionAbout),
+          subtitle: Text(l10n.aboutDescription),
           onTap: () {
-            Share.share(
-              'Descargá Vers Reminder: '
-              'https://github.com/meolivares06/vers-reminder/releases/latest',
-            );
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.email_outlined),
-          title: const Text('meolivares06@gmail.com'),
-          subtitle: Text(l10n.aboutContact),
-          onTap: () {
-            Clipboard.setData(
-              const ClipboardData(text: 'meolivares06@gmail.com'),
-            );
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Email copiado al portapapeles'),
-                duration: Duration(seconds: 2),
-              ),
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AboutScreen()),
             );
           },
         ),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 40),
       ],
     );
   }
 
+  /// Returns a trigger callback that kicks off generation when wallpaper
+  /// permission was granted (shared by the wallpaper-card tap affordance and
+  /// the empty-state tap, both of which remain silent when permission is off).
+  VoidCallback _triggerNow(
+    SettingsProvider settings,
+    VerseProvider verseProvider,
+    AppLocalizations l10n,
+  ) {
+    return () {
+      if (settings.wallpaperPermissionGranted) {
+        settings.triggerNow(
+          verseProvider: verseProvider,
+          locale:
+              context.read<LocaleProvider>().locale.languageCode,
+        );
+      }
+    };
+  }
+
+  /// Formats a wall timestamp as a compact localized relative phrase used as
+  /// the argument of `updatedAtLabel(time)` (e.g. "0 min", "5 min", "2 h").
+  String _relativeTime(DateTime time, AppLocalizations l10n) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inMinutes < 1) return l10n.timeMinutes(0);
+    if (diff.inMinutes < 60) return l10n.timeMinutes(diff.inMinutes);
+    return l10n.timeHours(diff.inHours);
+  }
+
   String _formatMinutes(int minutes, AppLocalizations l10n) {
-    if (minutes < 60) return '$minutes min';
+    if (minutes < 60) return l10n.timeMinutes(minutes);
     final h = minutes ~/ 60;
-    return '$h ${h == 1 ? 'hora' : 'horas'}';
+    return l10n.timeHours(h);
   }
 
   void _showPermissionDialog(
@@ -374,38 +391,6 @@ class _HomeTabState extends State<_HomeTab> {
               );
             },
             child: Text(l10n.changeNow),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
           ),
         ],
       ),

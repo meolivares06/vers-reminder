@@ -13,6 +13,7 @@ import 'package:vers_reminder/models/update_check_result.dart';
 import 'package:vers_reminder/providers/locale_provider.dart';
 import 'package:vers_reminder/providers/settings_provider.dart';
 import 'package:vers_reminder/providers/verse_provider.dart';
+import 'package:vers_reminder/screens/settings/about_screen.dart';
 import 'package:vers_reminder/screens/settings/settings_screen.dart';
 import 'package:vers_reminder/services/update_service.dart';
 import 'package:vers_reminder/widgets/async_action_button.dart';
@@ -64,7 +65,7 @@ void main() {
       'Sc.1 check finds an update available: tile subtitle and confirm '
       'dialog with Download/Cancel', (tester) async {
     final service = _FakeUpdateService(checkResult: _availableResult);
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     expect(find.text('Check for updates'), findsOneWidget);
     expect(find.text('Update available: v1.2.0+1'), findsNothing,
@@ -90,7 +91,7 @@ void main() {
   testWidgets('Sc.2 cancel dismisses the confirm dialog without downloading',
       (tester) async {
     final service = _FakeUpdateService(checkResult: _availableResult);
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     await tester.tap(find.text('Check for updates'));
     await _pumpAndPause(tester);
@@ -116,7 +117,7 @@ void main() {
       progressController: progress,
       downloadController: completion,
     );
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     await tester.tap(find.text('Check for updates'));
     await _pumpAndPause(tester);
@@ -159,7 +160,7 @@ void main() {
       checkResult: _availableResult,
       downloadController: controller,
     );
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     await tester.tap(find.text('Check for updates'));
     await _pumpAndPause(tester);
@@ -187,7 +188,7 @@ void main() {
       checkResult: _availableResult,
       downloadController: controller,
     );
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     await tester.tap(find.text('Check for updates'));
     await _pumpAndPause(tester);
@@ -224,7 +225,7 @@ void main() {
       checkResult: _availableResult,
       installResult: true,
     );
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     await tester.tap(find.text('Check for updates'));
     await _pumpAndPause(tester);
@@ -248,7 +249,7 @@ void main() {
       checkResult: _availableResult,
       installResult: false,
     );
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     await tester.tap(find.text('Check for updates'));
     await _pumpAndPause(tester);
@@ -271,7 +272,7 @@ void main() {
       (tester) async {
     final service =
         _FakeUpdateService(checkResult: UpdateCheckResult.empty());
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     await tester.tap(find.text('Check for updates'));
     await tester.pump();
@@ -286,7 +287,7 @@ void main() {
       (tester) async {
     final service =
         _FakeUpdateService(checkResult: UpdateCheckResult.failure('boom'));
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     await tester.tap(find.text('Check for updates'));
     await tester.pump();
@@ -307,7 +308,7 @@ void main() {
       'C2 cancel on the confirm dialog returns to idle and re-enables the '
       'tile (can re-trigger a check)', (tester) async {
     final service = _FakeUpdateService(checkResult: _availableResult);
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     // First check surfaces the confirm dialog.
     await tester.tap(find.text('Check for updates'));
@@ -338,7 +339,7 @@ void main() {
       checkResult: _availableResult,
       downloadError: StateError('network'),
     );
-    await _pumpSettingsScreen(tester, service);
+    await _pumpAboutScreen(tester, service);
 
     await tester.tap(find.text('Check for updates'));
     await _pumpAndPause(tester);
@@ -369,8 +370,8 @@ void main() {
   });
 
   testWidgets(
-      'wallpaper section renders first (above Scheduling) after the reorder',
-      (tester) async {
+      'Settings shows the four sections plus an About link, with no update '
+      'tiles inlined', (tester) async {
     final service = _FakeUpdateService(checkResult: UpdateCheckResult.empty());
     await tester.pumpWidget(
       MultiProvider(
@@ -394,30 +395,54 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
     await tester.pump();
 
-    // The Appearance (wallpaper) section is the first section visible at the
-    // top of the ListView — no section precedes it.
-    final appearanceTop = tester.getTopLeft(find.text('Appearance')).dy;
-    expect(appearanceTop, lessThan(200),
-        reason: 'wallpaper section sits at the top (no prior section)');
+    // The update-check tile must NOT be present in Settings — it lives in
+    // AboutScreen now.
+    expect(find.text('Check for updates'), findsNothing,
+        reason: 'update content moved out of Settings into AboutScreen');
 
-    // Scheduling does NOT precede appearance: scrolling down reveals it only
-    // AFTER the wallpaper section has scrolled away.
-    await tester.scrollUntilVisible(find.text('Scheduling'), 150);
-    await tester.pump();
-    expect(find.text('Scheduling'), findsOneWidget,
-        reason: 'Scheduling renders below the wallpaper section');
+    // Section order is browsable in order: Appearance, Scheduling, Categories,
+    // Actions, then the About link (scrolling reveals each below the fold).
+    for (final section in ['Appearance', 'Scheduling', 'Actions']) {
+      await tester.scrollUntilVisible(find.text(section), 150);
+      await tester.pump();
+      expect(find.text(section), findsWidgets,
+          reason: 'section "$section" present in Settings');
+    }
 
-    // The About section is still reachable at the very bottom.
-    await tester.scrollUntilVisible(find.text('Check for updates'), 300);
+    // The About link opens AboutScreen.
+    await tester.scrollUntilVisible(find.text('About'), 300);
     await tester.pump();
+    expect(find.text('About'), findsAtLeastNWidgets(1),
+        reason: 'About link present in Settings');
+    await tester.tap(find.byIcon(Icons.info_outline).last);
+    await _pumpAndPause(tester);
     expect(find.text('Check for updates'), findsOneWidget,
-        reason: 'About still reachable after the reorder');
+        reason: 'About tile opens AboutScreen with the update action');
   });
 
   testWidgets('Change now renders via the shared loader button',
       (tester) async {
     final service = _FakeUpdateService(checkResult: UpdateCheckResult.empty());
-    await _pumpSettingsScreen(tester, service);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<SettingsProvider>.value(
+              value: SettingsProvider()),
+          ChangeNotifierProvider<LocaleProvider>.value(
+              value: LocaleProvider()),
+          ChangeNotifierProvider<VerseProvider>.value(value: VerseProvider()),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: SettingsScreen(updateService: service),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
 
     // Change now lives in the Actions section; scroll to it.
     await tester.scrollUntilVisible(find.text('Change now'), 300);
@@ -428,13 +453,9 @@ void main() {
   });
 }
 
-/// Pumps the real [SettingsScreen] with a stubbed [UpdateService] and all
-/// providers it reads, then scrolls the About section into view.
-///
-/// The 300 ms wallpaper-preview timer scheduled in `initState` is fired
-/// explicitly so no timer is left pending; the preview settles into its
-/// placeholder state (no cached image in tests) rather than spinning.
-Future<void> _pumpSettingsScreen(
+/// Pumps the real [AboutScreen] with a stubbed [UpdateService] and all
+/// providers it reads.
+Future<void> _pumpAboutScreen(
   WidgetTester tester,
   _FakeUpdateService service,
 ) async {
@@ -450,16 +471,12 @@ Future<void> _pumpSettingsScreen(
         locale: const Locale('en'),
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: SettingsScreen(updateService: service),
+        home: AboutScreen(updateService: service),
       ),
     ),
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 350));
-  await tester.pump();
-
-  // The About section sits below the fold in the settings ListView.
-  await tester.scrollUntilVisible(find.text('Check for updates'), 300);
   await tester.pump();
 }
 

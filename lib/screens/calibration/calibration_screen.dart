@@ -424,7 +424,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
               const SizedBox(height: 16),
               Card(
                 color: settings.status == WallpaperStatus.error
-                    ? Colors.red.shade900
+                    ? Theme.of(context).colorScheme.error
                     : Colors.green.shade900,
                 child: Padding(
                   padding: const EdgeInsets.all(12),

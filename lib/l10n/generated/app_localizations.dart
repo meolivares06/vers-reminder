@@ -735,6 +735,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open image picker'**
   String get backgroundPickFailed;
+
+  /// No description provided for @currentWallpaperLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current wallpaper'**
+  String get currentWallpaperLabel;
+
+  /// Caption on the Home wallpaper card showing when it was last updated
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String updatedAtLabel(String time);
+
+  /// Subtitle on the Home active-categories tile
+  ///
+  /// In en, this message translates to:
+  /// **'Active: {count}'**
+  String activeCategoriesCount(int count);
+
+  /// Text shared when the user taps the share action on Home
+  ///
+  /// In en, this message translates to:
+  /// **'Download Vers Reminder: {url}'**
+  String shareApp(String url);
+
+  /// No description provided for @emailCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Email copied to clipboard'**
+  String get emailCopied;
+
+  /// Compact relative/frequency time unit for minute values
+  ///
+  /// In en, this message translates to:
+  /// **'{n} min'**
+  String timeMinutes(int n);
+
+  /// Compact relative/frequency time unit for hour values
+  ///
+  /// In en, this message translates to:
+  /// **'{n} h'**
+  String timeHours(int n);
+
+  /// No description provided for @previewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get previewLabel;
+
+  /// Single horizontal-offset caption resolved from the slider value's sign
+  ///
+  /// In en, this message translates to:
+  /// **'Offset: {direction} {value}'**
+  String offsetLabel(String direction, String value);
+
+  /// No description provided for @disabledLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Disabled'**
+  String get disabledLabel;
 }
 
 class _AppLocalizationsDelegate

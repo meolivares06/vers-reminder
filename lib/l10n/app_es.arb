@@ -170,5 +170,73 @@
   "pickBackgroundImage": "Elegí imagen de fondo",
   "replaceBackgroundImage": "Reemplazar imagen",
   "backgroundSelected": "Imagen de fondo seleccionada",
-  "backgroundPickFailed": "No se pudo abrir el selector"
+  "backgroundPickFailed": "No se pudo abrir el selector",
+  "currentWallpaperLabel": "Wallpaper actual",
+  "@updatedAtLabel": {
+    "description": "Leyenda en la tarjeta de wallpaper del inicio mostrando cuándo se actualizó",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "5 min"
+      }
+    }
+  },
+  "updatedAtLabel": "Actualizado {time}",
+  "@activeCategoriesCount": {
+    "description": "Subtítulo del tile de categorías activas en el inicio",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "activeCategoriesCount": "Activas: {count}",
+  "@shareApp": {
+    "description": "Texto compartido cuando el usuario toca la acción de compartir en el inicio",
+    "placeholders": {
+      "url": {
+        "type": "String",
+        "example": "https://github.com/meolivares06/vers-reminder"
+      }
+    }
+  },
+  "shareApp": "Descargá Vers Reminder: {url}",
+  "emailCopied": "Email copiado al portapapeles",
+  "@timeMinutes": {
+    "description": "Unidad de tiempo compacta para valores en minutos",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "15"
+      }
+    }
+  },
+  "timeMinutes": "{n} min",
+  "@timeHours": {
+    "description": "Unidad de tiempo compacta para valores en horas",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "timeHours": "{n} h",
+  "previewLabel": "Vista previa",
+  "@offsetLabel": {
+    "description": "Leyenda única del offset horizontal resuelta por el signo del valor",
+    "placeholders": {
+      "direction": {
+        "type": "String",
+        "example": "Izq"
+      },
+      "value": {
+        "type": "String",
+        "example": "-5"
+      }
+    }
+  },
+  "offsetLabel": "Desplazamiento: {direction} {value}",
+  "disabledLabel": "Desactivado"
 }

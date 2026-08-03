@@ -178,7 +178,9 @@ class _VerseFormScreenState extends State<VerseFormScreen> {
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
                             _errorMessage!,
-                            style: const TextStyle(color: Colors.red),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ),
                     ],

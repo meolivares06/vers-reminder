@@ -12,6 +12,7 @@ import 'providers/verse_provider.dart';
 import 'providers/locale_provider.dart';
 import 'screens/home_screen.dart';
 import 'services/wallpaper_scheduler.dart';
+import 'theme/app_theme.dart';
 import 'services/image_cache_service.dart';
 import 'services/temp_cleanup_service.dart';
 
@@ -68,13 +69,9 @@ class VersReminderApp extends StatelessWidget {
           return MaterialApp(
             title: 'Vers Reminder',
             debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.deepPurple,
-                brightness: Brightness.light,
-              ),
-              useMaterial3: true,
-            ),
+            theme: appLightTheme(),
+            darkTheme: appDarkTheme(),
+            themeMode: ThemeMode.system,
             locale: localeProvider.isInitialized
                 ? localeProvider.locale
                 : null,

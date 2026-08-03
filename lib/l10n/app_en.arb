@@ -166,5 +166,73 @@
   "pickBackgroundImage": "Choose background image",
   "replaceBackgroundImage": "Replace image",
   "backgroundSelected": "Background image selected",
-  "backgroundPickFailed": "Could not open image picker"
+  "backgroundPickFailed": "Could not open image picker",
+  "currentWallpaperLabel": "Current wallpaper",
+  "@updatedAtLabel": {
+    "description": "Caption on the Home wallpaper card showing when it was last updated",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "5 min"
+      }
+    }
+  },
+  "updatedAtLabel": "Updated {time}",
+  "@activeCategoriesCount": {
+    "description": "Subtitle on the Home active-categories tile",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "activeCategoriesCount": "Active: {count}",
+  "@shareApp": {
+    "description": "Text shared when the user taps the share action on Home",
+    "placeholders": {
+      "url": {
+        "type": "String",
+        "example": "https://github.com/meolivares06/vers-reminder"
+      }
+    }
+  },
+  "shareApp": "Download Vers Reminder: {url}",
+  "emailCopied": "Email copied to clipboard",
+  "@timeMinutes": {
+    "description": "Compact relative/frequency time unit for minute values",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "15"
+      }
+    }
+  },
+  "timeMinutes": "{n} min",
+  "@timeHours": {
+    "description": "Compact relative/frequency time unit for hour values",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "timeHours": "{n} h",
+  "previewLabel": "Preview",
+  "@offsetLabel": {
+    "description": "Single horizontal-offset caption resolved from the slider value's sign",
+    "placeholders": {
+      "direction": {
+        "type": "String",
+        "example": "Left"
+      },
+      "value": {
+        "type": "String",
+        "example": "-5"
+      }
+    }
+  },
+  "offsetLabel": "Offset: {direction} {value}",
+  "disabledLabel": "Disabled"
 }

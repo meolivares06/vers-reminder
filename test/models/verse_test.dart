@@ -55,5 +55,59 @@ void main() {
       expect(copy.textEs, 'Modificado');
       expect(copy.citation, 'Orig 1:1');
     });
+
+    group('textFor', () {
+      test('UX-HOME-005 returns textPt when locale is pt and textPt non-empty',
+          () {
+        final verse = Verse(
+          textEs: 'Texto en ES',
+          textPt: 'Texto em PT',
+          citation: 'Juan 3:16',
+        );
+        expect(verse.textFor('pt'), 'Texto em PT');
+      });
+
+      test('UX-HOME-005 falls back to textEs when locale is pt and textPt null',
+          () {
+        final verse = Verse(
+          textEs: 'Texto en ES',
+          textPt: null,
+          citation: 'Juan 3:16',
+        );
+        expect(verse.textFor('pt'), 'Texto en ES',
+            reason: 'null textPt must not render an empty string');
+      });
+
+      test('UX-HOME-005 falls back to textEs when locale is pt and textPt empty',
+          () {
+        final verse = Verse(
+          textEs: 'Texto en ES',
+          textPt: '',
+          citation: 'Juan 3:16',
+        );
+        expect(verse.textFor('pt'), 'Texto en ES',
+            reason: 'empty textPt must not render an empty string');
+      });
+
+      test('UX-HOME-005 returns textEs for es locale', () {
+        final verse = Verse(
+          textEs: 'Texto en ES',
+          textPt: 'Texto em PT',
+          citation: 'Juan 3:16',
+        );
+        expect(verse.textFor('es'), 'Texto en ES');
+      });
+
+      test('UX-HOME-005 returns textEs for non-pt/non-es locales (e.g. en)',
+          () {
+        final verse = Verse(
+          textEs: 'Texto en ES',
+          textPt: 'Texto em PT',
+          citation: 'Juan 3:16',
+        );
+        expect(verse.textFor('en'), 'Texto en ES',
+            reason: 'no textEn field — other locales fall back to Spanish');
+      });
+    });
   });
 }

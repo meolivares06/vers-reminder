@@ -5,6 +5,16 @@ class Verse {
   final String citation;
   final DateTime createdAt;
 
+  /// Returns the verse text for the active [localeCode].
+  ///
+  /// es/pt only (there is no `textEn` field): Portuguese wins only when the
+  /// locale is `pt` AND `textPt` is non-empty; otherwise it falls back to
+  /// the Spanish text. Mirrors `wallpaper_generator.dart` text selection.
+  String textFor(String localeCode) =>
+      (localeCode == 'pt' && textPt != null && textPt!.isNotEmpty)
+          ? textPt!
+          : textEs;
+
   Verse({
     this.id,
     required this.textEs,

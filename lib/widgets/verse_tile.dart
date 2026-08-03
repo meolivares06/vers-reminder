@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/verse.dart';
 
-class VerseTile extends StatelessWidget {
+import '../models/verse.dart';class VerseTile extends StatelessWidget {
   final Verse verse;
   final VoidCallback onTap;
   final VoidCallback onDelete;
@@ -23,10 +22,13 @@ class VerseTile extends StatelessWidget {
         return false;
       },
       background: Container(
-        color: Colors.red,
+        color: Theme.of(context).colorScheme.errorContainer,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
-        child: const Icon(Icons.delete, color: Colors.white),
+        child: Icon(
+          Icons.delete,
+          color: Theme.of(context).colorScheme.onErrorContainer,
+        ),
       ),
       child: ListTile(
         title: Text(
@@ -36,7 +38,7 @@ class VerseTile extends StatelessWidget {
               ),
         ),
         subtitle: Text(
-          verse.textEs,
+          verse.textFor(Localizations.localeOf(context).languageCode),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),

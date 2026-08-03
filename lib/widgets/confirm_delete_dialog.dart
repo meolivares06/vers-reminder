@@ -29,7 +29,7 @@ class ConfirmDeleteDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(true),
           child: Text(
             l10n.delete,
-            style: const TextStyle(color: Colors.red),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         ),
       ],

@@ -26,6 +26,15 @@ Widget buildTestApp(Locale locale) {
               Text(l10n.citation),
               Text(l10n.citationRequired),
               Text(l10n.textRequired),
+              Text(l10n.disabledLabel),
+              Text(l10n.currentWallpaperLabel),
+              Text(l10n.previewLabel),
+              Text(l10n.emailCopied),
+              Text(l10n.activeCategoriesCount(3)),
+              Text(l10n.shareApp('https://example.com')),
+              Text(l10n.updatedAtLabel(l10n.timeMinutes(5))),
+              Text(l10n.offsetLabel(l10n.leftOffset, '-12')),
+              Text(l10n.timeHours(2)),
             ],
           ),
         );
@@ -54,6 +63,16 @@ void main() {
       expect(find.text('Cita'), findsOneWidget);
       expect(find.text('La cita es requerida'), findsOneWidget);
       expect(find.text('El texto es requerido'), findsOneWidget);
+      expect(find.text('Desactivado'), findsOneWidget);
+      expect(find.text('Wallpaper actual'), findsOneWidget);
+      expect(find.text('Vista previa'), findsOneWidget);
+      expect(find.text('Email copiado al portapapeles'), findsOneWidget);
+      expect(find.text('Activas: 3'), findsOneWidget);
+      expect(find.text('Descargá Vers Reminder: https://example.com'),
+          findsOneWidget);
+      expect(find.text('Actualizado 5 min'), findsOneWidget);
+      expect(find.text('Desplazamiento: Izq -12'), findsOneWidget);
+      expect(find.text('2 h'), findsOneWidget);
     });
 
     testWidgets('returns Portuguese strings when locale is PT', (tester) async {
@@ -72,6 +91,17 @@ void main() {
       expect(find.text('Citação'), findsOneWidget);
       expect(find.text('A citação é obrigatória'), findsOneWidget);
       expect(find.text('O texto é obrigatório'), findsOneWidget);
+      expect(find.text('Desativado'), findsOneWidget);
+      expect(find.text('Wallpaper atual'), findsOneWidget);
+      expect(find.text('Pré-visualização'), findsOneWidget);
+      expect(find.text('Email copiado para a área de transferência'),
+          findsOneWidget);
+      expect(find.text('Ativas: 3'), findsOneWidget);
+      expect(find.text('Baixe o Vers Reminder: https://example.com'),
+          findsOneWidget);
+      expect(find.text('Atualizado 5 min'), findsOneWidget);
+      expect(find.text('Deslocamento: Esq -12'), findsOneWidget);
+      expect(find.text('2 h'), findsOneWidget);
     });
 
     testWidgets('returns English strings when locale is EN', (tester) async {
@@ -90,6 +120,16 @@ void main() {
       expect(find.text('Citation'), findsOneWidget);
       expect(find.text('Citation is required'), findsOneWidget);
       expect(find.text('Text is required'), findsOneWidget);
+      expect(find.text('Disabled'), findsOneWidget);
+      expect(find.text('Current wallpaper'), findsOneWidget);
+      expect(find.text('Preview'), findsOneWidget);
+      expect(find.text('Email copied to clipboard'), findsOneWidget);
+      expect(find.text('Active: 3'), findsOneWidget);
+      expect(find.text('Download Vers Reminder: https://example.com'),
+          findsOneWidget);
+      expect(find.text('Updated 5 min'), findsOneWidget);
+      expect(find.text('Offset: Left -12'), findsOneWidget);
+      expect(find.text('2 h'), findsOneWidget);
     });
 
     testWidgets('locale switching from ES to PT updates strings',
