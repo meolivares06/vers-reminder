@@ -90,18 +90,18 @@ void main() {
       await pumpHome(tester, settings);
 
       expect(
-        find.text('Your wallpaper'),
+        find.text('Current wallpaper'),
         findsOneWidget,
         reason: 'localized label on the card when a wallpaper exists',
       );
       expect(
-        find.textContaining('ago'),
+        find.textContaining('Updated'),
         findsOneWidget,
         reason:
             'updatedAtLabel caption is derived from the persisted timestamp',
       );
       expect(
-        find.text('Tap to create your first wallpaper'),
+        find.text('No wallpaper yet. Tap to generate your first one.'),
         findsNothing,
         reason: 'empty-state prompt must not render when a wallpaper exists',
       );
@@ -139,17 +139,17 @@ void main() {
     await pumpHome(tester, settings);
 
     expect(
-      find.text('Tap to create your first wallpaper'),
+      find.text('No wallpaper yet. Tap to generate your first one.'),
       findsOneWidget,
       reason: 'empty-state prompt guides the user to generate their first',
     );
     expect(
-      find.text('Your wallpaper'),
+      find.text('Current wallpaper'),
       findsNothing,
       reason: 'no caption when no wallpaper exists',
     );
     expect(
-      find.textContaining('ago'),
+      find.textContaining('Updated'),
       findsNothing,
       reason: 'no updated-time caption in the empty state',
     );
@@ -214,7 +214,7 @@ void main() {
     ) async {
       await pumpWithOffset(tester, const Duration(seconds: 20));
       expect(
-        find.text('0 min ago'),
+        find.text('Updated 0 min'),
         findsOneWidget,
         reason: 'sub-minute age maps to timeMinutes(0)',
       );
@@ -223,7 +223,7 @@ void main() {
     testWidgets('a few minutes render the exact minute count', (tester) async {
       await pumpWithOffset(tester, const Duration(minutes: 5, seconds: 5));
       expect(
-        find.text('5 min ago'),
+        find.text('Updated 5 min'),
         findsOneWidget,
         reason: 'ages under one hour map to timeMinutes(n)',
       );
@@ -232,7 +232,7 @@ void main() {
     testWidgets('over an hour renders the hour count', (tester) async {
       await pumpWithOffset(tester, const Duration(hours: 2, minutes: 5));
       expect(
-        find.text('2 h ago'),
+        find.text('Updated 2 h'),
         findsOneWidget,
         reason: 'ages over one hour map to timeHours(n)',
       );
