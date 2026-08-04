@@ -405,13 +405,9 @@ class _AboutScreenState extends State<AboutScreen> {
             },
           ),
           const SizedBox(height: 12),
-          SectionHeader(title: 'Reconocimientos'),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'A Alejandro Delgado Vaillant por su gran aporte.',
-              style: TextStyle(fontStyle: FontStyle.italic),
-            ),
+          const SectionHeader(
+            title: 'Reconocimientos',
+            subtitle: 'A Alejandro Delgado Vaillant por su gran aporte.',
           ),
           const SizedBox(height: 32),
         ],
