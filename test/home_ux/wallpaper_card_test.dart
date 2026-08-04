@@ -78,6 +78,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump();
+    // F6: allow async File.exists() to complete and setState to rebuild.
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump();
     return settings;
   }
 
@@ -238,4 +241,66 @@ void main() {
       );
     });
   });
+
+  // ── F6 RED: Async file check replaces existsSync in build ──
+
+  group('F6 async file check (UX-HOME-001)', () {
+    test('F6-RED existsSync absent from _HomeTabState.build', () {
+      final source =
+          File('lib/screens/home_screen.dart').readAsStringSync();
+
+      // Locate the _HomeTabState.build() method.
+      final buildStart = source.indexOf('Widget build(BuildContext context) {',
+          source.indexOf('class _HomeTabState'));
+      expect(buildStart, greaterThan(0),
+          reason: '_HomeTabState.build method must exist');
+
+      // Find the closing brace of build() (scan forward from the method body).
+      final buildEnd = _findMethodEnd(source, buildStart);
+      final buildBody = source.substring(buildStart, buildEnd);
+
+      // RED: existsSync must NOT appear inside _HomeTabState.build().
+      expect(buildBody.contains('existsSync'), isFalse,
+          reason: '_HomeTabState.build() must not call File.existsSync() — '
+              'the existence check must use the cached _wallpaperFileExists '
+              'flag updated asynchronously');
+    });
+
+    testWidgets(
+      'F6-GREEN card renders with cached _wallpaperFileExists flag after '
+      'existsSync removal',
+      (tester) async {
+        final settings = SettingsProvider()
+          ..setWallpaperCard(path: wallpaperPath, timestamp: DateTime.now());
+        await pumpHome(tester, settings);
+        // Allow the async file-existence check to settle.
+        await tester.pump(const Duration(milliseconds: 200));
+
+        // Card must render the wallpaper — the optimistic flag (true when
+        // path is non-null) holds because the temp file exists.
+        expect(find.byType(Card), findsOneWidget);
+        expect(
+          find.byType(Image),
+          findsOneWidget,
+          reason: 'cached _wallpaperFileExists flag allows the Image widget '
+              'to render without sync existsSync in build',
+        );
+      },
+    );
+  });
+}
+
+/// Returns the index of the closing brace that matches the opening at
+/// [start] (which should point to the `{` after a method/class signature).
+int _findMethodEnd(String source, int start) {
+  var depth = 0;
+  for (var i = start; i < source.length; i++) {
+    if (source[i] == '{') {
+      depth++;
+    } else if (source[i] == '}') {
+      depth--;
+      if (depth == 0) return i + 1;
+    }
+  }
+  return source.length;
 }
