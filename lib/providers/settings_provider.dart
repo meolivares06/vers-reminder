@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -143,13 +144,22 @@ class SettingsProvider extends ChangeNotifier {
     // Re-register WorkManager task if enabled (survives reboot)
     if (_isEnabled && _activeCategoryIds.isNotEmpty) {
       await WallpaperScheduler.registerPeriodic(_frequencyMinutes);
-      // Pre-generate wallpapers for background scheduler to use
-      await _preGenerateFutureWallpapers(locale: 'es');
       await NotificationService.show(_frequencyText);
-    }
 
-    _isLoading = false;
-    notifyListeners();
+      // F3: dismiss loading BEFORE fire-and-forget pre-gen so the app
+      // becomes interactive immediately; pre-gen failures are logged.
+      _isLoading = false;
+      notifyListeners();
+
+      unawaited(
+        _preGenerateFutureWallpapers(locale: 'es').catchError((e, st) {
+          debugPrint('SettingsProvider: pre-gen failed: $e\n$st');
+        }),
+      );
+    } else {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> setHorizontalOffset(int value) async {
@@ -188,10 +198,14 @@ class SettingsProvider extends ChangeNotifier {
     if (enabled && _activeCategoryIds.isNotEmpty) {
       await WallpaperScheduler.registerPeriodic(_frequencyMinutes);
       await NotificationService.show(_frequencyText);
-      // Pre-generate wallpapers for the background scheduler
+      // F3: fire-and-forget pre-gen for background scheduler (non-blocking)
       final prefs = await SharedPreferences.getInstance();
       final locale = prefs.getString('locale_override') ?? 'es';
-      await _preGenerateFutureWallpapers(locale: locale);
+      unawaited(
+        _preGenerateFutureWallpapers(locale: locale).catchError((e, st) {
+          debugPrint('SettingsProvider: pre-gen failed: $e\n$st');
+        }),
+      );
     } else {
       await WallpaperScheduler.cancel();
       await NotificationService.cancel();

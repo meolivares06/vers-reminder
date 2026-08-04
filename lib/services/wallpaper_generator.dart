@@ -245,6 +245,7 @@ class WallpaperGenerator {
     await Future<void>.delayed(Duration.zero);
 
     // --- 2. Set up Canvas at exact screen dimensions ---
+    ui.Picture? picture; // F1: declared before try so finally can null-guard dispose
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(
       recorder,
@@ -328,69 +329,79 @@ class WallpaperGenerator {
         ellipsis: '...',
       )..layout(maxWidth: maxTextWidth);
 
-      final citationPainter = TextPainter(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: '— ',
-              style: citationMeasureStyle(citationFontSize).copyWith(
-                color: citationRuleColor,
-                fontWeight: FontWeight.w500,
-                shadows: [shadow],
+      // F2: nested try/finally — citationPainter scoped inside textPainter's
+      // disposal block so both are guaranteed disposed in reverse-creation order.
+      try {
+        final citationPainter = TextPainter(
+          text: TextSpan(
+            children: [
+              TextSpan(
+                text: '— ',
+                style: citationMeasureStyle(citationFontSize).copyWith(
+                  color: citationRuleColor,
+                  fontWeight: FontWeight.w500,
+                  shadows: [shadow],
+                ),
               ),
-            ),
-            TextSpan(
-              text: citationDisplayText(citation),
-              style: citationMeasureStyle(citationFontSize).copyWith(
-                color: Colors.white70,
-                fontWeight: FontWeight.w500,
-                shadows: [shadow],
+              TextSpan(
+                text: citationDisplayText(citation),
+                style: citationMeasureStyle(citationFontSize).copyWith(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w500,
+                  shadows: [shadow],
+                ),
               ),
-            ),
-          ],
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout(maxWidth: maxTextWidth);
+            ],
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: maxTextWidth);
 
-      final totalTextHeight = textPainter.height + gap + citationPainter.height;
+        final totalTextHeight =
+            textPainter.height + gap + citationPainter.height;
 
-      // Vertical position (clamp to stay on screen)
-      final startY = switch (verticalAlignment) {
-        'top' => padding,
-        'bottom' => (screenHeight - totalTextHeight - padding).clamp(
+        // Vertical position (clamp to stay on screen)
+        final startY = switch (verticalAlignment) {
+          'top' => padding,
+          'bottom' => (screenHeight - totalTextHeight - padding).clamp(
+            0.0,
+            screenHeight.toDouble(),
+          ),
+          _ => ((screenHeight - totalTextHeight) / 2).clamp(
+            0.0,
+            screenHeight.toDouble(),
+          ),
+        };
+
+        // Horizontal position with user offset (clamp to screen edges)
+        final startX = (padding + horizontalOffset).clamp(
           0.0,
-          screenHeight.toDouble(),
-        ),
-        _ => ((screenHeight - totalTextHeight) / 2).clamp(
-          0.0,
-          screenHeight.toDouble(),
-        ),
-      };
+          (screenWidth - textPainter.width - gap).clamp(
+            0.0,
+            screenWidth.toDouble(),
+          ),
+        );
 
-      // Horizontal position with user offset (clamp to screen edges)
-      final startX = (padding + horizontalOffset).clamp(
-        0.0,
-        (screenWidth - textPainter.width - gap).clamp(
-          0.0,
-          screenWidth.toDouble(),
-        ),
-      );
+        // INNER: paint scope — citationPainter.dispose() in inner finally
+        try {
+          textPainter.paint(canvas, Offset(startX, startY));
 
-      textPainter.paint(canvas, Offset(startX, startY));
-
-      final citationTop = startY + textPainter.height + gap;
-      citationPainter.paint(canvas, Offset(startX, citationTop));
-
-      textPainter.dispose();
-      citationPainter.dispose();
+          final citationTop = startY + textPainter.height + gap;
+          citationPainter.paint(canvas, Offset(startX, citationTop));
+        } finally {
+          citationPainter.dispose();
+        }
+      } finally {
+        textPainter.dispose();
+      }
 
       // Yield before rasterization — PNG encode is CPU-heavy
       await Future<void>.delayed(Duration.zero);
 
       // --- 6. Rasterize to PNG via background isolate ---
-      final picture = recorder.endRecording();
+      picture = recorder.endRecording(); // F1: assign outer nullable variable
       final image = await picture.toImage(screenWidth, screenHeight);
       picture.dispose();
+      picture = null; // F1: after success-path dispose, null-out so finally guard is no-op
       // rawRgba is fast — GPU readback without PNG encoding
       final byteData = await image.toByteData(
         format: ui.ImageByteFormat.rawRgba,
@@ -412,6 +423,7 @@ class WallpaperGenerator {
         return _encodePngWorker((rawBytes, screenWidth, screenHeight));
       }
     } finally {
+      picture?.dispose(); // F1: error-path cleanup — no-op on success (nulled above)
       bg.dispose();
     }
   }

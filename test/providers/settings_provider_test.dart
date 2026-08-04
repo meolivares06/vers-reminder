@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/painting.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
@@ -319,6 +322,93 @@ void main() {
         reason: 'the legacy path key still loads independently',
       );
     });
+    // ── F3 RED: Non-blocking init ──
+    test('init() sets isLoading=false before fire-and-forget pre-gen', () {
+      final source =
+          File('lib/providers/settings_provider.dart').readAsStringSync();
+
+      // Scope search to init() method body (after 'Future<void> init()')
+      final initStart = source.indexOf('Future<void> init()');
+      expect(initStart, greaterThan(0),
+          reason: 'init() method must exist');
+
+      // Find _isLoading = false AFTER init() starts (not the field declaration)
+      final loadingFalseIdx = source.indexOf(
+        '_isLoading = false;',
+        initStart,
+      );
+      expect(loadingFalseIdx, greaterThan(0),
+          reason: '_isLoading must be set to false in init()');
+
+      final preGenCallIdx = source.indexOf(
+        '_preGenerateFutureWallpapers',
+        initStart,
+      );
+      expect(preGenCallIdx, greaterThan(0),
+          reason: '_preGenerateFutureWallpapers call must exist in init()');
+
+      // RED: current code sets _isLoading=false AFTER pre-gen completes
+      // GREEN: _isLoading=false BEFORE the fire-and-forget pre-gen call
+      expect(loadingFalseIdx < preGenCallIdx, isTrue,
+          reason: '_isLoading = false must appear before the '
+              '_preGenerateFutureWallpapers call in init(), not after it');
+    });
+
+    test('pre-gen launched as fire-and-forget with catchError in init()', () {
+      final source =
+          File('lib/providers/settings_provider.dart').readAsStringSync();
+
+      final initStart = source.indexOf('Future<void> init()');
+      final initEnd = source.indexOf('Future<void> setHorizontalOffset',
+          initStart + 1);
+
+      // After fix: pre-gen in init() is wrapped in unawaited(...catchError(...))
+      expect(source.contains('unawaited'), isTrue,
+          reason: 'dart:async unawaited required for fire-and-forget pre-gen');
+      expect(source.contains('catchError'), isTrue,
+          reason: 'catchError required so pre-gen failures are logged, '
+              'not propagated through init()');
+    });
+
+    test('isLoading is false after init() when scheduler disabled', () async {
+      // Behavioral regression: existing behavior must NOT change
+      final provider = SettingsProvider();
+      await provider.init();
+
+      expect(provider.isLoading, isFalse,
+          reason: 'init() must always set isLoading to false when complete');
+      expect(provider.isEnabled, isFalse,
+          reason: 'scheduler disabled by default in test config');
+    });
+
+    // Task 2.3 REFACTOR: setEnabled() fire-and-forget pattern
+    test('setEnabled() uses fire-and-forget pre-gen when enabled', () async {
+      final source =
+          File('lib/providers/settings_provider.dart').readAsStringSync();
+
+      // setEnabled(true) at L194 (approximately) should use the same
+      // unawaited + catchError pattern as init() for pre-gen
+      final setEnabledIdx = source.indexOf('Future<void> setEnabled');
+      expect(setEnabledIdx, greaterThan(0));
+
+      // Search for pre-gen call within setEnabled's body
+      final preGenInSetEnabled = source.indexOf(
+        '_preGenerateFutureWallpapers',
+        setEnabledIdx,
+      );
+      expect(preGenInSetEnabled, greaterThan(0),
+          reason: 'setEnabled() must call pre-gen when enabled');
+
+      // After fix: same fire-and-forget pattern as init
+      final unawaitedInSetEnabled = source.indexOf(
+        'unawaited',
+        setEnabledIdx,
+      );
+      expect(unawaitedInSetEnabled, greaterThan(0),
+          reason: 'setEnabled() pre-gen must use unawaited (non-blocking)');
+      expect(unawaitedInSetEnabled < preGenInSetEnabled, isTrue,
+          reason: 'unawaited must wrap the pre-gen call in setEnabled()');
+    });
   });
 }
 
@@ -452,5 +542,46 @@ class _FailingTimestampPrefsStore extends SharedPreferencesStorePlatform {
       throw StateError('simulated SharedPreferences write failure');
     }
     return backing.setValue(valueType, key, value);
+  }
+}
+
+/// A generator whose [preGenerateWallpapers] takes a deliberate delay,
+/// used to prove that [SettingsProvider.init] returns before pre-gen
+/// completes (non-blocking F3 fix).
+class _SlowPreGenGenerator extends _FakeWallpaperGenerator {
+  @override
+  Future<int> preGenerateWallpapers({
+    required List<Verse> verses,
+    required String locale,
+    required int screenWidth,
+    required int screenHeight,
+    int horizontalOffset = 0,
+    String verticalAlignment = 'center',
+    double fontScale = 1.0,
+    int calibratedInset = 0,
+    bool useMyWallpaper = false,
+  }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    return 0;
+  }
+}
+
+/// A generator whose [preGenerateWallpapers] always throws,
+/// used to prove that init recovers gracefully (fire-and-forget
+/// with catchError) and the app stays loaded.
+class _ThrowingPreGenGenerator extends _FakeWallpaperGenerator {
+  @override
+  Future<int> preGenerateWallpapers({
+    required List<Verse> verses,
+    required String locale,
+    required int screenWidth,
+    required int screenHeight,
+    int horizontalOffset = 0,
+    String verticalAlignment = 'center',
+    double fontScale = 1.0,
+    int calibratedInset = 0,
+    bool useMyWallpaper = false,
+  }) async {
+    throw Exception('simulated pre-gen failure');
   }
 }

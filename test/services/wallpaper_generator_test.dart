@@ -579,6 +579,116 @@ void main() {
       );
     });
   });
+
+  group('_compositeCanvas resource disposal (F1+F2 RED)', () {
+    final generator = WallpaperGenerator.instance;
+
+    // ── Task 1.1 RED: F1 — PictureRecorder disposal ──
+    test('finally block contains null-guarded picture dispose pattern', () {
+      final source =
+          File('lib/services/wallpaper_generator.dart').readAsStringSync();
+
+      // After fix: ui.Picture? picture declared before try block
+      expect(
+        source.contains('ui.Picture? picture'),
+        isTrue,
+        reason:
+            'F1 fix requires ui.Picture? picture declared before the try block '
+            'so the finally block can null-guard picture?.dispose() on error paths',
+      );
+
+      // After fix: picture?.dispose() in finally before bg.dispose()
+      final finallyIdx = source.lastIndexOf('finally');
+      expect(finallyIdx, greaterThan(0), reason: 'finally block must exist');
+      final pictureDisposeIdx = source.indexOf(
+        'picture?.dispose()',
+        finallyIdx,
+      );
+      final bgDisposeIdx = source.indexOf('bg.dispose()', finallyIdx);
+
+      expect(
+        pictureDisposeIdx,
+        greaterThan(0),
+        reason: 'finally must contain picture?.dispose() for error-path cleanup',
+      );
+      expect(
+        pictureDisposeIdx < bgDisposeIdx,
+        isTrue,
+        reason: 'picture?.dispose() must run before bg.dispose() — '
+            'reverse creation order (recorder → bg)',
+      );
+
+      // After fix: picture = null after success-path picture.dispose()
+      final pictureNullIdx = source.indexOf('picture = null');
+      expect(
+        pictureNullIdx,
+        greaterThan(0),
+        reason: 'after success-path picture.dispose(), picture must be set to null '
+            'so the finally guard is a no-op on success and active on error',
+      );
+    });
+
+    // ── Task 1.1 RED: F2 — TextPainter disposal nesting ──
+    test(
+      'citationPainter nested inside textPainter disposal scope '
+      '(reverse-creation order)',
+      () {
+        final source =
+            File('lib/services/wallpaper_generator.dart').readAsStringSync();
+
+        final textDisposeIdx = source.indexOf('textPainter.dispose()');
+        final citationDisposeIdx = source.indexOf(
+          'citationPainter.dispose()',
+        );
+
+        expect(
+          citationDisposeIdx,
+          greaterThan(0),
+          reason: 'citationPainter must be disposed in a finally block',
+        );
+        expect(
+          textDisposeIdx,
+          greaterThan(0),
+          reason: 'textPainter must be disposed in a finally block',
+        );
+        // Reverse creation order: citation (created last) → text (created first)
+        expect(
+          citationDisposeIdx < textDisposeIdx,
+          isTrue,
+          reason:
+              'dispose must follow reverse creation order: '
+              'citationPainter.dispose() before textPainter.dispose()',
+        );
+      },
+    );
+
+    // ── Task 3.3 behavioral: memory stress via repeated compositing ──
+    test('5× consecutive compositeFromBytes returns non-null each time', () async {
+      final srcBytes = _createTestImageBytes(100, 200);
+      final verse = Verse(textEs: 'Stress test', citation: 'Test 1:1');
+
+      for (int i = 0; i < 5; i++) {
+        final result = await generator.compositeFromBytes(
+          backgroundBytes: srcBytes,
+          verse: verse,
+          locale: 'es',
+          screenWidth: 270,
+          screenHeight: 480,
+        );
+        expect(
+          result,
+          isNotNull,
+          reason: 'iteration $i: compositeFromBytes should return valid bytes '
+              'without native resource leaks causing GPU exhaustion',
+        );
+        expect(
+          result!.length,
+          greaterThan(100),
+          reason: 'iteration $i: output should be a valid PNG of reasonable size',
+        );
+      }
+    });
+  });
 }
 
 /// Creates a synthetic image in memory and returns its PNG bytes.
