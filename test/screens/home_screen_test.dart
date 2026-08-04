@@ -86,6 +86,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump();
+    // F6: allow async File.exists() to complete and setState to rebuild.
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump();
     return settingsProvider;
   }
 

@@ -409,6 +409,123 @@ void main() {
       expect(unawaitedInSetEnabled < preGenInSetEnabled, isTrue,
           reason: 'unawaited must wrap the pre-gen call in setEnabled()');
     });
+
+    // ── F4 / F5 RED: Re-entrancy guard + pre-gen mutex ──
+
+    test('F4-RED concurrent triggerNow produces exactly one generation',
+        () async {
+      await DatabaseService.instance.insertCategory('Cat 1', isSeed: true);
+      await DatabaseService.instance.insertVerse(
+        Verse(textEs: 'Texto', citation: 'Juan 3:16'),
+        [1],
+      );
+
+      final fake = _CountingFakeGenerator();
+      final provider = SettingsProvider(wallpaperGenerator: fake);
+      await provider.init();
+      await provider.toggleCategory(1);
+
+      // Fire two triggerNow calls concurrently — the guard must block
+      // the second one from reaching generateAndSetWallpaper.
+      final f1 =
+          provider.triggerNow(verseProvider: VerseProvider(), locale: 'es');
+      final f2 =
+          provider.triggerNow(verseProvider: VerseProvider(), locale: 'es');
+      await Future.wait([f1, f2]);
+
+      expect(fake.generateCallCount, 1,
+          reason: 'only one generateAndSetWallpaper call must proceed; '
+              'the second triggerNow must return early via the re-entrancy '
+              'guard');
+    });
+
+    test('F4-RED retry after error is allowed by the guard', () async {
+      await DatabaseService.instance.insertCategory('Cat 1', isSeed: true);
+      await DatabaseService.instance.insertVerse(
+        Verse(textEs: 'Texto', citation: 'Juan 3:16'),
+        [1],
+      );
+
+      final fake = _CountingFakeGenerator();
+      final provider = SettingsProvider(wallpaperGenerator: fake);
+      await provider.init();
+      await provider.toggleCategory(1);
+
+      // Simulate a failed generation: the guard must NOT block retries.
+      await provider.triggerNow(verseProvider: VerseProvider(), locale: 'es');
+      expect(fake.generateCallCount, 1);
+      expect(provider.status, WallpaperStatus.updated);
+
+      // Artificially set status to error so we can test the retry path.
+      // (The guard must only skip when status == generating, not error.)
+      provider.setStatusForTest(WallpaperStatus.error);
+
+      await provider.triggerNow(verseProvider: VerseProvider(), locale: 'es');
+
+      expect(fake.generateCallCount, 2,
+          reason: 'retry after error must pass the guard and '
+              'call generateAndSetWallpaper again');
+    });
+
+    test('F5-RED mutex blocks overlapping pre-gen in triggerNow path',
+        () async {
+      await DatabaseService.instance.insertCategory('Cat 1', isSeed: true);
+      await DatabaseService.instance.insertVerse(
+        Verse(textEs: 'Texto', citation: 'Juan 3:16'),
+        [1],
+      );
+
+      // A generator whose preGenerateWallpapers is slow enough that a
+      // second triggerNow can reach the mutex while the first is still
+      // inside pre-gen.
+      final fake = _SlowCountingPreGenGenerator();
+      final provider = SettingsProvider(wallpaperGenerator: fake);
+      await provider.init();
+      await provider.toggleCategory(1);
+
+      // First triggerNow: generates + calls slow pre-gen (starts delay).
+      final f1 =
+          provider.triggerNow(verseProvider: VerseProvider(), locale: 'es');
+      // Give pre-gen enough time to enter the mutex before the second
+      // triggerNow finishes its own generateAndSetWallpaper step.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      // Second triggerNow: generation succeeds, then calls pre-gen —
+      // the mutex should skip it because the first pre-gen is still running.
+      final f2 =
+          provider.triggerNow(verseProvider: VerseProvider(), locale: 'es');
+      await Future.wait([f1, f2]);
+
+      expect(fake.preGenCallCount, 1,
+          reason: 'the second triggerNow must find the mutex locked '
+              'and skip its pre-gen call entirely');
+    });
+
+    test('F5-RED mutex resets so a sequential pre-gen call succeeds', () async {
+      await DatabaseService.instance.insertCategory('Cat 1', isSeed: true);
+      await DatabaseService.instance.insertVerse(
+        Verse(textEs: 'Texto', citation: 'Juan 3:16'),
+        [1],
+      );
+
+      final fake = _CountingFakeGenerator();
+      final provider = SettingsProvider(wallpaperGenerator: fake);
+      await provider.init();
+      await provider.toggleCategory(1);
+
+      // First full triggerNow: generates + pre-gen completes.
+      await provider.triggerNow(verseProvider: VerseProvider(), locale: 'es');
+      expect(fake.generateCallCount, 1);
+      expect(fake.preGenCallCount, 1);
+
+      // Second triggerNow — the mutex must have been reset so pre-gen
+      // runs again.
+      await provider.triggerNow(verseProvider: VerseProvider(), locale: 'es');
+      expect(fake.generateCallCount, 2);
+      expect(fake.preGenCallCount, 2,
+          reason: 'the mutex must be reset after the first pre-gen '
+              'completes so sequential calls are not blocked');
+    });
   });
 }
 
@@ -561,6 +678,87 @@ class _SlowPreGenGenerator extends _FakeWallpaperGenerator {
     int calibratedInset = 0,
     bool useMyWallpaper = false,
   }) async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    return 0;
+  }
+}
+
+/// A generator that counts calls to both [generateAndSetWallpaper] and
+/// [preGenerateWallpapers], used to prove re-entrancy (F4) and mutex (F5)
+/// guards.
+class _CountingFakeGenerator extends _FakeWallpaperGenerator {
+  int generateCallCount = 0;
+  int preGenCallCount = 0;
+
+  @override
+  Future<WallpaperResult> generateAndSetWallpaper({
+    required Verse verse,
+    required String locale,
+    int? screenWidth,
+    int? screenHeight,
+    int horizontalOffset = 0,
+    String verticalAlignment = 'center',
+    double fontScale = 1.0,
+    int calibratedInset = 0,
+    bool useMyWallpaper = false,
+  }) async {
+    generateCallCount++;
+    return super.generateAndSetWallpaper(
+      verse: verse,
+      locale: locale,
+      screenWidth: screenWidth,
+      screenHeight: screenHeight,
+      horizontalOffset: horizontalOffset,
+      verticalAlignment: verticalAlignment,
+      fontScale: fontScale,
+      calibratedInset: calibratedInset,
+      useMyWallpaper: useMyWallpaper,
+    );
+  }
+
+  @override
+  Future<int> preGenerateWallpapers({
+    required List<Verse> verses,
+    required String locale,
+    required int screenWidth,
+    required int screenHeight,
+    int horizontalOffset = 0,
+    String verticalAlignment = 'center',
+    double fontScale = 1.0,
+    int calibratedInset = 0,
+    bool useMyWallpaper = false,
+  }) async {
+    preGenCallCount++;
+    return super.preGenerateWallpapers(
+      verses: verses,
+      locale: locale,
+      screenWidth: screenWidth,
+      screenHeight: screenHeight,
+      horizontalOffset: horizontalOffset,
+      verticalAlignment: verticalAlignment,
+      fontScale: fontScale,
+      calibratedInset: calibratedInset,
+      useMyWallpaper: useMyWallpaper,
+    );
+  }
+}
+
+/// A generator whose [preGenerateWallpapers] is slow (300 ms) and counted,
+/// used to prove the F5 mutex blocks overlapping pre-gen calls.
+class _SlowCountingPreGenGenerator extends _CountingFakeGenerator {
+  @override
+  Future<int> preGenerateWallpapers({
+    required List<Verse> verses,
+    required String locale,
+    required int screenWidth,
+    required int screenHeight,
+    int horizontalOffset = 0,
+    String verticalAlignment = 'center',
+    double fontScale = 1.0,
+    int calibratedInset = 0,
+    bool useMyWallpaper = false,
+  }) async {
+    preGenCallCount++;
     await Future<void>.delayed(const Duration(milliseconds: 300));
     return 0;
   }

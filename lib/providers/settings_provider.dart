@@ -42,6 +42,7 @@ class SettingsProvider extends ChangeNotifier {
   bool _hasBackup = false;
   bool _useMyWallpaper = false;
   String? _userBackgroundPath;
+  bool _isPreGenerating = false;
 
   bool get isEnabled => _isEnabled;
   int get frequencyMinutes => _frequencyMinutes;
@@ -95,6 +96,14 @@ class SettingsProvider extends ChangeNotifier {
   void setHasBackup(bool value) {
     _hasBackup = value;
     notifyListeners();
+  }
+
+  /// Exposed for unit tests only — allows setting [status] and
+  /// [statusPayload] without going through [triggerNow].
+  @visibleForTesting
+  void setStatusForTest(WallpaperStatus status, {String? payload}) {
+    _status = status;
+    _statusPayload = payload;
   }
 
   Future<void> setUseMyWallpaper(bool value) async {
@@ -260,6 +269,9 @@ class SettingsProvider extends ChangeNotifier {
       return;
     }
 
+    // ── F4 re-entrancy guard ──
+    if (_status == WallpaperStatus.generating) return;
+
     _status = WallpaperStatus.generating;
     _statusPayload = null;
     notifyListeners();
@@ -347,28 +359,35 @@ class SettingsProvider extends ChangeNotifier {
   Future<void> _preGenerateFutureWallpapers({required String locale}) async {
     if (_activeCategoryIds.isEmpty) return;
 
-    final randomVerses = await _db.getRandomVerses(
-      _activeCategoryIds.toList(),
-      locale,
-      WallpaperGenerator.preGenCount,
-    );
+    // ── F5 pre-gen mutex: skip if already running ──
+    if (_isPreGenerating) return;
+    _isPreGenerating = true;
+    try {
+      final randomVerses = await _db.getRandomVerses(
+        _activeCategoryIds.toList(),
+        locale,
+        WallpaperGenerator.preGenCount,
+      );
 
-    if (randomVerses.isEmpty) return;
+      if (randomVerses.isEmpty) return;
 
-    final prefs = await SharedPreferences.getInstance();
-    final screenWidth = prefs.getInt('screen_width') ?? 1080;
-    final screenHeight = prefs.getInt('screen_height') ?? 1920;
+      final prefs = await SharedPreferences.getInstance();
+      final screenWidth = prefs.getInt('screen_width') ?? 1080;
+      final screenHeight = prefs.getInt('screen_height') ?? 1920;
 
-    await _generator.preGenerateWallpapers(
-      verses: randomVerses,
-      locale: locale,
-      screenWidth: screenWidth,
-      screenHeight: screenHeight,
-      horizontalOffset: _horizontalOffset,
-      verticalAlignment: _verticalAlignment,
-      fontScale: _fontScale,
-      calibratedInset: _calibratedInset,
-      useMyWallpaper: _useMyWallpaper,
-    );
+      await _generator.preGenerateWallpapers(
+        verses: randomVerses,
+        locale: locale,
+        screenWidth: screenWidth,
+        screenHeight: screenHeight,
+        horizontalOffset: _horizontalOffset,
+        verticalAlignment: _verticalAlignment,
+        fontScale: _fontScale,
+        calibratedInset: _calibratedInset,
+        useMyWallpaper: _useMyWallpaper,
+      );
+    } finally {
+      _isPreGenerating = false;
+    }
   }
 }

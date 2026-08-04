@@ -175,11 +175,58 @@ class _HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<_HomeTab> {
+  // ── F6 async file check ──
+  bool _wallpaperFileExists = false;
+  String? _lastCheckedPath;
+
+  @override
+  void initState() {
+    super.initState();
+    final path = widget.settings.lastWallpaperPath;
+    if (path != null) {
+      // Optimistic: assume the file exists (most real-world wallpapers
+      // do). The async check corrects this on the next frame if the
+      // file was actually deleted.
+      _wallpaperFileExists = true;
+      _lastCheckedPath = path;
+    }
+    widget.settings.addListener(_onSettingsChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkFile());
+  }
+
+  @override
+  void dispose() {
+    widget.settings.removeListener(_onSettingsChanged);
+    super.dispose();
+  }
+
+  void _onSettingsChanged() {
+    final path = widget.settings.lastWallpaperPath;
+    if (path != null && path != _lastCheckedPath) {
+      _lastCheckedPath = path;
+      _wallpaperFileExists = false; // reset — re-check async
+      _checkFile();
+    }
+  }
+
+  void _checkFile() {
+    final path = widget.settings.lastWallpaperPath;
+    if (path != null) {
+      File(path).exists().then((exists) {
+        if (mounted && exists != _wallpaperFileExists) {
+          setState(() => _wallpaperFileExists = exists);
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = widget.settings;
     final l10n = AppLocalizations.of(context)!;
     final verseProvider = context.watch<VerseProvider>();
+
+    final path = settings.lastWallpaperPath;
 
     // The wallpaper fills the available body height with a 12px margin.
     // The gold FAB is overlaid directly on the image — no fixed sizing needed.
@@ -191,8 +238,7 @@ class _HomeTabState extends State<_HomeTab> {
           borderRadius: BorderRadius.circular(16),
         ),
         child:
-            settings.lastWallpaperPath != null &&
-                File(settings.lastWallpaperPath!).existsSync()
+            path != null && _wallpaperFileExists
             ? Stack(
                 fit: StackFit.expand,
                 children: [
