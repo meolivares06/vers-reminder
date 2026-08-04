@@ -33,6 +33,38 @@ class WallpaperGenerator {
   static const double _fontStep = 2.0;
   static const double _citationFontSizeRatio = 0.75;
 
+  /// Gold brand rule drawn above the citation (matches `goldAccent`).
+  @visibleForTesting
+  static const Color citationRuleColor = Color(0xFFEFB14D);
+
+  static const double _citationRuleWidth = 26.0;
+  static const double _citationRuleHeight = 2.0;
+  static const double _citationRuleGap = 8.0;
+
+  /// Shared typographic identity for the verse text: EB Garamond italic.
+  ///
+  /// Used by BOTH the paint pass and [_resolveFontSize] so measurement can
+  /// never drift from what renders (spec R-WG "Measurement-Paint parity").
+  @visibleForTesting
+  TextStyle verseMeasureStyle(double size) => TextStyle(
+    fontSize: size,
+    height: 1.4,
+    fontFamily: 'EB Garamond',
+    fontStyle: FontStyle.italic,
+  );
+
+  /// Shared typographic identity for the citation: sans-serif (no explicit
+  /// family), letter-spaced, rendered uppercase via [citationDisplayText].
+  @visibleForTesting
+  TextStyle citationMeasureStyle(double size) =>
+      TextStyle(fontSize: size, height: 1.4, letterSpacing: 1.5);
+
+  /// Uppercase transformation applied to the citation in both the paint and
+  /// measurement passes — kept in one place so the fitting loop always
+  /// measures the exact text that will be drawn.
+  @visibleForTesting
+  String citationDisplayText(String citation) => citation.toUpperCase();
+
   /// Main entry point: generate and optionally set wallpaper.
   ///
   /// [screenWidth] and [screenHeight] resize the background to device
@@ -119,8 +151,7 @@ class WallpaperGenerator {
   }) async {
     try {
       if (!useMyWallpaper) {
-        final imagePath =
-            await ImageCacheService.instance.getNextRandomImage();
+        final imagePath = await ImageCacheService.instance.getNextRandomImage();
         if (imagePath == null) return null;
         return await _render(
           backgroundPath: imagePath,
@@ -233,8 +264,9 @@ class WallpaperGenerator {
 
       if (calibratedInset > 0) {
         final maxInset = (srcW / 2) - 1;
-        final actualInset =
-            calibratedInset < maxInset ? calibratedInset.toDouble() : maxInset;
+        final actualInset = calibratedInset < maxInset
+            ? calibratedInset.toDouble()
+            : maxInset;
         srcX += actualInset;
         srcW -= actualInset * 2;
       }
@@ -290,11 +322,9 @@ class WallpaperGenerator {
       final textPainter = TextPainter(
         text: TextSpan(
           text: text,
-          style: TextStyle(
+          style: verseMeasureStyle(resolvedFontSize).copyWith(
             color: Colors.white,
-            fontSize: resolvedFontSize,
             fontWeight: FontWeight.w700,
-            height: 1.4,
             shadows: [shadow],
           ),
         ),
@@ -305,12 +335,10 @@ class WallpaperGenerator {
 
       final citationPainter = TextPainter(
         text: TextSpan(
-          text: citation,
-          style: TextStyle(
+          text: citationDisplayText(citation),
+          style: citationMeasureStyle(citationFontSize).copyWith(
             color: Colors.white70,
-            fontSize: citationFontSize,
             fontWeight: FontWeight.w500,
-            height: 1.4,
             shadows: [shadow],
           ),
         ),
@@ -322,23 +350,40 @@ class WallpaperGenerator {
       // Vertical position (clamp to stay on screen)
       final startY = switch (verticalAlignment) {
         'top' => padding,
-        'bottom' => (screenHeight - totalTextHeight - padding)
-            .clamp(0.0, screenHeight.toDouble()),
-        _ => ((screenHeight - totalTextHeight) / 2)
-            .clamp(0.0, screenHeight.toDouble()),
+        'bottom' => (screenHeight - totalTextHeight - padding).clamp(
+          0.0,
+          screenHeight.toDouble(),
+        ),
+        _ => ((screenHeight - totalTextHeight) / 2).clamp(
+          0.0,
+          screenHeight.toDouble(),
+        ),
       };
 
       // Horizontal position with user offset (clamp to screen edges)
       final startX = (padding + horizontalOffset).clamp(
         0.0,
-        (screenWidth - textPainter.width - gap).clamp(0.0, screenWidth.toDouble()),
+        (screenWidth - textPainter.width - gap).clamp(
+          0.0,
+          screenWidth.toDouble(),
+        ),
       );
 
       textPainter.paint(canvas, Offset(startX, startY));
-      citationPainter.paint(
-        canvas,
-        Offset(startX, startY + textPainter.height + gap),
+
+      // Gold rule above the citation — the contrast styling that separates
+      // the sans-serif uppercase citation from the italic verse.
+      final citationTop = startY + textPainter.height + gap;
+      canvas.drawRect(
+        Rect.fromLTWH(
+          startX,
+          citationTop - _citationRuleGap - _citationRuleHeight,
+          _citationRuleWidth,
+          _citationRuleHeight,
+        ),
+        Paint()..color = citationRuleColor,
       );
+      citationPainter.paint(canvas, Offset(startX, citationTop));
 
       textPainter.dispose();
       citationPainter.dispose();
@@ -351,7 +396,9 @@ class WallpaperGenerator {
       final image = await picture.toImage(screenWidth, screenHeight);
       picture.dispose();
       // rawRgba is fast — GPU readback without PNG encoding
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final byteData = await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
       image.dispose();
       if (byteData == null) return null;
       final rawBytes = byteData.buffer.asUint8List();
@@ -359,10 +406,11 @@ class WallpaperGenerator {
       // Falls back to synchronous encoding if isolate is unavailable
       // (e.g., in test environments or constrained runtimes).
       try {
-        return await compute(
-          _encodePngWorker,
-          (rawBytes, screenWidth, screenHeight),
-        );
+        return await compute(_encodePngWorker, (
+          rawBytes,
+          screenWidth,
+          screenHeight,
+        ));
       } catch (_) {
         // Fallback: encode synchronously on main thread
         return _encodePngWorker((rawBytes, screenWidth, screenHeight));
@@ -406,6 +454,12 @@ class WallpaperGenerator {
   /// Runs the font-sizing loop: starts at [screenWidth] × [_baseFontRatio]
   /// × [fontScale] and shrinks by [_fontStep] until all text + citation fits
   /// within [availableHeight].
+  ///
+  /// The measurement TextStyles mirror the paint pass exactly — italic EB
+  /// Garamond verse, sans-serif uppercase citation with letterSpacing — so
+  /// the resolved size never overflows what actually renders. When
+  /// [legacyStyles] is true (test-only parity check), the pre-change styles
+  /// are used instead.
   double _resolveFontSize({
     required String text,
     required String citation,
@@ -413,10 +467,14 @@ class WallpaperGenerator {
     required double availableHeight,
     required int screenWidth,
     required double fontScale,
+    bool legacyStyles = false,
   }) {
     final baseSize = screenWidth * _baseFontRatio * fontScale;
     final minSize = screenWidth * _minFontRatio * fontScale;
     const gap = 16.0;
+    final measureCitation = legacyStyles
+        ? citation
+        : citationDisplayText(citation);
 
     for (var size = baseSize; size >= minSize; size -= _fontStep) {
       final citationSize = size * _citationFontSizeRatio;
@@ -424,15 +482,27 @@ class WallpaperGenerator {
       final tp = TextPainter(
         text: TextSpan(
           text: text,
-          style: TextStyle(fontSize: size, height: 1.4),
+          style: legacyStyles
+              ? TextStyle(
+                  fontSize: size,
+                  height: 1.4,
+                  fontFamily: 'EB Garamond',
+                )
+              : verseMeasureStyle(size),
         ),
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: maxTextWidth);
 
       final cp = TextPainter(
         text: TextSpan(
-          text: citation,
-          style: TextStyle(fontSize: citationSize, height: 1.4),
+          text: measureCitation,
+          style: legacyStyles
+              ? TextStyle(
+                  fontSize: citationSize,
+                  height: 1.4,
+                  fontFamily: 'EB Garamond',
+                )
+              : citationMeasureStyle(citationSize),
         ),
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: maxTextWidth);
@@ -448,6 +518,29 @@ class WallpaperGenerator {
     return minSize;
   }
 
+  /// Testing seam — resolves the verse/citation font size with the current
+  /// typographic styles, or with the pre-change legacy styles when
+  /// [legacyStyles] is true, so tests can prove measurement-paint parity
+  /// stays within 1px (spec "No sizing regression after style change").
+  @visibleForTesting
+  double resolveFontSizeForTest({
+    required String text,
+    required String citation,
+    required double maxTextWidth,
+    required double availableHeight,
+    required int screenWidth,
+    double fontScale = 1.0,
+    bool legacyStyles = false,
+  }) => _resolveFontSize(
+    text: text,
+    citation: citation,
+    maxTextWidth: maxTextWidth,
+    availableHeight: availableHeight,
+    screenWidth: screenWidth,
+    fontScale: fontScale,
+    legacyStyles: legacyStyles,
+  );
+
   /// Exposed for testing only. Calls [_compositeCanvas] directly with raw bytes.
   @visibleForTesting
   Future<Uint8List?> compositeFromBytes({
@@ -460,18 +553,17 @@ class WallpaperGenerator {
     String verticalAlignment = 'center',
     double fontScale = 1.0,
     int calibratedInset = 0,
-  }) =>
-      _compositeCanvas(
-        backgroundBytes: backgroundBytes,
-        verse: verse,
-        locale: locale,
-        screenWidth: screenWidth ?? 1080,
-        screenHeight: screenHeight ?? 2400,
-        horizontalOffset: horizontalOffset,
-        verticalAlignment: verticalAlignment,
-        fontScale: fontScale,
-        calibratedInset: calibratedInset,
-      );
+  }) => _compositeCanvas(
+    backgroundBytes: backgroundBytes,
+    verse: verse,
+    locale: locale,
+    screenWidth: screenWidth ?? 1080,
+    screenHeight: screenHeight ?? 2400,
+    horizontalOffset: horizontalOffset,
+    verticalAlignment: verticalAlignment,
+    fontScale: fontScale,
+    calibratedInset: calibratedInset,
+  );
 
   /// Core render pipeline — reads file, composites via Canvas, writes PNG.
   Future<String?> _render({
@@ -499,9 +591,10 @@ class WallpaperGenerator {
         // Fallback to nature
         // ignore: avoid_print
         print(
-            'WallpaperGenerator: user background not available in _render, falling back to nature');
-        final fallbackPath =
-            await ImageCacheService.instance.getNextRandomImage();
+          'WallpaperGenerator: user background not available in _render, falling back to nature',
+        );
+        final fallbackPath = await ImageCacheService.instance
+            .getNextRandomImage();
         if (fallbackPath == null) return null;
         bytes = await File(fallbackPath).readAsBytes();
       }
@@ -613,8 +706,11 @@ class WallpaperGenerator {
   }
 
   /// Set wallpaper on Android using [wallpaper_manager_flutter].
-  Future<void> _setWallpaper(String imagePath, int screenWidth,
-      int screenHeight) async {
+  Future<void> _setWallpaper(
+    String imagePath,
+    int screenWidth,
+    int screenHeight,
+  ) async {
     final file = File(imagePath);
     if (!await file.exists()) {
       throw Exception('Wallpaper file not found: $imagePath');
@@ -675,8 +771,9 @@ class WallpaperGenerator {
       if (batchBytes == null) {
         // ignore: avoid_print
         print(
-            'WallpaperGenerator: user background not available in preGenerate, '
-            'falling back to nature per wallpaper');
+          'WallpaperGenerator: user background not available in preGenerate, '
+          'falling back to nature per wallpaper',
+        );
       }
     }
 
@@ -689,8 +786,7 @@ class WallpaperGenerator {
       if (batchBytes != null) {
         backgroundBytes = batchBytes;
       } else {
-        final imagePath =
-            await ImageCacheService.instance.getNextRandomImage();
+        final imagePath = await ImageCacheService.instance.getNextRandomImage();
         if (imagePath == null) continue;
         backgroundBytes = await File(imagePath).readAsBytes();
       }
@@ -709,8 +805,9 @@ class WallpaperGenerator {
 
       if (pngBytes == null) continue;
 
-      await File(p.join(preGenDir.path, 'pregen_$i.png'))
-          .writeAsBytes(pngBytes);
+      await File(
+        p.join(preGenDir.path, 'pregen_$i.png'),
+      ).writeAsBytes(pngBytes);
       count++;
     }
 
@@ -818,8 +915,11 @@ Uint8List _encodePngWorker((Uint8List, int, int) params) {
   for (int y = 0; y < height; y++) {
     final offset = y * (1 + stride);
     scanlines[offset] = 0; // filter byte: None
-    scanlines.setRange(offset + 1, offset + 1 + stride,
-        rawRgba.sublist(y * stride, (y + 1) * stride));
+    scanlines.setRange(
+      offset + 1,
+      offset + 1 + stride,
+      rawRgba.sublist(y * stride, (y + 1) * stride),
+    );
   }
 
   // IDAT chunk: zlib-compressed scanlines

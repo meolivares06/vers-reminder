@@ -748,12 +748,6 @@ abstract class AppLocalizations {
   /// **'Updated {time}'**
   String updatedAtLabel(String time);
 
-  /// Subtitle on the Home active-categories tile
-  ///
-  /// In en, this message translates to:
-  /// **'Active: {count}'**
-  String activeCategoriesCount(int count);
-
   /// Text shared when the user taps the share action on Home
   ///
   /// In en, this message translates to:

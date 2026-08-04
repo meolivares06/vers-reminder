@@ -156,6 +156,50 @@ void main() {
     );
   });
 
+  testWidgets(
+    'UX-HOME-001 card fills 85-88% of visible home height when wallpaper '
+    'exists',
+    (tester) async {
+      final settings = SettingsProvider()
+        ..setWallpaperCard(path: wallpaperPath, timestamp: DateTime.now());
+      await pumpHome(tester, settings);
+
+      final bodyHeight = tester.getSize(find.byType(IndexedStack)).height;
+      final cardHeight = tester.getSize(find.byType(Card)).height;
+      final fraction = cardHeight / bodyHeight;
+
+      expect(
+        fraction,
+        inInclusiveRange(0.85, 0.88),
+        reason:
+            'card must fill 85-88% of the home body height, not a fixed 320px '
+            '(fraction was ${fraction.toStringAsFixed(3)})',
+      );
+    },
+  );
+
+  testWidgets(
+    'UX-HOME-001 empty-state card keeps the same 85-88% height fraction',
+    (tester) async {
+      final settings = SettingsProvider()
+        ..setWallpaperCard(path: null, timestamp: null);
+      await pumpHome(tester, settings);
+
+      final bodyHeight = tester.getSize(find.byType(IndexedStack)).height;
+      final cardHeight = tester.getSize(find.byType(Card)).height;
+      final fraction = cardHeight / bodyHeight;
+
+      expect(
+        fraction,
+        inInclusiveRange(0.85, 0.88),
+        reason:
+            'empty state must occupy the same height fraction as the '
+            'wallpaper-present card (fraction was '
+            '${fraction.toStringAsFixed(3)})',
+      );
+    },
+  );
+
   group('relative time caption buckets', () {
     Future<void> pumpWithOffset(WidgetTester tester, Duration age) async {
       final settings = SettingsProvider()

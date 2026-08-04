@@ -30,7 +30,6 @@ Widget buildTestApp(Locale locale) {
               Text(l10n.currentWallpaperLabel),
               Text(l10n.previewLabel),
               Text(l10n.emailCopied),
-              Text(l10n.activeCategoriesCount(3)),
               Text(l10n.shareApp('https://example.com')),
               Text(l10n.updatedAtLabel(l10n.timeMinutes(5))),
               Text(l10n.offsetLabel(l10n.leftOffset, '-12')),
@@ -67,7 +66,6 @@ void main() {
       expect(find.text('Wallpaper actual'), findsOneWidget);
       expect(find.text('Vista previa'), findsOneWidget);
       expect(find.text('Email copiado al portapapeles'), findsOneWidget);
-      expect(find.text('Activas: 3'), findsOneWidget);
       expect(find.text('Descargá Vers Reminder: https://example.com'),
           findsOneWidget);
       expect(find.text('Actualizado 5 min'), findsOneWidget);
@@ -96,7 +94,6 @@ void main() {
       expect(find.text('Pré-visualização'), findsOneWidget);
       expect(find.text('Email copiado para a área de transferência'),
           findsOneWidget);
-      expect(find.text('Ativas: 3'), findsOneWidget);
       expect(find.text('Baixe o Vers Reminder: https://example.com'),
           findsOneWidget);
       expect(find.text('Atualizado 5 min'), findsOneWidget);
@@ -124,7 +121,6 @@ void main() {
       expect(find.text('Current wallpaper'), findsOneWidget);
       expect(find.text('Preview'), findsOneWidget);
       expect(find.text('Email copied to clipboard'), findsOneWidget);
-      expect(find.text('Active: 3'), findsOneWidget);
       expect(find.text('Download Vers Reminder: https://example.com'),
           findsOneWidget);
       expect(find.text('Updated 5 min'), findsOneWidget);

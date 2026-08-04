@@ -46,7 +46,6 @@ void main() {
 
     test('supports every ui-ux-review batch key in all locales', () {
       const expectedKeys = <String>{
-        'activeCategoriesCount', // UX-HOME-003
         'shareApp', // UX-HOME-004
         'emailCopied', // UX-HOME-004
         'currentWallpaperLabel', // UX-SET-003 / UX-HOME-001

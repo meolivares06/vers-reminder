@@ -182,16 +182,6 @@
     }
   },
   "updatedAtLabel": "Actualizado {time}",
-  "@activeCategoriesCount": {
-    "description": "Subtítulo del tile de categorías activas en el inicio",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "3"
-      }
-    }
-  },
-  "activeCategoriesCount": "Activas: {count}",
   "@shareApp": {
     "description": "Texto compartido cuando el usuario toca la acción de compartir en el inicio",
     "placeholders": {

@@ -352,11 +352,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String activeCategoriesCount(int count) {
-    return 'Active: $count';
-  }
-
-  @override
   String shareApp(String url) {
     return 'Download Vers Reminder: $url';
   }

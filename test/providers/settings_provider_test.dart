@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
@@ -387,8 +388,7 @@ class _FakeWallpaperGenerator implements WallpaperGenerator {
     double fontScale = 1.0,
     int calibratedInset = 0,
     bool useMyWallpaper = false,
-  }) async =>
-      null;
+  }) async => null;
 
   @override
   Future<Uint8List?> renderPreview({
@@ -407,6 +407,26 @@ class _FakeWallpaperGenerator implements WallpaperGenerator {
   @override
   Future<bool> setNextPreGenerated(int screenWidth, int screenHeight) async =>
       false;
+
+  @override
+  TextStyle verseMeasureStyle(double size) => TextStyle();
+
+  @override
+  TextStyle citationMeasureStyle(double size) => TextStyle();
+
+  @override
+  String citationDisplayText(String citation) => citation.toUpperCase();
+
+  @override
+  double resolveFontSizeForTest({
+    required String text,
+    required String citation,
+    required double maxTextWidth,
+    required double availableHeight,
+    required int screenWidth,
+    double fontScale = 1.0,
+    bool legacyStyles = false,
+  }) => 24.0;
 }
 
 /// A prefs store that fails writes to `last_wallpaper_timestamp` while

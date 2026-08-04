@@ -43,3 +43,10 @@ flutter:
   assets:
     - assets/seed/verses.json
     - assets/images/nature/
+
+  fonts:
+    - family: EB Garamond
+      fonts:
+        - asset: assets/fonts/EBGaramond-Variable.ttf
+        - asset: assets/fonts/EBGaramond-Italic.ttf
+          style: italic

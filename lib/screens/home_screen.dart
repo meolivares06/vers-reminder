@@ -8,11 +8,9 @@ import '../models/wallpaper_status.dart';
 import '../providers/locale_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/verse_provider.dart';
-import '../widgets/async_action_button.dart';
-import '../widgets/section_header.dart';
+import '../theme/app_theme.dart';
 import 'backoffice/verse_form_screen.dart';
 import 'backoffice/verse_list_screen.dart';
-import 'settings/about_screen.dart';
 import 'settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -37,11 +35,68 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Shared permission-gated trigger for the gold Home FAB (mirrors the
+  /// behavior of the removed full-width "Change now" button): shows the
+  /// permission dialog when storage permission is missing, otherwise starts
+  /// generation and reports the no-categories state via a snackbar.
+  Future<void> _handleFabPressed() async {
+    final l10n = AppLocalizations.of(context)!;
+    final settings = context.read<SettingsProvider>();
+    final verseProvider = context.read<VerseProvider>();
+    if (!settings.wallpaperPermissionGranted) {
+      _showPermissionDialog(settings, verseProvider, l10n);
+      return;
+    }
+    await settings.triggerNow(
+      verseProvider: verseProvider,
+      locale: context.read<LocaleProvider>().locale.languageCode,
+    );
+    if (!mounted) return;
+    if (settings.status == WallpaperStatus.noCategories) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.selectCategoryStatus),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _showPermissionDialog(
+    SettingsProvider settings,
+    VerseProvider verseProvider,
+    AppLocalizations l10n,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.permissionTitle),
+        content: Text(l10n.permissionMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await settings.grantWallpaperPermission();
+              settings.triggerNow(
+                verseProvider: verseProvider,
+                locale: context.read<LocaleProvider>().locale.languageCode,
+              );
+            },
+            child: Text(l10n.changeNow),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
-    final locale = context.watch<LocaleProvider>().locale.languageCode;
 
     // Show Snackbar when wallpaper generation fails
     if (settings.status == WallpaperStatus.error &&
@@ -75,16 +130,26 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          _HomeTab(settings: settings, locale: locale),
+          _HomeTab(settings: settings),
           const VerseListScreen(),
         ],
       ),
-      floatingActionButton: _currentIndex == 1
-          ? FloatingActionButton(
-              onPressed: () => _openVerseForm(context),
-              child: const Icon(Icons.add),
-            )
-          : null,
+      floatingActionButton: switch (_currentIndex) {
+        // Home tab: gold circular FAB is the primary wallpaper-change action.
+        // The card remains tappable as a secondary affordance.
+        0 => FloatingActionButton(
+          onPressed: _handleFabPressed,
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          foregroundColor: onGoldAccent,
+          tooltip: l10n.changeNow,
+          child: const Icon(Icons.refresh),
+        ),
+        // Verse-list tab: add-verse FAB only — never both.
+        _ => FloatingActionButton(
+          onPressed: () => _openVerseForm(context),
+          child: const Icon(Icons.add),
+        ),
+      },
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (i) => setState(() => _currentIndex = i),
@@ -107,9 +172,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _HomeTab extends StatefulWidget {
   final SettingsProvider settings;
-  final String locale;
 
-  const _HomeTab({required this.settings, required this.locale});
+  const _HomeTab({required this.settings});
 
   @override
   State<_HomeTab> createState() => _HomeTabState();
@@ -119,212 +183,117 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   Widget build(BuildContext context) {
     final settings = widget.settings;
-    final locale = widget.locale;
     final l10n = AppLocalizations.of(context)!;
     final verseProvider = context.watch<VerseProvider>();
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // ── Wallpaper preview card ──
-        Card(
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: SizedBox(
-            height: 200,
-            child:
-                settings.lastWallpaperPath != null &&
-                    File(settings.lastWallpaperPath!).existsSync()
-                ? InkWell(
-                    onTap: _triggerNow(settings, verseProvider, l10n),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.file(
-                          File(settings.lastWallpaperPath!),
-                          fit: BoxFit.cover,
-                        ),
-                        Positioned(
-                          bottom: 12,
-                          left: 16,
-                          right: 16,
-                          // Black54 scrim guarantees the caption stays legible over
-                          // the image in both light and dark themes.
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.black54,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  l10n.currentWallpaperLabel,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
+    // The wallpaper is the visual hero of Home: the card fills 85% of the
+    // available body height (clamped to at most 88%), leaving a guaranteed
+    // tap zone for the gold FAB. No fixed-pixel sizing — the fraction is
+    // relative to the actual layout box (AppBar + navbar included).
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardHeight = (constraints.maxHeight * 0.85).clamp(
+          0.0,
+          constraints.maxHeight * 0.88,
+        );
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              SizedBox(
+                height: cardHeight,
+                child: Card(
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child:
+                      settings.lastWallpaperPath != null &&
+                          File(settings.lastWallpaperPath!).existsSync()
+                      ? InkWell(
+                          onTap: _triggerNow(settings, verseProvider, l10n),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.file(
+                                File(settings.lastWallpaperPath!),
+                                fit: BoxFit.cover,
+                              ),
+                              Positioned(
+                                bottom: 12,
+                                left: 16,
+                                right: 16,
+                                // Black54 scrim guarantees the caption stays
+                                // legible over the image in both themes.
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black54,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        l10n.currentWallpaperLabel,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      if (settings.lastWallpaperTimestamp
+                                          case final DateTime ts)
+                                        Text(
+                                          l10n.updatedAtLabel(
+                                            _relativeTime(ts, l10n),
+                                          ),
+                                          style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
-                                if (settings.lastWallpaperTimestamp
-                                    case final DateTime ts)
-                                  Text(
-                                    l10n.updatedAtLabel(
-                                      _relativeTime(ts, l10n),
-                                    ),
-                                    style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                    ),
-                                  ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : InkWell(
+                          onTap: _triggerNow(settings, verseProvider, l10n),
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.wallpaper_outlined,
+                                  size: 48,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.5),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  l10n.noWallpaper,
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
                               ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  )
-                : InkWell(
-                    onTap: _triggerNow(settings, verseProvider, l10n),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.wallpaper_outlined,
-                            size: 48,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.5),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            l10n.noWallpaper,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // ── Change now button ──
-        SizedBox(
-          width: double.infinity,
-          child: AsyncActionButton(
-            icon: Icons.refresh,
-            label: l10n.changeNow,
-            style: AsyncActionButtonStyle.filled,
-            // Gold brand accent on the active CTA via colorScheme.secondary;
-            // the widget derives a dark foreground that clears WCAG AA on it.
-            backgroundColor: Theme.of(context).colorScheme.secondary,
-            onPressed: () async {
-              if (!settings.wallpaperPermissionGranted) {
-                _showPermissionDialog(context, settings, verseProvider, l10n);
-              } else {
-                await settings.triggerNow(
-                  verseProvider: verseProvider,
-                  locale: context.read<LocaleProvider>().locale.languageCode,
-                );
-                if (!mounted) return;
-                if (settings.status == WallpaperStatus.noCategories) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.selectCategoryStatus),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              }
-            },
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // ── Status section ──
-        SectionHeader(
-          title: l10n.sectionScheduling,
-          subtitle: l10n.sectionSchedulingSub,
-        ),
-        ListTile(
-          leading: const Icon(Icons.schedule),
-          title: Text(
-            settings.isEnabled
-                ? '${l10n.autoChange}: ${_formatMinutes(settings.frequencyMinutes, l10n)}'
-                : l10n.autoChange,
-          ),
-          subtitle: Text(
-            settings.isEnabled ? l10n.sectionSchedulingSub : l10n.disabledLabel,
-          ),
-          trailing: Switch(
-            value: settings.isEnabled,
-            onChanged: (v) => settings.setEnabled(v),
-          ),
-        ),
-
-        // Active categories
-        ListTile(
-          leading: const Icon(Icons.category_outlined),
-          title: Text(l10n.categoriesLabel),
-          subtitle: Text(
-            l10n.activeCategoriesCount(settings.activeCategoryIds.length),
-          ),
-          onTap: () {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
-          },
-        ),
-
-        // Language
-        ListTile(
-          leading: const Icon(Icons.language),
-          title: Text(l10n.language),
-          subtitle: Text(
-            locale == 'es'
-                ? l10n.spanish
-                : locale == 'pt'
-                ? l10n.portuguese
-                : 'English',
-          ),
-          onTap: () {
-            final localeProvider = context.read<LocaleProvider>();
-            final newLocale = localeProvider.locale.languageCode == 'es'
-                ? const Locale('pt')
-                : const Locale('es');
-            localeProvider.setLocale(newLocale);
-          },
-        ),
-
-        const SizedBox(height: 8),
-
-        // ── About ──
-        const Divider(),
-        ListTile(
-          leading: const Icon(Icons.info_outline),
-          title: Text(l10n.sectionAbout),
-          subtitle: Text(l10n.aboutDescription),
-          onTap: () {
-            Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const AboutScreen()));
-          },
-        ),
-
-        const SizedBox(height: 40),
-      ],
+        );
+      },
     );
   }
 
@@ -353,43 +322,5 @@ class _HomeTabState extends State<_HomeTab> {
     if (diff.inMinutes < 1) return l10n.timeMinutes(0);
     if (diff.inMinutes < 60) return l10n.timeMinutes(diff.inMinutes);
     return l10n.timeHours(diff.inHours);
-  }
-
-  String _formatMinutes(int minutes, AppLocalizations l10n) {
-    if (minutes < 60) return l10n.timeMinutes(minutes);
-    final h = minutes ~/ 60;
-    return l10n.timeHours(h);
-  }
-
-  void _showPermissionDialog(
-    BuildContext context,
-    SettingsProvider settings,
-    VerseProvider verseProvider,
-    AppLocalizations l10n,
-  ) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.permissionTitle),
-        content: Text(l10n.permissionMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              await settings.grantWallpaperPermission();
-              settings.triggerNow(
-                verseProvider: verseProvider,
-                locale: context.read<LocaleProvider>().locale.languageCode,
-              );
-            },
-            child: Text(l10n.changeNow),
-          ),
-        ],
-      ),
-    );
   }
 }

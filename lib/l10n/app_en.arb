@@ -178,16 +178,6 @@
     }
   },
   "updatedAtLabel": "Updated {time}",
-  "@activeCategoriesCount": {
-    "description": "Subtitle on the Home active-categories tile",
-    "placeholders": {
-      "count": {
-        "type": "int",
-        "example": "3"
-      }
-    }
-  },
-  "activeCategoriesCount": "Active: {count}",
   "@shareApp": {
     "description": "Text shared when the user taps the share action on Home",
     "placeholders": {

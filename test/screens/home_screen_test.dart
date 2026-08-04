@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vers_reminder/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/models/wallpaper_status.dart';
 import 'package:vers_reminder/providers/locale_provider.dart';
 import 'package:vers_reminder/providers/settings_provider.dart';
 import 'package:vers_reminder/providers/verse_provider.dart';
@@ -12,8 +13,9 @@ import 'package:vers_reminder/screens/home_screen.dart';
 
 /// Channel used by `package_info_plus` — mocked so onboarding to AboutScreen
 /// renders deterministically.
-const MethodChannel _packageInfoChannel =
-    MethodChannel('dev.fluttercommunity.plus/package_info');
+const MethodChannel _packageInfoChannel = MethodChannel(
+  'dev.fluttercommunity.plus/package_info',
+);
 
 void main() {
   setUp(() {
@@ -21,16 +23,16 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_packageInfoChannel, (call) async {
-      if (call.method == 'getAll') {
-        return <String, dynamic>{
-          'version': '3.0.1',
-          'buildNumber': '12',
-          'packageName': 'com.versreminder.vers_reminder',
-          'appName': 'vers_reminder',
-        };
-      }
-      return null;
-    });
+          if (call.method == 'getAll') {
+            return <String, dynamic>{
+              'version': '3.0.1',
+              'buildNumber': '12',
+              'packageName': 'com.versreminder.vers_reminder',
+              'appName': 'vers_reminder',
+            };
+          }
+          return null;
+        });
   });
 
   tearDown(() {
@@ -38,14 +40,19 @@ void main() {
         .setMockMethodCallHandler(_packageInfoChannel, null);
   });
 
-  Future<void> pumpHome(WidgetTester tester) async {
+  Future<SettingsProvider> pumpHome(
+    WidgetTester tester, {
+    SettingsProvider? settings,
+  }) async {
+    final settingsProvider = settings ?? SettingsProvider();
     final localeProvider = LocaleProvider();
     await localeProvider.init();
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           ChangeNotifierProvider<SettingsProvider>.value(
-              value: SettingsProvider()),
+            value: settingsProvider,
+          ),
           ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
           ChangeNotifierProvider<VerseProvider>.value(value: VerseProvider()),
         ],
@@ -60,25 +67,135 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pump();
+    return settingsProvider;
   }
 
-  testWidgets('Home About is now a tile that opens AboutScreen', (tester) async {
+  testWidgets('Home no longer has an About tile — About is in Settings', (
+    tester,
+  ) async {
     await pumpHome(tester);
 
-    // The About tile sits below the fold in the Home ListView; scroll to it.
-    await tester.scrollUntilVisible(find.text('About'), 200);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    // The About tile was removed from Home — it's now accessible only from Settings.
+    expect(
+      find.text('About'),
+      findsNothing,
+      reason: 'About tile removed from Home',
+    );
 
-    // No more inline share/version tiles — those moved to AboutScreen.
-    expect(find.text('Share app'), findsNothing,
-        reason: 'share tile moved to AboutScreen, not inlined on Home');
+    // Share app is not on Home either.
+    expect(
+      find.text('Share app'),
+      findsNothing,
+      reason: 'share tile moved to AboutScreen',
+    );
 
-    // Tapping the About tile opens AboutScreen (which renders the update flow).
-    await tester.tap(find.widgetWithText(ListTile, 'About'));
-    await tester.pumpAndSettle();
+    // Language tile was also removed.
+    expect(
+      find.text('Language'),
+      findsNothing,
+      reason: 'language tile removed from Home',
+    );
+  });
 
-    expect(find.text('Check for updates'), findsOneWidget,
-        reason: 'About tile navigates to AboutScreen');
+  group('Home tab declutter (UX-HOME-002/003)', () {
+    testWidgets('rotation and categories tiles are gone from Home', (
+      tester,
+    ) async {
+      await pumpHome(tester);
+
+      expect(
+        find.byType(Switch),
+        findsNothing,
+        reason: 'rotation toggle moved to Settings-only',
+      );
+      expect(
+        find.text('Categories'),
+        findsNothing,
+        reason: 'categories tile moved to Settings-only',
+      );
+      expect(
+        find.text('Auto-rotate'),
+        findsNothing,
+        reason: 'rotation ListTile removed from Home',
+      );
+    });
+
+    testWidgets(
+      'gold FAB on Home (idx 0), add-verse FAB on verse list (idx 1), '
+      'never both',
+      (tester) async {
+        await pumpHome(tester);
+
+        final goldFab = find.widgetWithIcon(
+          FloatingActionButton,
+          Icons.refresh,
+        );
+        final addFab = find.widgetWithIcon(FloatingActionButton, Icons.add);
+        expect(
+          goldFab,
+          findsOneWidget,
+          reason: 'gold circular FAB is the primary Home action',
+        );
+        expect(
+          addFab,
+          findsNothing,
+          reason: 'add-verse FAB must not render on Home',
+        );
+
+        // Switch to the verse-list tab.
+        await tester.tap(find.text('Verses'));
+        await tester.pumpAndSettle();
+
+        expect(
+          addFab,
+          findsOneWidget,
+          reason: 'add-verse FAB renders on tab index 1',
+        );
+        expect(
+          goldFab,
+          findsNothing,
+          reason: 'gold FAB must not render on the verse-list tab',
+        );
+      },
+    );
+
+    testWidgets('gold FAB triggers generation when permission granted', (
+      tester,
+    ) async {
+      final settings = SettingsProvider()
+        ..setWallpaperCard(permissionGranted: true);
+      await pumpHome(tester, settings: settings);
+      expect(settings.status, WallpaperStatus.idle);
+
+      await tester.tap(find.byIcon(Icons.refresh));
+      await tester.pump();
+
+      expect(
+        settings.status,
+        WallpaperStatus.noCategories,
+        reason: 'tapping the gold FAB runs the permission-gated trigger path',
+      );
+    });
+
+    testWidgets('gold FAB shows permission dialog when permission missing', (
+      tester,
+    ) async {
+      final settings = SettingsProvider()..setWallpaperCard();
+      await pumpHome(tester, settings: settings);
+
+      await tester.tap(find.byIcon(Icons.refresh));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Wallpaper permission'),
+        findsOneWidget,
+        reason: 'FAB surfaces the permission dialog when access is missing',
+      );
+      expect(
+        settings.status,
+        WallpaperStatus.idle,
+        reason: 'no generation starts until permission is granted',
+      );
+    });
   });
 }
