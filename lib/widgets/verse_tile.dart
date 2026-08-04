@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../models/verse.dart';class VerseTile extends StatelessWidget {
+import '../models/verse.dart';
+
+class VerseTile extends StatelessWidget {
   final Verse verse;
   final VoidCallback onTap;
   final VoidCallback onDelete;
@@ -33,9 +35,9 @@ import '../models/verse.dart';class VerseTile extends StatelessWidget {
       child: ListTile(
         title: Text(
           verse.citation,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
           verse.textFor(Localizations.localeOf(context).languageCode),

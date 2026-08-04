@@ -9,10 +9,21 @@ import '../models/wallpaper_status.dart';
 import '../services/wallpaper_backup_service.dart';
 import '../services/wallpaper_generator.dart';
 import '../services/wallpaper_scheduler.dart';
+import '../services/notification_service.dart';
 import 'verse_provider.dart';
 
 class SettingsProvider extends ChangeNotifier {
+  SettingsProvider({this.wallpaperGenerator});
+
   final DatabaseService _db = DatabaseService.instance;
+
+  /// Test seam — the wallpaper generation service. Defaults to
+  /// [WallpaperGenerator.instance] when null.
+  @visibleForTesting
+  final WallpaperGenerator? wallpaperGenerator;
+
+  late final WallpaperGenerator _generator =
+      wallpaperGenerator ?? WallpaperGenerator.instance;
 
   bool _isEnabled = false;
   int _frequencyMinutes = 360;
@@ -47,6 +58,13 @@ class SettingsProvider extends ChangeNotifier {
   bool get hasBackup => _hasBackup;
   bool get useMyWallpaper => _useMyWallpaper;
   String? get userBackgroundPath => _userBackgroundPath;
+
+  String get _frequencyText {
+    if (_frequencyMinutes % 60 == 0) {
+      return 'Every ${_frequencyMinutes ~/ 60} h';
+    }
+    return 'Every $_frequencyMinutes min';
+  }
 
   /// Exposed for widget tests only — lets Home render a deterministic
   /// active-categories count without a real database.
@@ -127,6 +145,7 @@ class SettingsProvider extends ChangeNotifier {
       await WallpaperScheduler.registerPeriodic(_frequencyMinutes);
       // Pre-generate wallpapers for background scheduler to use
       await _preGenerateFutureWallpapers(locale: 'es');
+      await NotificationService.show(_frequencyText);
     }
 
     _isLoading = false;
@@ -163,27 +182,25 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> setEnabled(bool enabled) async {
     _isEnabled = enabled;
-    await _db.updateAppConfig({
-      'scheduler_enabled': enabled ? 1 : 0,
-    });
+    await _db.updateAppConfig({'scheduler_enabled': enabled ? 1 : 0});
     notifyListeners();
 
     if (enabled && _activeCategoryIds.isNotEmpty) {
       await WallpaperScheduler.registerPeriodic(_frequencyMinutes);
+      await NotificationService.show(_frequencyText);
       // Pre-generate wallpapers for the background scheduler
       final prefs = await SharedPreferences.getInstance();
       final locale = prefs.getString('locale_override') ?? 'es';
       await _preGenerateFutureWallpapers(locale: locale);
     } else {
       await WallpaperScheduler.cancel();
+      await NotificationService.cancel();
     }
   }
 
   Future<void> setFrequency(int minutes) async {
     _frequencyMinutes = minutes;
-    await _db.updateAppConfig({
-      'frequency_minutes': minutes,
-    });
+    await _db.updateAppConfig({'frequency_minutes': minutes});
     notifyListeners();
 
     if (_isEnabled && _activeCategoryIds.isNotEmpty) {
@@ -257,7 +274,7 @@ class SettingsProvider extends ChangeNotifier {
     }
 
     final verse = verses[0];
-    final result = await WallpaperGenerator.instance.generateAndSetWallpaper(
+    final result = await _generator.generateAndSetWallpaper(
       verse: verse,
       locale: locale,
       horizontalOffset: _horizontalOffset,
@@ -271,18 +288,24 @@ class SettingsProvider extends ChangeNotifier {
       case WallpaperResultSuccess(:final wallpaperPath, :final citation):
         _status = WallpaperStatus.updated;
         _statusPayload = citation;
+        await NotificationService.show(citation ?? _frequencyText);
         _lastWallpaperPath = wallpaperPath;
         _lastWallpaperTimestamp = DateTime.now();
-        SharedPreferences.getInstance().then((prefs) {
-          prefs.setString('last_wallpaper_path', wallpaperPath);
+        // Persistence is best-effort: the in-memory wallpaper state is already
+        // correct, so a failed write must never break the generation flow.
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('last_wallpaper_path', wallpaperPath);
           // Write-only new key: old installs lack it and stay null until the
           // next foreground generation (backwards-compatible with
           // last_wallpaper_path, which still governs the empty/exists state).
-          prefs.setString(
+          await prefs.setString(
             'last_wallpaper_timestamp',
             _lastWallpaperTimestamp!.toIso8601String(),
           );
-        });
+        } catch (e) {
+          debugPrint('Failed to persist last wallpaper metadata: $e');
+        }
         // Pre-generate future wallpapers for the background scheduler
         // after a successful foreground generation.
         await _preGenerateFutureWallpapers(locale: locale);
@@ -322,7 +345,7 @@ class SettingsProvider extends ChangeNotifier {
     final screenWidth = prefs.getInt('screen_width') ?? 1080;
     final screenHeight = prefs.getInt('screen_height') ?? 1920;
 
-    await WallpaperGenerator.instance.preGenerateWallpapers(
+    await _generator.preGenerateWallpapers(
       verses: randomVerses,
       locale: locale,
       screenWidth: screenWidth,

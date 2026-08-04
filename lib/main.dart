@@ -14,6 +14,7 @@ import 'screens/home_screen.dart';
 import 'services/wallpaper_scheduler.dart';
 import 'theme/app_theme.dart';
 import 'services/image_cache_service.dart';
+import 'services/notification_service.dart';
 import 'services/temp_cleanup_service.dart';
 
 void main() async {
@@ -46,6 +47,7 @@ void main() async {
 
   await ImageCacheService.instance.init();
   await WallpaperScheduler.init();
+  await NotificationService.init();
 
   // Fire-and-forget cleanup of stale temp wallpapers (non-blocking)
   unawaited(TempCleanupService.instance.cleanTempWallpapers());

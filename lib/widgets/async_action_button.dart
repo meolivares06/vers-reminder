@@ -1,4 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
+import '../theme/app_theme.dart';
+
+/// Minimum WCAG AA contrast ratio the filled foreground must clear on a custom
+/// brand background.
+const double _kMinContrast = 4.5;
 
 /// Visual variant of an [AsyncActionButton].
 enum AsyncActionButtonStyle { filled, elevated, text, tile }
@@ -50,7 +58,9 @@ class AsyncActionButton extends StatefulWidget {
 
   /// Optional [FilledButton] background override (only honored for the
   /// [AsyncActionButtonStyle.filled] style). Used for the gold brand accent on
-  /// the active CTA without recoloring the rest of the palette.
+  /// the active CTA without recoloring the rest of the palette. When set, the
+  /// foreground is derived so it clears WCAG AA on that background (never the
+  /// near-white `onPrimary` default, which fails on gold).
   final Color? backgroundColor;
 
   @override
@@ -95,18 +105,24 @@ class _AsyncActionButtonState extends State<AsyncActionButton> {
     switch (widget.style) {
       case AsyncActionButtonStyle.filled:
         final bg = widget.backgroundColor;
+        final fg = _filledForeground(Theme.of(context).colorScheme, bg);
         return FilledButton(
-            onPressed: _interactive ? _handlePressed : null,
-            style: bg != null
-                ? FilledButton.styleFrom(backgroundColor: bg)
-                : null,
-            child: _child());
+          onPressed: _interactive ? _handlePressed : null,
+          style: fg != null
+              ? FilledButton.styleFrom(backgroundColor: bg, foregroundColor: fg)
+              : null,
+          child: _child(),
+        );
       case AsyncActionButtonStyle.elevated:
         return ElevatedButton(
-            onPressed: _interactive ? _handlePressed : null, child: _child());
+          onPressed: _interactive ? _handlePressed : null,
+          child: _child(),
+        );
       case AsyncActionButtonStyle.text:
         return TextButton(
-            onPressed: _interactive ? _handlePressed : null, child: _child());
+          onPressed: _interactive ? _handlePressed : null,
+          child: _child(),
+        );
       case AsyncActionButtonStyle.tile:
         return ListTile(
           leading: Icon(widget.icon),
@@ -122,11 +138,48 @@ class _AsyncActionButtonState extends State<AsyncActionButton> {
                   ),
                 )
               : Text(widget.label),
-          subtitle: widget.subtitle != null
-              ? Text(widget.subtitle!)
-              : null,
+          subtitle: widget.subtitle != null ? Text(widget.subtitle!) : null,
           onTap: _interactive ? _handlePressed : null,
         );
     }
   }
+}
+
+/// Resolves the foreground for the [AsyncActionButtonStyle.filled] style when a
+/// custom [AsyncActionButton.backgroundColor] is set.
+///
+/// The default `FilledButton` foreground is the scheme's `onPrimary` (near
+/// white), which fails on the gold brand surface (~1.9:1). Prefers
+/// [ColorScheme.onSecondary] when it already clears WCAG AA (dark mode);
+/// otherwise falls back to [onGoldAccent] — a fixed dark tone that passes on
+/// the gold surface in light mode too.
+Color? _filledForeground(ColorScheme scheme, Color? bg) {
+  if (bg == null) return null;
+  final onSecondary = scheme.onSecondary;
+  if (_contrastRatio(bg, onSecondary) >= _kMinContrast) return onSecondary;
+  return onGoldAccent;
+}
+
+/// WCAG 2.x contrast ratio between two opaque colors (from their relative
+/// luminance).
+double _contrastRatio(Color a, Color b) {
+  final la = _relativeLuminance(a);
+  final lb = _relativeLuminance(b);
+  final lighter = la > lb ? la : lb;
+  final darker = la > lb ? lb : la;
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/// WCAG relative luminance of an opaque color.
+double _relativeLuminance(Color c) {
+  double channel(double v) {
+    final s = v / 255;
+    return s <= 0.04045
+        ? s / 12.92
+        : math.pow((s + 0.055) / 1.055, 2.4).toDouble();
+  }
+
+  return 0.2126 * channel(c.r * 255) +
+      0.7152 * channel(c.g * 255) +
+      0.0722 * channel(c.b * 255);
 }

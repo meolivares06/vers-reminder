@@ -12,11 +12,19 @@ import '../../widgets/section_header.dart';
 /// The lifetime of the self-update flow in the About screen.
 enum _UpdateCheckState { idle, checking, available, downloading, installing }
 
+/// Public release page of the project repo — used by the share tile and as the
+/// browser fallback when the release tag is unknown.
+const String _releaseLatestUrl =
+    'https://github.com/meolivares06/vers-reminder/releases/latest';
+
+/// Support email shown on the contact tile.
+const String _contactEmail = 'meolivares06@gmail.com';
+
 /// Dedicated About screen reached from a Settings tile (and Home tile).
 ///
 /// Holds the app update/version/share/contact content previously inlined in
 /// `settings_screen.dart`. The self-update state machine and the injectable
-/// [updateService] seam were moved here verbatim (pure move, UX-SET-001).
+/// [updateService] seam were moved here verbatim (pure move).
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key, this.updateService});
 
@@ -107,15 +115,23 @@ class _AboutScreenState extends State<AboutScreen> {
   }
 
   void _showUpdateConfirmDialog(
-      AppLocalizations l10n, UpdateCheckResult result) {
+    AppLocalizations l10n,
+    UpdateCheckResult result,
+  ) {
     showDialog<void>(
       context: context,
+      // The only exits are the explicit buttons: barrier taps must not dismiss
+      // the dialog, or the state machine would be stranded in `available` with
+      // a disabled tile and no way back to retry.
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.updateAvailable(_displayVersion(result.tagName))),
-        content: Text(l10n.downloadUpdateConfirm(
-          _displayVersion(result.tagName),
-          result.sizeBytes != null ? _formatSize(result.sizeBytes!) : '?',
-        )),
+        content: Text(
+          l10n.downloadUpdateConfirm(
+            _displayVersion(result.tagName),
+            result.sizeBytes != null ? _formatSize(result.sizeBytes!) : '?',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -136,11 +152,20 @@ class _AboutScreenState extends State<AboutScreen> {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      // Defensive: barrierDismissible:false already guarantees the dialog only
+      // closes through Cancel/Download, both of which leave the state machine
+      // consistent. If a future refactor re-enables barrier dismissal, still
+      // reset to idle instead of stranding the update tile disabled forever.
+      if (!mounted || _updateState != _UpdateCheckState.available) return;
+      setState(() => _updateState = _UpdateCheckState.idle);
+    });
   }
 
   Future<void> _downloadAndInstall(
-      AppLocalizations l10n, UpdateCheckResult result) async {
+    AppLocalizations l10n,
+    UpdateCheckResult result,
+  ) async {
     if (!mounted) return;
     setState(() {
       _updateState = _UpdateCheckState.downloading;
@@ -168,7 +193,8 @@ class _AboutScreenState extends State<AboutScreen> {
                 Text(l10n.updateDownloadProgress('$percent')),
                 const SizedBox(height: 16),
                 LinearProgressIndicator(
-                    value: _downloadProgress > 0 ? _downloadProgress : null),
+                  value: _downloadProgress > 0 ? _downloadProgress : null,
+                ),
               ],
             ),
           );
@@ -237,8 +263,14 @@ class _AboutScreenState extends State<AboutScreen> {
   void _showInstallAction(AppLocalizations l10n) {
     showDialog<void>(
       context: context,
+      // Like the confirm dialog: the install action must only close through its
+      // explicit buttons, otherwise the state machine could be stranded in
+      // `installing` with a disabled tile.
+      barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.updateAvailable(_displayVersion(_updateResult?.tagName))),
+        title: Text(
+          l10n.updateAvailable(_displayVersion(_updateResult?.tagName)),
+        ),
         content: Text(l10n.downloadComplete),
         actions: [
           TextButton(
@@ -308,7 +340,7 @@ class _AboutScreenState extends State<AboutScreen> {
   /// user can act on, never the raw APK download URL.
   String _releasePageUrl(String? tag) {
     if (tag == null || tag.trim().isEmpty) {
-      return 'https://github.com/meolivares06/vers-reminder/releases/latest';
+      return _releaseLatestUrl;
     }
     return 'https://github.com/meolivares06/vers-reminder/releases/tag/$tag';
   }
@@ -355,21 +387,15 @@ class _AboutScreenState extends State<AboutScreen> {
             leading: const Icon(Icons.share),
             title: Text(l10n.aboutShare),
             onTap: () {
-              Share.share(
-                l10n.shareApp(
-                  'https://github.com/meolivares06/vers-reminder/releases/latest',
-                ),
-              );
+              Share.share(l10n.shareApp(_releaseLatestUrl));
             },
           ),
           ListTile(
             leading: const Icon(Icons.email_outlined),
-            title: const Text('meolivares06@gmail.com'),
+            title: const Text(_contactEmail),
             subtitle: Text(l10n.aboutContact),
             onTap: () {
-              Clipboard.setData(
-                const ClipboardData(text: 'meolivares06@gmail.com'),
-              );
+              Clipboard.setData(const ClipboardData(text: _contactEmail));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(l10n.emailCopied),

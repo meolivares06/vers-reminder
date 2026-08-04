@@ -27,15 +27,13 @@ class _HomeScreenState extends State<HomeScreen> {
   WallpaperStatus _previousWallpaperStatus = WallpaperStatus.idle;
 
   Future<void> _openVerseForm(BuildContext context) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const VerseFormScreen(),
-      ),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const VerseFormScreen()));
     if (mounted) {
       context.read<VerseProvider>().loadVerses(
-            context.read<LocaleProvider>().locale.languageCode,
-          );
+        context.read<LocaleProvider>().locale.languageCode,
+      );
     }
   }
 
@@ -64,14 +62,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title:
-            Text(_currentIndex == 0 ? 'Vers Reminder' : l10n.verseListTitle),
+        title: Text(_currentIndex == 0 ? 'Vers Reminder' : l10n.verseListTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
           ),
         ],
       ),
@@ -132,11 +129,13 @@ class _HomeTabState extends State<_HomeTab> {
         // ── Wallpaper preview card ──
         Card(
           clipBehavior: Clip.antiAlias,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: SizedBox(
             height: 200,
-            child: settings.lastWallpaperPath != null &&
+            child:
+                settings.lastWallpaperPath != null &&
                     File(settings.lastWallpaperPath!).existsSync()
                 ? InkWell(
                     onTap: _triggerNow(settings, verseProvider, l10n),
@@ -152,7 +151,7 @@ class _HomeTabState extends State<_HomeTab> {
                           left: 16,
                           right: 16,
                           // Black54 scrim guarantees the caption stays legible over
-                          // the image in both light and dark themes (UX-THEME-005).
+                          // the image in both light and dark themes.
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -174,8 +173,7 @@ class _HomeTabState extends State<_HomeTab> {
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
-                                if (settings
-                                    .lastWallpaperTimestamp
+                                if (settings.lastWallpaperTimestamp
                                     case final DateTime ts)
                                   Text(
                                     l10n.updatedAtLabel(
@@ -202,10 +200,9 @@ class _HomeTabState extends State<_HomeTab> {
                           Icon(
                             Icons.wallpaper_outlined,
                             size: 48,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.5),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.5),
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -229,7 +226,8 @@ class _HomeTabState extends State<_HomeTab> {
             icon: Icons.refresh,
             label: l10n.changeNow,
             style: AsyncActionButtonStyle.filled,
-            // F2: gold brand accent on the active CTA via colorScheme.secondary.
+            // Gold brand accent on the active CTA via colorScheme.secondary;
+            // the widget derives a dark foreground that clears WCAG AA on it.
             backgroundColor: Theme.of(context).colorScheme.secondary,
             onPressed: () async {
               if (!settings.wallpaperPermissionGranted) {
@@ -237,8 +235,7 @@ class _HomeTabState extends State<_HomeTab> {
               } else {
                 await settings.triggerNow(
                   verseProvider: verseProvider,
-                  locale:
-                      context.read<LocaleProvider>().locale.languageCode,
+                  locale: context.read<LocaleProvider>().locale.languageCode,
                 );
                 if (!mounted) return;
                 if (settings.status == WallpaperStatus.noCategories) {
@@ -263,13 +260,14 @@ class _HomeTabState extends State<_HomeTab> {
         ),
         ListTile(
           leading: const Icon(Icons.schedule),
-          title: Text(settings.isEnabled
-              ? '${l10n.autoChange}: ${_formatMinutes(settings.frequencyMinutes, l10n)}'
-              : l10n.autoChange),
+          title: Text(
+            settings.isEnabled
+                ? '${l10n.autoChange}: ${_formatMinutes(settings.frequencyMinutes, l10n)}'
+                : l10n.autoChange,
+          ),
           subtitle: Text(
-              settings.isEnabled
-                  ? l10n.sectionSchedulingSub
-                  : l10n.disabledLabel),
+            settings.isEnabled ? l10n.sectionSchedulingSub : l10n.disabledLabel,
+          ),
           trailing: Switch(
             value: settings.isEnabled,
             onChanged: (v) => settings.setEnabled(v),
@@ -284,9 +282,9 @@ class _HomeTabState extends State<_HomeTab> {
             l10n.activeCategoriesCount(settings.activeCategoryIds.length),
           ),
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            );
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
           },
         ),
 
@@ -298,8 +296,8 @@ class _HomeTabState extends State<_HomeTab> {
             locale == 'es'
                 ? l10n.spanish
                 : locale == 'pt'
-                    ? l10n.portuguese
-                    : 'English',
+                ? l10n.portuguese
+                : 'English',
           ),
           onTap: () {
             final localeProvider = context.read<LocaleProvider>();
@@ -319,9 +317,9 @@ class _HomeTabState extends State<_HomeTab> {
           title: Text(l10n.sectionAbout),
           subtitle: Text(l10n.aboutDescription),
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AboutScreen()),
-            );
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const AboutScreen()));
           },
         ),
 
@@ -342,8 +340,7 @@ class _HomeTabState extends State<_HomeTab> {
       if (settings.wallpaperPermissionGranted) {
         settings.triggerNow(
           verseProvider: verseProvider,
-          locale:
-              context.read<LocaleProvider>().locale.languageCode,
+          locale: context.read<LocaleProvider>().locale.languageCode,
         );
       }
     };
@@ -386,8 +383,7 @@ class _HomeTabState extends State<_HomeTab> {
               await settings.grantWallpaperPermission();
               settings.triggerNow(
                 verseProvider: verseProvider,
-                locale:
-                    context.read<LocaleProvider>().locale.languageCode,
+                locale: context.read<LocaleProvider>().locale.languageCode,
               );
             },
             child: Text(l10n.changeNow),

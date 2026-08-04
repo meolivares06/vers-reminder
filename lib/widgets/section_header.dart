@@ -5,13 +5,9 @@ import 'package:flutter/material.dart';
 ///
 /// Extracted from the previously duplicated private `_SectionHeader` in
 /// `home_screen.dart` and `settings_screen.dart` so all three consuming screens
-/// render identical headers (UX-SET-001).
+/// render identical headers.
 class SectionHeader extends StatelessWidget {
-  const SectionHeader({
-    super.key,
-    required this.title,
-    required this.subtitle,
-  });
+  const SectionHeader({super.key, required this.title, required this.subtitle});
 
   final String title;
   final String subtitle;
@@ -26,8 +22,9 @@ class SectionHeader extends StatelessWidget {
         children: [
           Text(
             title,
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 2),
           Text(

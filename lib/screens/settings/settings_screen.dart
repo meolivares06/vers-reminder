@@ -16,6 +16,7 @@ import '../../services/image_cache_service.dart';
 import '../../services/update_service.dart';
 import '../../services/wallpaper_backup_service.dart';
 import '../../services/wallpaper_generator.dart';
+import '../../theme/app_theme.dart';
 import '../../widgets/async_action_button.dart';
 import '../../widgets/section_header.dart';
 import 'about_screen.dart';
@@ -107,12 +108,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     // Capture width before async gap
-    final previewWidth =
-        (MediaQuery.of(context).size.width * 0.8).round();
+    final previewWidth = (MediaQuery.of(context).size.width * 0.8).round();
 
     try {
-      _previewImagePath ??=
-          await ImageCacheService.instance.getNextRandomImage();
+      _previewImagePath ??= await ImageCacheService.instance
+          .getNextRandomImage();
 
       // No cached image to render against (empty cache on first run) — settle
       // into the placeholder.
@@ -162,8 +162,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // No image stored — open picker automatically
       try {
         final picker = ImagePicker();
-        final XFile? pickedImage =
-            await picker.pickImage(source: ImageSource.gallery);
+        final XFile? pickedImage = await picker.pickImage(
+          source: ImageSource.gallery,
+        );
 
         if (pickedImage == null) {
           // User cancelled — revert to App
@@ -212,8 +213,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     try {
       final picker = ImagePicker();
-      final XFile? pickedImage =
-          await picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedImage = await picker.pickImage(
+        source: ImageSource.gallery,
+      );
 
       if (pickedImage == null) return;
 
@@ -314,7 +316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-@override
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.watch<SettingsProvider>();
@@ -345,9 +347,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: _cachedPreview != null
                             ? Image.memory(_cachedPreview!, fit: BoxFit.cover)
                             : Container(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHighest,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
                                 // Settles into a placeholder when a preview can't
                                 // be produced (empty cache/offline first run) so
                                 // the spinner never spins forever.
@@ -364,8 +366,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                       ),
                     ),
-                    // "Preview" caption (F7, UX-SET-003): distinguishes the
-                    // composition preview from the Home "Current wallpaper".
+                    // "Preview" caption: distinguishes the composition preview
+                    // from the Home "Current wallpaper" card.
                     Positioned(
                       top: 8,
                       left: 8,
@@ -395,12 +397,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: SegmentedButton<String>(
                     segments: [
+                      ButtonSegment(value: 'top', label: Text(l10n.topAlign)),
                       ButtonSegment(
-                          value: 'top', label: Text(l10n.topAlign)),
+                        value: 'center',
+                        label: Text(l10n.centerAlign),
+                      ),
                       ButtonSegment(
-                          value: 'center', label: Text(l10n.centerAlign)),
-                      ButtonSegment(
-                          value: 'bottom', label: Text(l10n.bottomAlign)),
+                        value: 'bottom',
+                        label: Text(l10n.bottomAlign),
+                      ),
                     ],
                     selected: {settings.verticalAlignment},
                     onSelectionChanged: (sel) {
@@ -417,15 +422,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(bottom: 4),
-                        child: Text(l10n.backgroundSourceLabel,
-                            style: Theme.of(context).textTheme.bodySmall),
+                        child: Text(
+                          l10n.backgroundSourceLabel,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ),
                       SegmentedButton<bool>(
                         segments: [
                           ButtonSegment(
-                              value: false, label: Text(l10n.backgroundSourceApp)),
+                            value: false,
+                            label: Text(l10n.backgroundSourceApp),
+                          ),
                           ButtonSegment(
-                              value: true, label: Text(l10n.backgroundSourceMine)),
+                            value: true,
+                            label: Text(l10n.backgroundSourceMine),
+                          ),
                         ],
                         selected: {settings.useMyWallpaper},
                         onSelectionChanged: (sel) {
@@ -455,9 +466,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     File(settings.userBackgroundPath!),
                                     fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) => Container(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .surfaceContainerHighest,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceContainerHighest,
                                       child: const Icon(Icons.broken_image),
                                     ),
                                   ),
@@ -476,9 +487,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 // Horizontal offset — rendered as ONE caption resolved from the value's
-                // sign (F6, UX-SET-002): no static left/right Row labels, no
-                // duplicate text node. Direction word comes from the localized
-                // offsetLabel(direction, value).
+                // sign: no static left/right Row labels, no duplicate text node.
+                // Direction word comes from the localized offsetLabel(direction, value).
                 Slider(
                   value: settings.horizontalOffset.toDouble(),
                   min: -20,
@@ -517,7 +527,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         label: settings.fontScale.toStringAsFixed(2),
                         onChanged: (v) {
                           settings.setFontScale(
-                              double.parse(v.toStringAsFixed(2)));
+                            double.parse(v.toStringAsFixed(2)),
+                          );
                           _schedulePreview();
                         },
                       ),
@@ -543,8 +554,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       label: l10n.restoreOriginalWallpaper,
                       style: AsyncActionButtonStyle.tile,
                       enabled: settings.hasBackup,
-                      onPressed: () =>
-                          _showRestoreDialog(context, l10n),
+                      onPressed: () => _showRestoreDialog(context, l10n),
                     );
                   },
                 ),
@@ -566,22 +576,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (settings.isEnabled)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: SettingsScreen.frequencyOptions
-                          .map(
-                            (freq) =>                             ChoiceChip(
-                              label: Text(_frequencyLabel(freq, l10n)),
-                              selected: settings.frequencyMinutes == freq,
-                              // F2: gold tint on the selected control via
-                              // colorScheme.secondary.
-                              selectedColor:
-                                  Theme.of(context).colorScheme.secondary,
-                              onSelected: (_) => settings.setFrequency(freq),
-                            ),
-                          )
-                          .toList(),
+                    child: ChipTheme(
+                      // The selected chip sits on the gold brand surface; the
+                      // default M3 selected label color (onSurfaceVariant) is
+                      // near-white in dark mode and fails contrast on gold.
+                      // Pin the selected label to the fixed dark tone used on
+                      // the gold brand surface in both themes.
+                      data: ChipTheme.of(context).copyWith(
+                        secondaryLabelStyle: TextStyle(color: onGoldAccent),
+                      ),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: SettingsScreen.frequencyOptions
+                            .map(
+                              (freq) => ChoiceChip(
+                                label: Text(_frequencyLabel(freq, l10n)),
+                                selected: settings.frequencyMinutes == freq,
+                                // Gold tint on the selected control via
+                                // colorScheme.secondary.
+                                selectedColor: Theme.of(
+                                  context,
+                                ).colorScheme.secondary,
+                                onSelected: (_) => settings.setFrequency(freq),
+                              ),
+                            )
+                            .toList(),
+                      ),
                     ),
                   ),
 
@@ -619,11 +640,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
-                ...verseProvider.categories.map((cat) => CheckboxListTile(
-                      title: Text(cat.name),
-                      value: settings.activeCategoryIds.contains(cat.id),
-                      onChanged: (_) => settings.toggleCategory(cat.id!),
-                    )),
+                ...verseProvider.categories.map(
+                  (cat) => CheckboxListTile(
+                    title: Text(cat.name),
+                    value: settings.activeCategoryIds.contains(cat.id),
+                    onChanged: (_) => settings.toggleCategory(cat.id!),
+                  ),
+                ),
 
                 // ── Actions ──
                 const Divider(),
@@ -659,20 +682,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     if (status == WallpaperStatus.updated) {
                       messenger.showSnackBar(
                         SnackBar(
-                          content: Text(l10n.wallpaperUpdated(
-                              settings.statusPayload ?? '')),
-                          behavior: SnackBarBehavior.floating,
-                          action: SnackBarAction(
-                            label: 'OK',
-                            onPressed: () {},
+                          content: Text(
+                            l10n.wallpaperUpdated(settings.statusPayload ?? ''),
                           ),
+                          behavior: SnackBarBehavior.floating,
+                          action: SnackBarAction(label: 'OK', onPressed: () {}),
                         ),
                       );
                     } else if (status == WallpaperStatus.error) {
                       messenger.showSnackBar(
                         SnackBar(
-                          content: Text(l10n.generatingError,
-                              style: TextStyle(color: errorColor)),
+                          content: Text(
+                            l10n.generatingError,
+                            style: TextStyle(color: errorColor),
+                          ),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );

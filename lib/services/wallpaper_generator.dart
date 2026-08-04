@@ -738,10 +738,13 @@ class WallpaperGenerator {
       if (!await preGenDir.exists()) return false;
 
       final prefs = await SharedPreferences.getInstance();
-      final index = prefs.getInt('pregen_index') ?? 0;
       final count = prefs.getInt('pregen_count') ?? 0;
+      if (count == 0) return false;
 
-      if (index >= count) return false;
+      var index = prefs.getInt('pregen_index') ?? 0;
+      // Wrap around when all pre-generated wallpapers have been consumed
+      // so the background scheduler never stops rotating.
+      if (index >= count) index = 0;
 
       final filePath = p.join(preGenDir.path, 'pregen_$index.png');
       final file = File(filePath);
