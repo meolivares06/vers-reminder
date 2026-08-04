@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,6 +18,23 @@ import 'package:vers_reminder/screens/home_screen.dart';
 const MethodChannel _packageInfoChannel = MethodChannel(
   'dev.fluttercommunity.plus/package_info',
 );
+
+/// Minimal valid PNG bytes for [File.existsSync] checks.
+const _kPngBytes = <int>[
+  0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
+  0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+  0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xDE, 0x00, 0x00, 0x00,
+  0x0C, 0x49, 0x44, 0x41, 0x54, 0x08, 0xD7, 0x63, 0xF8, 0xCF, 0x00, 0x00,
+  0x01, 0x00, 0x01, 0x00, 0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00,
+  0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82,
+];
+
+String _createTempPng() {
+  final dir = Directory.systemTemp.createTempSync('home_screen_test_');
+  final file = File('${dir.path}/wallpaper.png');
+  file.writeAsBytesSync(_kPngBytes);
+  return file.path;
+}
 
 void main() {
   setUp(() {
@@ -124,7 +143,10 @@ void main() {
       'gold FAB on Home (idx 0), add-verse FAB on verse list (idx 1), '
       'never both',
       (tester) async {
-        await pumpHome(tester);
+        final wallpaperPath = _createTempPng();
+        final settings = SettingsProvider()
+          ..setWallpaperCard(path: wallpaperPath);
+        await pumpHome(tester, settings: settings);
 
         final goldFab = find.widgetWithIcon(
           FloatingActionButton,
@@ -162,8 +184,9 @@ void main() {
     testWidgets('gold FAB triggers generation when permission granted', (
       tester,
     ) async {
+      final wallpaperPath = _createTempPng();
       final settings = SettingsProvider()
-        ..setWallpaperCard(permissionGranted: true);
+        ..setWallpaperCard(path: wallpaperPath, permissionGranted: true);
       await pumpHome(tester, settings: settings);
       expect(settings.status, WallpaperStatus.idle);
 
@@ -180,7 +203,8 @@ void main() {
     testWidgets('gold FAB shows permission dialog when permission missing', (
       tester,
     ) async {
-      final settings = SettingsProvider()..setWallpaperCard();
+      final wallpaperPath = _createTempPng();
+      final settings = SettingsProvider()..setWallpaperCard(path: wallpaperPath);
       await pumpHome(tester, settings: settings);
 
       await tester.tap(find.byIcon(Icons.refresh));

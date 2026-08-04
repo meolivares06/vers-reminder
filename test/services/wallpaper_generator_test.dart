@@ -504,7 +504,7 @@ void main() {
   group('WallpaperGenerator typography (wallpaper-gen delta)', () {
     final generator = WallpaperGenerator.instance;
 
-    test('verse style is EB Garamond italic in paint and measurement', () {
+    test('verse style is EB Garamond regular (not italic) in paint and measurement', () {
       final style = generator.verseMeasureStyle(24);
       expect(
         style.fontFamily,
@@ -513,8 +513,8 @@ void main() {
       );
       expect(
         style.fontStyle,
-        FontStyle.italic,
-        reason: 'verse must render italic at every font-size tier',
+        isNull,
+        reason: 'verse must render in regular weight, not italic',
       );
     });
 
@@ -540,11 +540,11 @@ void main() {
       );
     });
 
-    test('gold rule above the citation uses brand color 0xFFEFB14D', () {
+    test('citation dash uses brand gold color 0xFFEFB14D', () {
       expect(
         WallpaperGenerator.citationRuleColor,
         const Color(0xFFEFB14D),
-        reason: 'gold rule must match the brand gold accent',
+        reason: 'citation dash must match the brand gold accent',
       );
     });
 

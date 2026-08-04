@@ -33,15 +33,11 @@ class WallpaperGenerator {
   static const double _fontStep = 2.0;
   static const double _citationFontSizeRatio = 0.75;
 
-  /// Gold brand rule drawn above the citation (matches `goldAccent`).
+  /// Gold brand color used for the citation dash (matches `goldAccent`).
   @visibleForTesting
   static const Color citationRuleColor = Color(0xFFEFB14D);
 
-  static const double _citationRuleWidth = 26.0;
-  static const double _citationRuleHeight = 2.0;
-  static const double _citationRuleGap = 8.0;
-
-  /// Shared typographic identity for the verse text: EB Garamond italic.
+  /// Shared typographic identity for the verse text: EB Garamond.
   ///
   /// Used by BOTH the paint pass and [_resolveFontSize] so measurement can
   /// never drift from what renders (spec R-WG "Measurement-Paint parity").
@@ -50,7 +46,6 @@ class WallpaperGenerator {
     fontSize: size,
     height: 1.4,
     fontFamily: 'EB Garamond',
-    fontStyle: FontStyle.italic,
   );
 
   /// Shared typographic identity for the citation: sans-serif (no explicit
@@ -335,12 +330,24 @@ class WallpaperGenerator {
 
       final citationPainter = TextPainter(
         text: TextSpan(
-          text: citationDisplayText(citation),
-          style: citationMeasureStyle(citationFontSize).copyWith(
-            color: Colors.white70,
-            fontWeight: FontWeight.w500,
-            shadows: [shadow],
-          ),
+          children: [
+            TextSpan(
+              text: '— ',
+              style: citationMeasureStyle(citationFontSize).copyWith(
+                color: citationRuleColor,
+                fontWeight: FontWeight.w500,
+                shadows: [shadow],
+              ),
+            ),
+            TextSpan(
+              text: citationDisplayText(citation),
+              style: citationMeasureStyle(citationFontSize).copyWith(
+                color: Colors.white70,
+                fontWeight: FontWeight.w500,
+                shadows: [shadow],
+              ),
+            ),
+          ],
         ),
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: maxTextWidth);
@@ -371,18 +378,7 @@ class WallpaperGenerator {
 
       textPainter.paint(canvas, Offset(startX, startY));
 
-      // Gold rule above the citation — the contrast styling that separates
-      // the sans-serif uppercase citation from the italic verse.
       final citationTop = startY + textPainter.height + gap;
-      canvas.drawRect(
-        Rect.fromLTWH(
-          startX,
-          citationTop - _citationRuleGap - _citationRuleHeight,
-          _citationRuleWidth,
-          _citationRuleHeight,
-        ),
-        Paint()..color = citationRuleColor,
-      );
       citationPainter.paint(canvas, Offset(startX, citationTop));
 
       textPainter.dispose();
@@ -474,7 +470,7 @@ class WallpaperGenerator {
     const gap = 16.0;
     final measureCitation = legacyStyles
         ? citation
-        : citationDisplayText(citation);
+        : '— ${citationDisplayText(citation)}';
 
     for (var size = baseSize; size >= minSize; size -= _fontStep) {
       final citationSize = size * _citationFontSizeRatio;

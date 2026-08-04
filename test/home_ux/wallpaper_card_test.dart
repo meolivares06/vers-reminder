@@ -90,18 +90,18 @@ void main() {
       await pumpHome(tester, settings);
 
       expect(
-        find.text('Current wallpaper'),
+        find.text('Your wallpaper'),
         findsOneWidget,
         reason: 'localized label on the card when a wallpaper exists',
       );
       expect(
-        find.textContaining('Updated'),
+        find.textContaining('ago'),
         findsOneWidget,
         reason:
             'updatedAtLabel caption is derived from the persisted timestamp',
       );
       expect(
-        find.text('No wallpaper yet. Tap to generate your first one.'),
+        find.text('Tap to create your first wallpaper'),
         findsNothing,
         reason: 'empty-state prompt must not render when a wallpaper exists',
       );
@@ -120,11 +120,10 @@ void main() {
     await pumpHome(tester, settings);
     expect(settings.status, WallpaperStatus.idle);
 
-    await tester.tap(find.text('Current wallpaper'));
+    await tester.tap(find.byIcon(Icons.refresh));
     await tester.pump();
 
-    // With no active categories, triggerNow short-circuits to noCategories —
-    // proving the card tap is wired to the same trigger path as the CTA.
+    // FAB overlay triggers generation via the same permission-gated path.
     expect(
       settings.status,
       WallpaperStatus.noCategories,
@@ -140,24 +139,24 @@ void main() {
     await pumpHome(tester, settings);
 
     expect(
-      find.text('No wallpaper yet. Tap to generate your first one.'),
+      find.text('Tap to create your first wallpaper'),
       findsOneWidget,
       reason: 'empty-state prompt guides the user to generate their first',
     );
     expect(
-      find.text('Current wallpaper'),
+      find.text('Your wallpaper'),
       findsNothing,
       reason: 'no caption when no wallpaper exists',
     );
     expect(
-      find.textContaining('Updated'),
+      find.textContaining('ago'),
       findsNothing,
       reason: 'no updated-time caption in the empty state',
     );
   });
 
   testWidgets(
-    'UX-HOME-001 card fills 85-88% of visible home height when wallpaper '
+    'UX-HOME-001 card fills >90% of visible home height when wallpaper '
     'exists',
     (tester) async {
       final settings = SettingsProvider()
@@ -170,16 +169,16 @@ void main() {
 
       expect(
         fraction,
-        inInclusiveRange(0.85, 0.88),
+        inInclusiveRange(0.90, 0.99),
         reason:
-            'card must fill 85-88% of the home body height, not a fixed 320px '
-            '(fraction was ${fraction.toStringAsFixed(3)})',
+            'card must fill >90% of the home body height (was '
+            '${fraction.toStringAsFixed(3)})',
       );
     },
   );
 
   testWidgets(
-    'UX-HOME-001 empty-state card keeps the same 85-88% height fraction',
+    'UX-HOME-001 empty-state card keeps the same height fraction',
     (tester) async {
       final settings = SettingsProvider()
         ..setWallpaperCard(path: null, timestamp: null);
@@ -191,10 +190,10 @@ void main() {
 
       expect(
         fraction,
-        inInclusiveRange(0.85, 0.88),
+        inInclusiveRange(0.90, 0.99),
         reason:
             'empty state must occupy the same height fraction as the '
-            'wallpaper-present card (fraction was '
+            'wallpaper-present card (was '
             '${fraction.toStringAsFixed(3)})',
       );
     },
@@ -215,7 +214,7 @@ void main() {
     ) async {
       await pumpWithOffset(tester, const Duration(seconds: 20));
       expect(
-        find.text('Updated 0 min'),
+        find.text('0 min ago'),
         findsOneWidget,
         reason: 'sub-minute age maps to timeMinutes(0)',
       );
@@ -224,7 +223,7 @@ void main() {
     testWidgets('a few minutes render the exact minute count', (tester) async {
       await pumpWithOffset(tester, const Duration(minutes: 5, seconds: 5));
       expect(
-        find.text('Updated 5 min'),
+        find.text('5 min ago'),
         findsOneWidget,
         reason: 'ages under one hour map to timeMinutes(n)',
       );
@@ -233,7 +232,7 @@ void main() {
     testWidgets('over an hour renders the hour count', (tester) async {
       await pumpWithOffset(tester, const Duration(hours: 2, minutes: 5));
       expect(
-        find.text('Updated 2 h'),
+        find.text('2 h ago'),
         findsOneWidget,
         reason: 'ages over one hour map to timeHours(n)',
       );

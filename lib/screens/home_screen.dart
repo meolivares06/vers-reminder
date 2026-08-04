@@ -130,21 +130,15 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          _HomeTab(settings: settings),
+          _HomeTab(
+            settings: settings,
+            onFabPressed: _handleFabPressed,
+          ),
           const VerseListScreen(),
         ],
       ),
       floatingActionButton: switch (_currentIndex) {
-        // Home tab: gold circular FAB is the primary wallpaper-change action.
-        // The card remains tappable as a secondary affordance.
-        0 => FloatingActionButton(
-          onPressed: _handleFabPressed,
-          backgroundColor: Theme.of(context).colorScheme.secondary,
-          foregroundColor: onGoldAccent,
-          tooltip: l10n.changeNow,
-          child: const Icon(Icons.refresh),
-        ),
-        // Verse-list tab: add-verse FAB only — never both.
+        0 => null,
         _ => FloatingActionButton(
           onPressed: () => _openVerseForm(context),
           child: const Icon(Icons.add),
@@ -172,8 +166,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _HomeTab extends StatefulWidget {
   final SettingsProvider settings;
+  final VoidCallback? onFabPressed;
 
-  const _HomeTab({required this.settings});
+  const _HomeTab({required this.settings, this.onFabPressed});
 
   @override
   State<_HomeTab> createState() => _HomeTabState();
@@ -186,114 +181,107 @@ class _HomeTabState extends State<_HomeTab> {
     final l10n = AppLocalizations.of(context)!;
     final verseProvider = context.watch<VerseProvider>();
 
-    // The wallpaper is the visual hero of Home: the card fills 85% of the
-    // available body height (clamped to at most 88%), leaving a guaranteed
-    // tap zone for the gold FAB. No fixed-pixel sizing — the fraction is
-    // relative to the actual layout box (AppBar + navbar included).
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardHeight = (constraints.maxHeight * 0.85).clamp(
-          0.0,
-          constraints.maxHeight * 0.88,
-        );
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              SizedBox(
-                height: cardHeight,
-                child: Card(
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+    // The wallpaper fills the available body height with a 12px margin.
+    // The gold FAB is overlaid directly on the image — no fixed sizing needed.
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child:
+            settings.lastWallpaperPath != null &&
+                File(settings.lastWallpaperPath!).existsSync()
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  InkWell(
+                    onTap: _triggerNow(settings, verseProvider, l10n),
+                    child: Image.file(
+                      File(settings.lastWallpaperPath!),
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                  child:
-                      settings.lastWallpaperPath != null &&
-                          File(settings.lastWallpaperPath!).existsSync()
-                      ? InkWell(
-                          onTap: _triggerNow(settings, verseProvider, l10n),
-                          child: Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              Image.file(
-                                File(settings.lastWallpaperPath!),
-                                fit: BoxFit.cover,
-                              ),
-                              Positioned(
-                                bottom: 12,
-                                left: 16,
-                                right: 16,
-                                // Black54 scrim guarantees the caption stays
-                                // legible over the image in both themes.
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black54,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        l10n.currentWallpaperLabel,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      if (settings.lastWallpaperTimestamp
-                                          case final DateTime ts)
-                                        Text(
-                                          l10n.updatedAtLabel(
-                                            _relativeTime(ts, l10n),
-                                          ),
-                                          style: const TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : InkWell(
-                          onTap: _triggerNow(settings, verseProvider, l10n),
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.wallpaper_outlined,
-                                  size: 48,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.5),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  l10n.noWallpaper,
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ],
+                  Positioned(
+                    bottom: 12,
+                    left: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.currentWallpaperLabel,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
+                          if (settings.lastWallpaperTimestamp
+                              case final DateTime ts)
+                            Text(
+                              l10n.updatedAtLabel(
+                                _relativeTime(ts, l10n),
+                              ),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (widget.onFabPressed != null)
+                    Positioned(
+                      bottom: 12,
+                      right: 12,
+                      child: FloatingActionButton.small(
+                        onPressed: widget.onFabPressed,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.secondary,
+                        foregroundColor: onGoldAccent,
+                        tooltip: l10n.changeNow,
+                        child: const Icon(Icons.refresh),
+                      ),
+                    ),
+                ],
+              )
+            : InkWell(
+                onTap: _triggerNow(settings, verseProvider, l10n),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.wallpaper_outlined,
+                        size: 48,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.noWallpaper,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          ),
-        );
-      },
+      ),
     );
   }
 
