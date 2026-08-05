@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
@@ -69,6 +70,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          Provider<EventBus>.value(value: EventBus.instance),
           ChangeNotifierProvider<SettingsProvider>.value(
             value: settingsProvider,
           ),
@@ -128,21 +130,22 @@ void main() {
       final showDialogIdx = source.indexOf('_showPermissionDialog');
       expect(showDialogIdx, greaterThan(0));
 
-      // After grantWallpaperPermission(), the triggerNow call at ~L84
+      // After grantWallpaperPermission(), the RefreshWallpaper emission at ~L90
       // must be wrapped in try/catch with debugPrint logging
       final grantIdx = source.indexOf('grantWallpaperPermission',
           showDialogIdx);
       expect(grantIdx, greaterThan(0));
 
       // The try/catch must appear AFTER grantWallpaperPermission
-      // and wrap the triggerNow call
+      // and wrap the RefreshWallpaper emit call
       final tryIdx = source.indexOf('try {', grantIdx);
       expect(tryIdx, greaterThan(0),
-          reason: 'F9 fix: dialog triggerNow must be wrapped in try/catch '
-              'at ~L84 so async exceptions from the unawaited call are logged');
-      final catchIdx = source.indexOf('triggerNow failed', tryIdx);
+          reason: 'F9 fix: dialog RefreshWallpaper emit must be wrapped in '
+              'try/catch at ~L90 so async exceptions from the unawaited call '
+              'are logged');
+      final catchIdx = source.indexOf('RefreshWallpaper emit failed', tryIdx);
       expect(catchIdx, greaterThan(0),
-          reason: 'F9 fix: catch must log triggerNow failures via debugPrint');
+          reason: 'F9 fix: catch must log RefreshWallpaper failures via debugPrint');
     });
 
     test('F9-RED _triggerNow VoidCallback body wrapped in try/catch', () {
@@ -154,21 +157,20 @@ void main() {
       expect(triggerNowIdx, greaterThan(0),
           reason: '_triggerNow method must exist');
 
-      // The body of _triggerNow (the anonymous VoidCallback at ~L342)
-      // must wrap settings.triggerNow in try/catch
+      // The body of _triggerNow (the anonymous VoidCallback at ~L345)
+      // must wrap RefreshWallpaper emit in try/catch
       final tryIdx = source.indexOf('try {', triggerNowIdx);
       expect(tryIdx, greaterThan(0),
-          reason: 'F9 fix: _triggerNow body at ~L342 must wrap '
-              'triggerNow in try/catch so sync exceptions are caught');
+          reason: 'F9 fix: _triggerNow body at ~L345 must wrap '
+              'RefreshWallpaper emit in try/catch so sync exceptions are caught');
 
-      final triggerNowCallIdx = source.indexOf('settings.triggerNow',
-          tryIdx);
-      expect(triggerNowCallIdx, greaterThan(tryIdx),
-          reason: 'the triggerNow call must be inside the try block');
+      final emitIdx = source.indexOf('RefreshWallpaper(locale:', tryIdx);
+      expect(emitIdx, greaterThan(tryIdx),
+          reason: 'the RefreshWallpaper emit must be inside the try block');
 
-      final catchIdx = source.indexOf('triggerNow failed', tryIdx);
+      final catchIdx = source.indexOf('RefreshWallpaper emit failed', tryIdx);
       expect(catchIdx, greaterThan(0),
-          reason: 'F9 fix: catch must log triggerNow failures via debugPrint');
+          reason: 'F9 fix: catch must log RefreshWallpaper failures via debugPrint');
     });
   });
 

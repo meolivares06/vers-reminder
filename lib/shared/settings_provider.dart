@@ -5,16 +5,25 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vers_reminder/shared/database_service.dart';
+import 'package:vers_reminder/shared/event_bus/event_bus.dart';
+import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_result.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
 import 'package:vers_reminder/backup/wallpaper_backup_service.dart';
 import 'package:vers_reminder/wallpaper/wallpaper_generator.dart';
-import 'package:vers_reminder/scheduler/wallpaper_scheduler.dart';
-import 'package:vers_reminder/notifications/notification_service.dart';
 import 'package:vers_reminder/verses/verse_provider.dart';
 
 class SettingsProvider extends ChangeNotifier {
-  SettingsProvider({this.wallpaperGenerator});
+  SettingsProvider({this.wallpaperGenerator}) {
+    // Listen for RefreshWallpaper events — registered in constructor
+    // instead of init() so widget tests work without a database.
+    EventBus.instance.on<RefreshWallpaper>((event) async {
+      await triggerNow(
+        verseProvider: null,
+        locale: event.locale,
+      );
+    });
+  }
 
   final DatabaseService _db = DatabaseService.instance;
 
@@ -152,8 +161,13 @@ class SettingsProvider extends ChangeNotifier {
 
     // Re-register WorkManager task if enabled (survives reboot)
     if (_isEnabled && _activeCategoryIds.isNotEmpty) {
-      await WallpaperScheduler.registerPeriodic(_frequencyMinutes);
-      await NotificationService.show(_frequencyText);
+      EventBus.instance.emit(SchedulerToggled(enabled: true));
+      EventBus.instance.emit(
+        const NotificationRequested(
+          title: 'Vers Reminder',
+          body: '', // body filled by _frequencyText
+        ),
+      );
 
       // F3: dismiss loading BEFORE fire-and-forget pre-gen so the app
       // becomes interactive immediately; pre-gen failures are logged.
@@ -205,8 +219,12 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
 
     if (enabled && _activeCategoryIds.isNotEmpty) {
-      await WallpaperScheduler.registerPeriodic(_frequencyMinutes);
-      await NotificationService.show(_frequencyText);
+      EventBus.instance.emit(
+        SchedulerToggled(enabled: true, frequencyMinutes: _frequencyMinutes),
+      );
+      EventBus.instance.emit(
+        NotificationRequested(title: 'Vers Reminder', body: _frequencyText),
+      );
       // F3: fire-and-forget pre-gen for background scheduler (non-blocking)
       final prefs = await SharedPreferences.getInstance();
       final locale = prefs.getString('locale_override') ?? 'es';
@@ -216,8 +234,7 @@ class SettingsProvider extends ChangeNotifier {
         }),
       );
     } else {
-      await WallpaperScheduler.cancel();
-      await NotificationService.cancel();
+      EventBus.instance.emit(const SchedulerToggled(enabled: false));
     }
   }
 
@@ -227,8 +244,10 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
 
     if (_isEnabled && _activeCategoryIds.isNotEmpty) {
-      await WallpaperScheduler.cancel();
-      await WallpaperScheduler.registerPeriodic(minutes);
+      EventBus.instance.emit(const SchedulerToggled(enabled: false));
+      EventBus.instance.emit(
+        SchedulerToggled(enabled: true, frequencyMinutes: minutes),
+      );
     }
   }
 
@@ -245,10 +264,12 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
 
     if (_activeCategoryIds.isEmpty && _isEnabled) {
-      await WallpaperScheduler.cancel();
+      EventBus.instance.emit(const SchedulerToggled(enabled: false));
     } else if (_isEnabled && _activeCategoryIds.length == 1) {
       // Re-register after having none
-      await WallpaperScheduler.registerPeriodic(_frequencyMinutes);
+      EventBus.instance.emit(
+        SchedulerToggled(enabled: true, frequencyMinutes: _frequencyMinutes),
+      );
     }
   }
 
@@ -259,13 +280,14 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   Future<void> triggerNow({
-    required VerseProvider verseProvider,
+    VerseProvider? verseProvider, // kept for API compatibility; unused internally
     required String locale,
   }) async {
     if (_activeCategoryIds.isEmpty) {
       _status = WallpaperStatus.noCategories;
       _statusPayload = null;
       notifyListeners();
+      EventBus.instance.emit(const SettingChanged(key: 'no_categories'));
       return;
     }
 
@@ -286,6 +308,7 @@ class SettingsProvider extends ChangeNotifier {
       _statusPayload = 'No verses for locale';
       // ignore: avoid_print
       print('WallpaperGenerator: noVersesForLocale');
+      EventBus.instance.emit(const SettingChanged(key: 'wallpaper_error'));
       // Flutter 3.7+ notifies are safe after async gaps; no _disposed guard needed per design review
       notifyListeners();
       return;
@@ -315,7 +338,15 @@ class SettingsProvider extends ChangeNotifier {
       case WallpaperResultSuccess(:final wallpaperPath, :final citation):
         _status = WallpaperStatus.updated;
         _statusPayload = citation;
-        await NotificationService.show(citation ?? _frequencyText);
+        EventBus.instance.emit(
+          NotificationRequested(
+            title: 'Vers Reminder',
+            body: citation ?? _frequencyText,
+          ),
+        );
+        EventBus.instance.emit(
+          WallpaperGenerated(path: wallpaperPath, citation: citation),
+        );
         _lastWallpaperPath = wallpaperPath;
         _lastWallpaperTimestamp = DateTime.now();
         // Persistence is best-effort: the in-memory wallpaper state is already
@@ -341,6 +372,7 @@ class SettingsProvider extends ChangeNotifier {
         _statusPayload = reason.name;
         // ignore: avoid_print
         print('WallpaperGenerator error: $reason');
+        EventBus.instance.emit(const SettingChanged(key: 'wallpaper_error'));
     }
     // Flutter 3.7+ notifies are safe after async gaps; no _disposed guard needed per design review
     notifyListeners();
