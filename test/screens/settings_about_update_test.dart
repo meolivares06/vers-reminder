@@ -8,15 +8,15 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/models/update_check_result.dart';
-import 'package:vers_reminder/providers/locale_provider.dart';
-import 'package:vers_reminder/providers/settings_provider.dart';
-import 'package:vers_reminder/providers/verse_provider.dart';
-import 'package:vers_reminder/screens/settings/about_screen.dart';
-import 'package:vers_reminder/screens/settings/settings_screen.dart';
-import 'package:vers_reminder/services/update_service.dart';
-import 'package:vers_reminder/widgets/async_action_button.dart';
+import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/settings/update_check_result.dart';
+import 'package:vers_reminder/shared/locale_provider.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/verses/verse_provider.dart';
+import 'package:vers_reminder/settings/about_screen.dart';
+import 'package:vers_reminder/settings/settings_screen.dart';
+import 'package:vers_reminder/settings/update_service.dart';
+import 'package:vers_reminder/shared/widgets/async_action_button.dart';
 
 /// Channel used by `package_info_plus` — mocked so `_loadVersion` does not
 /// hit a real platform channel in tests.
@@ -566,9 +566,9 @@ void main() {
         reason: 'update content moved out of Settings into AboutScreen',
       );
 
-      // Section order is browsable in order: Appearance, Scheduling, Categories,
+      // Section order is browsable in order: Appearance, Rotation, Categories,
       // Actions, then the About link (scrolling reveals each below the fold).
-      for (final section in ['Appearance', 'Scheduling', 'Actions']) {
+      for (final section in ['Appearance', 'Rotation', 'Actions']) {
         await tester.scrollUntilVisible(find.text(section), 150);
         await tester.pump();
         expect(

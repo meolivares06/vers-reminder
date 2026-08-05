@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/providers/locale_provider.dart';
-import 'package:vers_reminder/providers/settings_provider.dart';
-import 'package:vers_reminder/providers/verse_provider.dart';
-import 'package:vers_reminder/screens/settings/settings_screen.dart';
+import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/shared/locale_provider.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/verses/verse_provider.dart';
+import 'package:vers_reminder/settings/settings_screen.dart';
 
 void main() {
   Future<void> pumpSettings(WidgetTester tester, SettingsProvider settings) async {
@@ -31,7 +31,7 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('negative offset shows a single caption with Left direction',
+  testWidgets('slider area no longer shows offset text labels',
       (tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
@@ -40,17 +40,14 @@ void main() {
 
     await pumpSettings(tester, settings);
 
-    // Exactly one offset caption, resolved to Left.
-    expect(find.text('Offset: Left -5'), findsOneWidget,
-        reason: 'single caption derives Left from the negative offset');
-    // No duplicate static left/right Row labels remain (UX-SET-002).
-    expect(find.text('Right'), findsNothing,
-        reason: 'the static right Row label is removed');
-    expect(find.text('Offset: Right -5'), findsNothing,
-        reason: 'no right word appears in the caption for a negative offset');
+    // No offset caption — the slider is self-explanatory with its value label.
+    expect(find.text('Offset: Left -5'), findsNothing,
+        reason: 'offset text label was removed');
+    expect(find.text('Left'), findsNothing);
+    expect(find.text('Right'), findsNothing);
   });
 
-  testWidgets('positive offset shows a single caption with Right direction',
+  testWidgets('positive offset also has no text label',
       (tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
@@ -59,13 +56,12 @@ void main() {
 
     await pumpSettings(tester, settings);
 
-    expect(find.text('Offset: Right 5'), findsOneWidget,
-        reason: 'single caption derived from sign for a positive offset');
-    expect(find.text('Left'), findsNothing,
-        reason: 'the static left Row label is removed');
+    expect(find.text('Offset: Right 5'), findsNothing,
+        reason: 'offset text label was removed');
+    expect(find.text('Left'), findsNothing);
   });
 
-  testWidgets('only one offset-related text node exists in the slider area',
+  testWidgets('zero offset has no text label',
       (tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
@@ -74,12 +70,8 @@ void main() {
 
     await pumpSettings(tester, settings);
 
-    // The caption is the single offset text node; no duplicated offset labels.
-    expect(find.text('Offset: Right 0'), findsOneWidget,
-        reason: 'zero offset resolves to a single Right caption');
-    expect(find.text('Left'), findsNothing,
-        reason: 'no duplicate Left node in the zero state');
-    expect(find.text('Right'), findsNothing,
-        reason: 'no standalone Right static node');
+    expect(find.text('Offset: Right 0'), findsNothing,
+        reason: 'offset text label was removed');
+    expect(find.text('Left'), findsNothing);
   });
 }

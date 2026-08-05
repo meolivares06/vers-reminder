@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vers_reminder/models/wallpaper_result.dart';
+import 'package:vers_reminder/wallpaper/domain/wallpaper_result.dart';
 
 void main() {
   group('WallpaperResult', () {

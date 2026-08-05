@@ -22,9 +22,7 @@ const _localesPaths = <String, String>{
 Set<String> _plainKeys(String locale) {
   final file = File(_localesPaths[locale]!);
   final json = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
-  return json.keys
-      .where((key) => !key.startsWith('@'))
-      .toSet();
+  return json.keys.where((key) => !key.startsWith('@')).toSet();
 }
 
 void main() {
@@ -59,8 +57,7 @@ void main() {
       for (final locale in keysByLocale.keys) {
         final keys = keysByLocale[locale]!;
         for (final key in expectedKeys) {
-          expect(keys, contains(key),
-              reason: '$locale ARB must define "$key"');
+          expect(keys, contains(key), reason: '$locale ARB must define "$key"');
         }
       }
     });

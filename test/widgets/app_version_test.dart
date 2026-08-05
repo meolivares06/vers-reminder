@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:vers_reminder/widgets/app_version.dart';
+import 'package:vers_reminder/shared/widgets/app_version.dart';
 
 /// Channel used by `package_info_plus` — mocked so `resolveAppVersionString`
 /// never hits a real platform channel in tests.

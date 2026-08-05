@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:vers_reminder/theme/app_theme.dart';
+import 'package:vers_reminder/shared/theme/app_theme.dart';
 
 void main() {
   setUp(() {

@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/providers/locale_provider.dart';
-import 'package:vers_reminder/providers/settings_provider.dart';
-import 'package:vers_reminder/widgets/async_action_button.dart';
+import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/shared/locale_provider.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/shared/widgets/async_action_button.dart';
 
 /// Minimal widget that replicates the restore tile from SettingsScreen to
 /// allow widget-level testing without the full screen's DB dependencies.

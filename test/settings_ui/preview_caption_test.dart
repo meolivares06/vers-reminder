@@ -3,12 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/providers/locale_provider.dart';
-import 'package:vers_reminder/providers/settings_provider.dart';
-import 'package:vers_reminder/providers/verse_provider.dart';
-import 'package:vers_reminder/screens/home_screen.dart';
-import 'package:vers_reminder/screens/settings/settings_screen.dart';
+import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/shared/locale_provider.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/verses/verse_provider.dart';
+import 'package:vers_reminder/home/home_screen.dart';
+import 'package:vers_reminder/settings/settings_screen.dart';
 
 void main() {
   Future<void> pumpSettings(WidgetTester tester) async {
@@ -33,15 +33,15 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('Settings Appearance preview shows a localized Preview caption',
+  testWidgets('Settings Appearance preview no longer shows a Preview caption',
       (tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
 
     await pumpSettings(tester);
 
-    expect(find.text('Preview'), findsOneWidget,
-        reason: 'Settings preview is captioned to distinguish it from Home');
+    expect(find.text('Preview'), findsNothing,
+        reason: 'Preview badge was removed — preview is self-explanatory');
   });
 
   testWidgets('Home shows Current wallpaper caption (not Preview)',

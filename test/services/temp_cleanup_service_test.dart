@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/services/temp_cleanup_service.dart';
+import 'package:vers_reminder/wallpaper/temp_cleanup_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

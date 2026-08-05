@@ -9,13 +9,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:vers_reminder/database/database_service.dart';
-import 'package:vers_reminder/models/verse.dart';
-import 'package:vers_reminder/models/wallpaper_result.dart';
-import 'package:vers_reminder/models/wallpaper_status.dart';
-import 'package:vers_reminder/providers/settings_provider.dart';
-import 'package:vers_reminder/providers/verse_provider.dart';
-import 'package:vers_reminder/services/wallpaper_generator.dart';
+import 'package:vers_reminder/shared/database_service.dart';
+import 'package:vers_reminder/verses/domain/verse.dart';
+import 'package:vers_reminder/wallpaper/domain/wallpaper_result.dart';
+import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/verses/verse_provider.dart';
+import 'package:vers_reminder/wallpaper/wallpaper_generator.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -298,7 +298,7 @@ void main() {
     // ── F11 RED: notifyListeners post-async safety comment ──
     test('F11-RED notifyListeners sites have Flutter 3.7+ dispose comment', () {
       final source =
-          File('lib/providers/settings_provider.dart').readAsStringSync();
+          File('lib/shared/settings_provider.dart').readAsStringSync();
 
       // The triggerNow method has two post-async notifyListeners() calls
       // (L289 after getVersesByCategoryIds, L344 after generateAndSetWallpaper).
@@ -367,7 +367,7 @@ void main() {
     // ── F3 RED: Non-blocking init ──
     test('init() sets isLoading=false before fire-and-forget pre-gen', () {
       final source =
-          File('lib/providers/settings_provider.dart').readAsStringSync();
+          File('lib/shared/settings_provider.dart').readAsStringSync();
 
       // Scope search to init() method body (after 'Future<void> init()')
       final initStart = source.indexOf('Future<void> init()');
@@ -398,7 +398,7 @@ void main() {
 
     test('pre-gen launched as fire-and-forget with catchError in init()', () {
       final source =
-          File('lib/providers/settings_provider.dart').readAsStringSync();
+          File('lib/shared/settings_provider.dart').readAsStringSync();
 
       final initStart = source.indexOf('Future<void> init()');
       final initEnd = source.indexOf('Future<void> setHorizontalOffset',
@@ -426,7 +426,7 @@ void main() {
     // Task 2.3 REFACTOR: setEnabled() fire-and-forget pattern
     test('setEnabled() uses fire-and-forget pre-gen when enabled', () async {
       final source =
-          File('lib/providers/settings_provider.dart').readAsStringSync();
+          File('lib/shared/settings_provider.dart').readAsStringSync();
 
       // setEnabled(true) at L194 (approximately) should use the same
       // unawaited + catchError pattern as init() for pre-gen

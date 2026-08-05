@@ -7,10 +7,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import 'package:vers_reminder/database/database_service.dart';
-import 'package:vers_reminder/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/providers/locale_provider.dart';
-import 'package:vers_reminder/providers/settings_provider.dart';
+import 'package:vers_reminder/shared/database_service.dart';
+import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/shared/locale_provider.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
 
 /// Replicates the background source section from SettingsScreen to allow
 /// widget-level testing of the SegmentedButton visibility, thumbnail,
