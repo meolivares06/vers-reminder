@@ -8,8 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:vers_reminder/settings/update_check_result.dart';
-import 'package:vers_reminder/settings/update_cleanup_service.dart';
+import 'package:vers_reminder/settings/infrastructure/update_check_result.dart';
+import 'package:vers_reminder/settings/infrastructure/update_cleanup_service.dart';
 
 /// Compares a GitHub release tag against the installed app version.
 ///

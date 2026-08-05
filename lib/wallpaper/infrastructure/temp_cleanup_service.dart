@@ -5,7 +5,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/shared/sweep_utils.dart';
+import 'package:vers_reminder/shared/application/sweep_utils.dart';
 
 /// Sweeps `getTemporaryDirectory()` for stale `wallpaper_*.png` files.
 ///

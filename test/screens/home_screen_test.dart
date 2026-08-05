@@ -9,12 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
-import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
-import 'package:vers_reminder/scheduler/scheduler_config.dart';
-import 'package:vers_reminder/settings/appearance_settings.dart';
-import 'package:vers_reminder/verses/verse_provider.dart';
-import 'package:vers_reminder/home/home_screen.dart';
+import 'package:vers_reminder/shared/application/locale_provider.dart';
+import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/application/scheduler_config.dart';
+import 'package:vers_reminder/settings/application/appearance_settings.dart';
+import 'package:vers_reminder/verses/application/verse_provider.dart';
+import 'package:vers_reminder/home/application/home_container.dart';
 
 /// Channel used by `package_info_plus` — mocked so onboarding to AboutScreen
 /// renders deterministically.
@@ -85,7 +85,7 @@ void main() {
           locale: const Locale('en'),
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: const HomeScreen(),
+          home: const HomeContainer(),
         ),
       ),
     );
@@ -205,6 +205,7 @@ void main() {
       'gold FAB on Home (idx 0), add-verse FAB on verse list (idx 1), '
       'never both',
       (tester) async {
+        final wallpaperPath = _createTempPng();
         final wallpaper = WallpaperState()
           ..setWallpaperCard(path: wallpaperPath);
         await pumpHome(tester, wallpaper: wallpaper);

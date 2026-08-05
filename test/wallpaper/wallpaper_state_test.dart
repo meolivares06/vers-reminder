@@ -8,14 +8,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:vers_reminder/shared/database_service.dart';
+import 'package:vers_reminder/shared/domain/database_service.dart';
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/verses/domain/verse.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_result.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
-import 'package:vers_reminder/wallpaper/wallpaper_generator.dart';
-import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
+import 'package:vers_reminder/wallpaper/infrastructure/wallpaper_generator.dart';
+import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vers_reminder/shared/category.dart';
+import 'package:vers_reminder/shared/domain/category.dart';
 
 void main() {
   group('Category', () {

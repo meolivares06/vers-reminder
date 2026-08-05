@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:vers_reminder/shared/database_service.dart';
-import 'package:vers_reminder/settings/appearance_settings.dart';
+import 'package:vers_reminder/shared/domain/database_service.dart';
+import 'package:vers_reminder/settings/application/appearance_settings.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

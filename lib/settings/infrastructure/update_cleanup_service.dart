@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'package:vers_reminder/shared/sweep_utils.dart';
+import 'package:vers_reminder/shared/application/sweep_utils.dart';
 
 /// Manages the dedicated APK download directory for the auto-update flow.
 ///

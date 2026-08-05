@@ -4,11 +4,12 @@ modules:
     deps: [shared, scheduler, backup, notifications, verses]
     barrel: lib/wallpaper/wallpaper.dart
     files:
-      - wallpaper_generator.dart
-      - image_cache_service.dart
-      - temp_cleanup_service.dart
       - domain/wallpaper_status.dart
       - domain/wallpaper_result.dart
+      - application/wallpaper_state.dart
+      - infrastructure/wallpaper_generator.dart
+      - infrastructure/image_cache_service.dart
+      - infrastructure/temp_cleanup_service.dart
     exceptions:
       - "scheduler → wallpaper/wallpaper_generator.dart (isolate)"
 
@@ -17,62 +18,66 @@ modules:
     deps: [shared, wallpaper]
     barrel: lib/scheduler/scheduler.dart
     files:
-      - wallpaper_scheduler.dart
+      - application/scheduler_config.dart
+      - infrastructure/wallpaper_scheduler.dart
 
   verses:
     path: lib/verses
     deps: [shared]
     barrel: lib/verses/verses.dart
     files:
-      - verse_provider.dart
-      - seed_loader.dart
       - domain/verse.dart
-      - category_create_dialog.dart
-      - verse_form_screen.dart
-      - verse_list_screen.dart
+      - application/verse_provider.dart
+      - application/seed_loader.dart
+      - infrastructure/category_create_dialog.dart
+      - widgets/verse_form_screen.dart
+      - widgets/verse_list_screen.dart
 
   home:
     path: lib/home
     deps: [shared, wallpaper, settings, verses]
     barrel: lib/home/home.dart
     files:
-      - home_screen.dart
+      - application/home_container.dart
+      - widgets/wallpaper_card.dart
+      - widgets/empty_home.dart
 
   settings:
     path: lib/settings
     deps: [shared, wallpaper, backup, verses]
     barrel: lib/settings/settings.dart
     files:
-      - settings_screen.dart
-      - about_screen.dart
-      - update_check_result.dart
-      - update_cleanup_service.dart
-      - update_service.dart
+      - application/appearance_settings.dart
+      - infrastructure/settings_screen.dart
+      - infrastructure/about_screen.dart
+      - infrastructure/update_check_result.dart
+      - infrastructure/update_cleanup_service.dart
+      - infrastructure/update_service.dart
 
   backup:
     path: lib/backup
     deps: [shared]
     barrel: lib/backup/backup.dart
     files:
-      - wallpaper_backup_service.dart
+      - infrastructure/wallpaper_backup_service.dart
 
   notifications:
     path: lib/notifications
     deps: [shared]
     barrel: lib/notifications/notifications.dart
     files:
-      - notification_service.dart
+      - infrastructure/notification_service.dart
 
   shared:
     path: lib/shared
     deps: []
     barrel: lib/shared/shared.dart
     files:
-      - database_service.dart
-      - settings_provider.dart
-      - locale_provider.dart
-      - sweep_utils.dart
-      - category.dart
+      - domain/database_service.dart
+      - domain/category.dart
+      - application/settings_provider.dart
+      - application/locale_provider.dart
+      - application/sweep_utils.dart
       - theme/app_theme.dart
       - widgets/app_version.dart
       - widgets/async_action_button.dart
