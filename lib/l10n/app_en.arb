@@ -41,7 +41,7 @@
   "language": "Language",
   "spanish": "Spanish",
   "portuguese": "Portuguese",
-  "autoChange": "Auto change wallpaper",
+  "autoChange": "Auto-rotate",
   "freq15min": "15 min",
   "freq30min": "30 min",
   "freq1h": "1 hour",
@@ -92,15 +92,11 @@
   "nameRequired": "Name cannot be empty",
   "citationRequired": "Citation is required",
   "textRequired": "Text is required",
-  "sectionScheduling": "Scheduling",
-  "sectionSchedulingSub": "Set how often the wallpaper updates automatically",
+  "sectionScheduling": "Rotation",
   "sectionAppearance": "Appearance",
-  "sectionAppearanceSub": "Adjust text position on the wallpaper",
-  "sectionCategoriesSub": "Choose which verses to display",
   "sectionActions": "Actions",
-  "sectionActionsSub": "Change wallpaper or calibrate centering",
-  "selectAll": "Select all",
-  "clearAll": "Clear all",
+  "selectAll": "All",
+  "clearAll": "None",
   "sectionAbout": "About",
   "aboutDescription": "Vers Reminder helps you memorize Bible verses by displaying them as wallpaper on your home screen.",
   "aboutContact": "Contact",
@@ -150,7 +146,7 @@
   "updateDownloadProgress": "Downloading update... {percentage}%",
   "downloadComplete": "Download complete. Install the update now?",
   "homeTab": "Home",
-  "noWallpaper": "No wallpaper yet. Tap to generate your first one.",
+  "noWallpaper": "Tap to create your first wallpaper",
   "restoreOriginalWallpaper": "Restore original wallpaper",
   "restoreOriginalWallpaperSubtitle": "Restore the wallpaper that was active before using Vers Reminder",
   "restoreConfirmTitle": "Restore wallpaper?",
@@ -167,7 +163,7 @@
   "replaceBackgroundImage": "Replace image",
   "backgroundSelected": "Background image selected",
   "backgroundPickFailed": "Could not open image picker",
-  "currentWallpaperLabel": "Current wallpaper",
+  "currentWallpaperLabel": "Your wallpaper",
   "@updatedAtLabel": {
     "description": "Caption on the Home wallpaper card showing when it was last updated",
     "placeholders": {
@@ -177,7 +173,7 @@
       }
     }
   },
-  "updatedAtLabel": "Updated {time}",
+  "updatedAtLabel": "{time} ago",
   "@shareApp": {
     "description": "Text shared when the user taps the share action on Home",
     "placeholders": {

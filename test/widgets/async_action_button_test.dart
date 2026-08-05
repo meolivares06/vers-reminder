@@ -4,8 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:vers_reminder/theme/app_theme.dart';
-import 'package:vers_reminder/widgets/async_action_button.dart';
+import 'package:vers_reminder/shared/theme/app_theme.dart';
+import 'package:vers_reminder/shared/widgets/async_action_button.dart';
 
 Future<void> _pumpButton(WidgetTester tester, Widget widget) async {
   await tester.pumpWidget(

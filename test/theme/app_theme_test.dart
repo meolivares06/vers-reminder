@@ -4,16 +4,16 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:vers_reminder/theme/app_theme.dart';
+import 'package:vers_reminder/shared/theme/app_theme.dart';
 
 /// Files touched by the Batch A theme change — the surfaces this change is
 /// responsible for keeping free of raw error literals (UX-THEME-004 / F9).
 const List<String> _batchAEditableFiles = [
   'lib/main.dart',
-  'lib/widgets/verse_tile.dart',
-  'lib/screens/settings/settings_screen.dart',
-  'lib/screens/home_screen.dart',
-  'lib/widgets/async_action_button.dart',
+  'lib/shared/widgets/verse_tile.dart',
+  'lib/settings/settings_screen.dart',
+  'lib/home/home_screen.dart',
+  'lib/shared/widgets/async_action_button.dart',
 ];
 
 void main() {
@@ -82,7 +82,7 @@ void main() {
     test('no literal deepPurple scattered outside app_theme.dart', () {
       expect(
         grepLib(RegExp(r'Colors\.deepPurple')),
-        ['lib/theme/app_theme.dart'],
+        ['lib/shared/theme/app_theme.dart'],
         reason: 'the only deepPurple literal is the seed constant itself',
       );
     });
@@ -105,7 +105,7 @@ void main() {
 
 /// Files (relative to project root) under `lib/` whose content matches
 /// [pattern]. Only excludes nothing — used for the deepPurple check, which
-/// expects exactly [lib/theme/app_theme.dart].
+/// expects exactly [lib/shared/theme/app_theme.dart].
 List<String> grepLib(RegExp pattern) {
   final dir = Directory('lib');
   final hits = <String>[];

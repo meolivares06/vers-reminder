@@ -8,10 +8,9 @@ context: >
   wallpaper_manager_flutter. No Flutter project scaffolded yet; this
   config defines conventions for when code generation starts.
 
-strict_tdd: false
-strict_tdd_reason: >
-  No test runner detected — project has no pubspec.yaml or test config
-  yet. Once Flutter is scaffolded with flutter_test, set strict_tdd: true.
+strict_tdd: true
+test_command: flutter test --no-pub
+coverage_command: flutter test --no-pub --coverage
 
 testing:
   runner: null

@@ -41,7 +41,7 @@
   "language": "Idioma",
   "spanish": "Espanhol",
   "portuguese": "Português",
-  "autoChange": "Troca automática de wallpaper",
+  "autoChange": "Auto-rotação",
   "freq15min": "15 min",
   "freq30min": "30 min",
   "freq1h": "1 hora",
@@ -96,15 +96,11 @@
   "nameRequired": "O nome não pode estar vazio",
   "citationRequired": "A citação é obrigatória",
   "textRequired": "O texto é obrigatório",
-  "sectionScheduling": "Agendamento",
-  "sectionSchedulingSub": "Configure com que frequência o wallpaper é atualizado automaticamente",
+  "sectionScheduling": "Rotação",
   "sectionAppearance": "Aparência",
-  "sectionAppearanceSub": "Ajuste a posição do texto no wallpaper",
-  "sectionCategoriesSub": "Escolha quais versículos exibir",
   "sectionActions": "Ações",
-  "sectionActionsSub": "Troque o wallpaper ou calibre o centralização",
-  "selectAll": "Selecionar tudo",
-  "clearAll": "Limpar",
+  "selectAll": "Todas",
+  "clearAll": "Nenhuma",
   "sectionAbout": "Sobre",
   "aboutDescription": "O Vers Reminder ajuda você a memorizar versículos bíblicos exibindo-os como wallpaper na tela inicial.",
   "aboutContact": "Contato",
@@ -154,7 +150,7 @@
   "updateDownloadProgress": "Baixando atualização... {percentage}%",
   "downloadComplete": "Download concluído. Instalar a atualização agora?",
   "homeTab": "Início",
-  "noWallpaper": "Sem wallpaper ainda. Toque para gerar o primeiro.",
+  "noWallpaper": "Toque para criar seu primeiro wallpaper",
   "restoreOriginalWallpaper": "Restaurar wallpaper original",
   "restoreOriginalWallpaperSubtitle": "Restaure o wallpaper que estava ativo antes de usar o Vers Reminder",
   "restoreConfirmTitle": "Restaurar wallpaper?",
@@ -171,7 +167,7 @@
   "replaceBackgroundImage": "Substituir imagem",
   "backgroundSelected": "Imagem de fundo selecionada",
   "backgroundPickFailed": "Não foi possível abrir o seletor",
-  "currentWallpaperLabel": "Wallpaper atual",
+  "currentWallpaperLabel": "Seu wallpaper",
   "@updatedAtLabel": {
     "description": "Legenda no cartão de wallpaper da tela inicial mostrando quando foi atualizado",
     "placeholders": {
@@ -181,7 +177,7 @@
       }
     }
   },
-  "updatedAtLabel": "Atualizado {time}",
+  "updatedAtLabel": "Há {time}",
   "@shareApp": {
     "description": "Texto compartilhado quando o usuário toca na ação de compartilhar na tela inicial",
     "placeholders": {

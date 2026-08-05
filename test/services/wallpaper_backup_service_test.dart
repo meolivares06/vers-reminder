@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/services/wallpaper_backup_service.dart';
+import 'package:vers_reminder/backup/wallpaper_backup_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

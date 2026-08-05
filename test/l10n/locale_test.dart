@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vers_reminder/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 
 Widget buildTestApp(Locale locale) {
   return MaterialApp(
@@ -63,12 +63,14 @@ void main() {
       expect(find.text('La cita es requerida'), findsOneWidget);
       expect(find.text('El texto es requerido'), findsOneWidget);
       expect(find.text('Desactivado'), findsOneWidget);
-      expect(find.text('Wallpaper actual'), findsOneWidget);
+      expect(find.text('Tu wallpaper'), findsOneWidget);
       expect(find.text('Vista previa'), findsOneWidget);
       expect(find.text('Email copiado al portapapeles'), findsOneWidget);
-      expect(find.text('Descargá Vers Reminder: https://example.com'),
-          findsOneWidget);
-      expect(find.text('Actualizado 5 min'), findsOneWidget);
+      expect(
+        find.text('Descargá Vers Reminder: https://example.com'),
+        findsOneWidget,
+      );
+      expect(find.text('Hace 5 min'), findsOneWidget);
       expect(find.text('Desplazamiento: Izq -12'), findsOneWidget);
       expect(find.text('2 h'), findsOneWidget);
     });
@@ -90,13 +92,17 @@ void main() {
       expect(find.text('A citação é obrigatória'), findsOneWidget);
       expect(find.text('O texto é obrigatório'), findsOneWidget);
       expect(find.text('Desativado'), findsOneWidget);
-      expect(find.text('Wallpaper atual'), findsOneWidget);
+      expect(find.text('Seu wallpaper'), findsOneWidget);
       expect(find.text('Pré-visualização'), findsOneWidget);
-      expect(find.text('Email copiado para a área de transferência'),
-          findsOneWidget);
-      expect(find.text('Baixe o Vers Reminder: https://example.com'),
-          findsOneWidget);
-      expect(find.text('Atualizado 5 min'), findsOneWidget);
+      expect(
+        find.text('Email copiado para a área de transferência'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Baixe o Vers Reminder: https://example.com'),
+        findsOneWidget,
+      );
+      expect(find.text('Há 5 min'), findsOneWidget);
       expect(find.text('Deslocamento: Esq -12'), findsOneWidget);
       expect(find.text('2 h'), findsOneWidget);
     });
@@ -118,18 +124,21 @@ void main() {
       expect(find.text('Citation is required'), findsOneWidget);
       expect(find.text('Text is required'), findsOneWidget);
       expect(find.text('Disabled'), findsOneWidget);
-      expect(find.text('Current wallpaper'), findsOneWidget);
+      expect(find.text('Your wallpaper'), findsOneWidget);
       expect(find.text('Preview'), findsOneWidget);
       expect(find.text('Email copied to clipboard'), findsOneWidget);
-      expect(find.text('Download Vers Reminder: https://example.com'),
-          findsOneWidget);
-      expect(find.text('Updated 5 min'), findsOneWidget);
+      expect(
+        find.text('Download Vers Reminder: https://example.com'),
+        findsOneWidget,
+      );
+      expect(find.text('5 min ago'), findsOneWidget);
       expect(find.text('Offset: Left -12'), findsOneWidget);
       expect(find.text('2 h'), findsOneWidget);
     });
 
-    testWidgets('locale switching from ES to PT updates strings',
-        (tester) async {
+    testWidgets('locale switching from ES to PT updates strings', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestApp(const Locale('es')));
 
       // Verify ES strings are displayed

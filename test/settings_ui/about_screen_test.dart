@@ -6,14 +6,14 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/models/update_check_result.dart';
-import 'package:vers_reminder/providers/locale_provider.dart';
-import 'package:vers_reminder/providers/settings_provider.dart';
-import 'package:vers_reminder/providers/verse_provider.dart';
-import 'package:vers_reminder/screens/settings/about_screen.dart';
-import 'package:vers_reminder/screens/settings/settings_screen.dart';
-import 'package:vers_reminder/services/update_service.dart';
+import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/settings/update_check_result.dart';
+import 'package:vers_reminder/shared/locale_provider.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/verses/verse_provider.dart';
+import 'package:vers_reminder/settings/about_screen.dart';
+import 'package:vers_reminder/settings/settings_screen.dart';
+import 'package:vers_reminder/settings/update_service.dart';
 
 /// Channel used by `package_info_plus` — mocked so the About version tile
 /// renders deterministically.
@@ -121,8 +121,8 @@ void main() {
         reason: 'Settings keeps only an About link');
   });
 
-  testWidgets(
-      'Settings section order is Appearance, Scheduling, Actions, then About '
+      testWidgets(
+      'Settings section order is Appearance, Rotation, Categories, Actions, then About '
       'link', (tester) async {
     await tester.pumpWidget(
       MultiProvider(
@@ -147,7 +147,7 @@ void main() {
     // All section headers render.
     for (final label in [
       'Appearance',
-      'Scheduling',
+      'Rotation',
       'Categories',
       'Actions',
       'About',

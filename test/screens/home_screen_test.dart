@@ -6,12 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/models/wallpaper_status.dart';
-import 'package:vers_reminder/providers/locale_provider.dart';
-import 'package:vers_reminder/providers/settings_provider.dart';
-import 'package:vers_reminder/providers/verse_provider.dart';
-import 'package:vers_reminder/screens/home_screen.dart';
+import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
+import 'package:vers_reminder/shared/locale_provider.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/verses/verse_provider.dart';
+import 'package:vers_reminder/home/home_screen.dart';
 
 /// Channel used by `package_info_plus` — mocked so onboarding to AboutScreen
 /// renders deterministically.
@@ -122,7 +122,7 @@ void main() {
   group('F9 RED — triggerNow async error boundaries', () {
     test('F9-RED dialog triggerNow callback wrapped in try/catch', () {
       final source =
-          File('lib/screens/home_screen.dart').readAsStringSync();
+          File('lib/home/home_screen.dart').readAsStringSync();
 
       // Find the permission dialog FilledButton onPressed callback
       final showDialogIdx = source.indexOf('_showPermissionDialog');
@@ -147,7 +147,7 @@ void main() {
 
     test('F9-RED _triggerNow VoidCallback body wrapped in try/catch', () {
       final source =
-          File('lib/screens/home_screen.dart').readAsStringSync();
+          File('lib/home/home_screen.dart').readAsStringSync();
 
       // Find the _triggerNow method
       final triggerNowIdx = source.indexOf('VoidCallback _triggerNow(');

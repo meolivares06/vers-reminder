@@ -4,18 +4,18 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'providers/settings_provider.dart';
-import 'providers/verse_provider.dart';
-import 'providers/locale_provider.dart';
-import 'screens/home_screen.dart';
-import 'services/wallpaper_scheduler.dart';
-import 'theme/app_theme.dart';
-import 'services/image_cache_service.dart';
-import 'services/notification_service.dart';
-import 'services/temp_cleanup_service.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/verses/verse_provider.dart';
+import 'package:vers_reminder/shared/locale_provider.dart';
+import 'package:vers_reminder/home/home_screen.dart';
+import 'package:vers_reminder/scheduler/wallpaper_scheduler.dart';
+import 'package:vers_reminder/shared/theme/app_theme.dart';
+import 'package:vers_reminder/wallpaper/image_cache_service.dart';
+import 'package:vers_reminder/notifications/notification_service.dart';
+import 'package:vers_reminder/wallpaper/temp_cleanup_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

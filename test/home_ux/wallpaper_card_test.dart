@@ -5,12 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/models/wallpaper_status.dart';
-import 'package:vers_reminder/providers/locale_provider.dart';
-import 'package:vers_reminder/providers/settings_provider.dart';
-import 'package:vers_reminder/providers/verse_provider.dart';
-import 'package:vers_reminder/screens/home_screen.dart';
+import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
+import 'package:vers_reminder/shared/locale_provider.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/verses/verse_provider.dart';
+import 'package:vers_reminder/home/home_screen.dart';
 
 /// A minimal valid 1x1 PNG so [Image.file] can decode the wallpaper path.
 const List<int> _pngBytes = <int>[
@@ -247,7 +247,7 @@ void main() {
   group('F6 async file check (UX-HOME-001)', () {
     test('F6-RED existsSync absent from _HomeTabState.build', () {
       final source =
-          File('lib/screens/home_screen.dart').readAsStringSync();
+          File('lib/home/home_screen.dart').readAsStringSync();
 
       // Locate the _HomeTabState.build() method.
       final buildStart = source.indexOf('Widget build(BuildContext context) {',
