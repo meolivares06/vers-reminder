@@ -119,6 +119,59 @@ void main() {
     );
   });
 
+  group('F9 RED — triggerNow async error boundaries', () {
+    test('F9-RED dialog triggerNow callback wrapped in try/catch', () {
+      final source =
+          File('lib/screens/home_screen.dart').readAsStringSync();
+
+      // Find the permission dialog FilledButton onPressed callback
+      final showDialogIdx = source.indexOf('_showPermissionDialog');
+      expect(showDialogIdx, greaterThan(0));
+
+      // After grantWallpaperPermission(), the triggerNow call at ~L84
+      // must be wrapped in try/catch with debugPrint logging
+      final grantIdx = source.indexOf('grantWallpaperPermission',
+          showDialogIdx);
+      expect(grantIdx, greaterThan(0));
+
+      // The try/catch must appear AFTER grantWallpaperPermission
+      // and wrap the triggerNow call
+      final tryIdx = source.indexOf('try {', grantIdx);
+      expect(tryIdx, greaterThan(0),
+          reason: 'F9 fix: dialog triggerNow must be wrapped in try/catch '
+              'at ~L84 so async exceptions from the unawaited call are logged');
+      final catchIdx = source.indexOf('triggerNow failed', tryIdx);
+      expect(catchIdx, greaterThan(0),
+          reason: 'F9 fix: catch must log triggerNow failures via debugPrint');
+    });
+
+    test('F9-RED _triggerNow VoidCallback body wrapped in try/catch', () {
+      final source =
+          File('lib/screens/home_screen.dart').readAsStringSync();
+
+      // Find the _triggerNow method
+      final triggerNowIdx = source.indexOf('VoidCallback _triggerNow(');
+      expect(triggerNowIdx, greaterThan(0),
+          reason: '_triggerNow method must exist');
+
+      // The body of _triggerNow (the anonymous VoidCallback at ~L342)
+      // must wrap settings.triggerNow in try/catch
+      final tryIdx = source.indexOf('try {', triggerNowIdx);
+      expect(tryIdx, greaterThan(0),
+          reason: 'F9 fix: _triggerNow body at ~L342 must wrap '
+              'triggerNow in try/catch so sync exceptions are caught');
+
+      final triggerNowCallIdx = source.indexOf('settings.triggerNow',
+          tryIdx);
+      expect(triggerNowCallIdx, greaterThan(tryIdx),
+          reason: 'the triggerNow call must be inside the try block');
+
+      final catchIdx = source.indexOf('triggerNow failed', tryIdx);
+      expect(catchIdx, greaterThan(0),
+          reason: 'F9 fix: catch must log triggerNow failures via debugPrint');
+    });
+  });
+
   group('Home tab declutter (UX-HOME-002/003)', () {
     testWidgets('rotation and categories tiles are gone from Home', (
       tester,

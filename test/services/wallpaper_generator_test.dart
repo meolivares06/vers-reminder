@@ -336,6 +336,46 @@ void main() {
       expect(decoded.height, 200, reason: 'preview height should match');
     });
 
+    // ── F8 RED: renderOnly error logging ──
+    test('F8-RED renderOnly catch block logs error via debugPrint', () {
+      final source =
+          File('lib/services/wallpaper_generator.dart').readAsStringSync();
+
+      // Find the renderOnly method
+      final renderOnlyIdx = source.indexOf('Future<String?> renderOnly(');
+      expect(renderOnlyIdx, greaterThan(0),
+          reason: 'renderOnly method must exist');
+
+      // The catch block inside renderOnly must log via debugPrint
+      // and return null as safe fallback.
+      final catchIdx = source.indexOf('debugPrint(\'renderOnly failed',
+          renderOnlyIdx);
+      expect(catchIdx, greaterThan(0),
+          reason: 'F8 fix: renderOnly catch must log error via debugPrint '
+              'before returning null — current catch (_) swallows silently');
+    });
+
+    // ── F10 RED: compute fallback error logging ──
+    test('F10-RED compute fallback catch logs isolate error via debugPrint', () {
+      final source =
+          File('lib/services/wallpaper_generator.dart').readAsStringSync();
+
+      // Find the compute/_encodePngWorker area
+      final computeIdx = source.indexOf('compute(_encodePngWorker');
+      expect(computeIdx, greaterThan(0),
+          reason: 'compute call must exist');
+
+      // The catch block after compute must log the error via debugPrint
+      // before falling back to sync encoding.
+      final catchIdx = source.indexOf(
+        'debugPrint(\'PNG encode isolate failed',
+        computeIdx,
+      );
+      expect(catchIdx, greaterThan(0),
+          reason: 'F10 fix: compute fallback catch must log isolate error '
+              'via debugPrint before falling back — current catch (_) swallows silently');
+    });
+
     test('compositing with calibratedInset crops before resize', () async {
       final srcBytes = _createTestImageBytes(200, 400);
       final generator = WallpaperGenerator.instance;

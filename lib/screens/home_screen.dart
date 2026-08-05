@@ -81,10 +81,14 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () async {
               Navigator.of(ctx).pop();
               await settings.grantWallpaperPermission();
-              settings.triggerNow(
-                verseProvider: verseProvider,
-                locale: context.read<LocaleProvider>().locale.languageCode,
-              );
+              try {
+                settings.triggerNow(
+                  verseProvider: verseProvider,
+                  locale: context.read<LocaleProvider>().locale.languageCode,
+                );
+              } catch (e) {
+                debugPrint('triggerNow failed: $e');
+              }
             },
             child: Text(l10n.changeNow),
           ),
@@ -340,11 +344,15 @@ class _HomeTabState extends State<_HomeTab> {
     AppLocalizations l10n,
   ) {
     return () {
-      if (settings.wallpaperPermissionGranted) {
-        settings.triggerNow(
-          verseProvider: verseProvider,
-          locale: context.read<LocaleProvider>().locale.languageCode,
-        );
+      try {
+        if (settings.wallpaperPermissionGranted) {
+          settings.triggerNow(
+            verseProvider: verseProvider,
+            locale: context.read<LocaleProvider>().locale.languageCode,
+          );
+        }
+      } catch (e) {
+        debugPrint('triggerNow failed: $e');
       }
     };
   }

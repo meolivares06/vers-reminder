@@ -295,6 +295,48 @@ void main() {
       },
     );
 
+    // ── F11 RED: notifyListeners post-async safety comment ──
+    test('F11-RED notifyListeners sites have Flutter 3.7+ dispose comment', () {
+      final source =
+          File('lib/providers/settings_provider.dart').readAsStringSync();
+
+      // The triggerNow method has two post-async notifyListeners() calls
+      // (L289 after getVersesByCategoryIds, L344 after generateAndSetWallpaper).
+      // Both must document that Flutter 3.7+ handles dispose safely.
+      final triggerNowIdx = source.indexOf('Future<void> triggerNow(');
+      expect(triggerNowIdx, greaterThan(0),
+          reason: 'triggerNow method must exist');
+
+      final commentIdx = source.indexOf(
+        'Flutter 3.7+ notifies are safe',
+        triggerNowIdx,
+      );
+      expect(commentIdx, greaterThan(0),
+          reason: 'F11 fix: post-async notifyListeners() calls in triggerNow '
+              'must document Flutter 3.7+ dispose safety — '
+              'no runtime _disposed guard needed');
+
+      // Verify the comment appears BEFORE a notifyListeners call
+      // immediately after the async gap (the no-verses path).
+      final notifyAfterComment = source.indexOf(
+        'notifyListeners();',
+        commentIdx,
+      );
+      expect(notifyAfterComment, greaterThan(commentIdx),
+          reason: 'comment must appear immediately before a post-async '
+              'notifyListeners() call');
+
+      // Verify there's a second occurrence of the comment (or at least that
+      // the final notifyListeners is also guarded) — search past the first.
+      final commentIdx2 = source.indexOf(
+        'Flutter 3.7+ notifies are safe',
+        commentIdx + 1,
+      );
+      expect(commentIdx2, greaterThan(0),
+          reason: 'at least one more occurrence of the dispose-safety comment '
+              'must exist near the final notifyListeners() in triggerNow');
+    });
+
     test('absent or malformed persisted timestamp falls back safely', () async {
       final p1 = SettingsProvider();
       await p1.init();

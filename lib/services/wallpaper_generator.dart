@@ -173,7 +173,8 @@ class WallpaperGenerator {
         calibratedInset: calibratedInset,
         useMyWallpaper: true,
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('renderOnly failed: $e');
       return null;
     }
   }
@@ -418,7 +419,8 @@ class WallpaperGenerator {
           screenWidth,
           screenHeight,
         ));
-      } catch (_) {
+      } catch (e) {
+        debugPrint('PNG encode isolate failed: $e');
         // Fallback: encode synchronously on main thread
         return _encodePngWorker((rawBytes, screenWidth, screenHeight));
       }

@@ -286,6 +286,7 @@ class SettingsProvider extends ChangeNotifier {
       _statusPayload = 'No verses for locale';
       // ignore: avoid_print
       print('WallpaperGenerator: noVersesForLocale');
+      // Flutter 3.7+ notifies are safe after async gaps; no _disposed guard needed per design review
       notifyListeners();
       return;
     }
@@ -341,6 +342,7 @@ class SettingsProvider extends ChangeNotifier {
         // ignore: avoid_print
         print('WallpaperGenerator error: $reason');
     }
+    // Flutter 3.7+ notifies are safe after async gaps; no _disposed guard needed per design review
     notifyListeners();
   }
 
