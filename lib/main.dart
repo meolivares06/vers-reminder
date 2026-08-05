@@ -8,7 +8,9 @@ import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/scheduler_config.dart';
+import 'package:vers_reminder/settings/appearance_settings.dart';
 import 'package:vers_reminder/verses/verse_provider.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
 import 'package:vers_reminder/home/home_screen.dart';
@@ -66,7 +68,9 @@ class VersReminderApp extends StatelessWidget {
         Provider<EventBus>.value(value: EventBus.instance),
         ChangeNotifierProvider(create: (_) => VerseProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => WallpaperState()),
+        ChangeNotifierProvider(create: (_) => SchedulerConfig()),
+        ChangeNotifierProvider(create: (_) => AppearanceSettings()),
       ],
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, _) {
@@ -115,19 +119,25 @@ class _AppEntryState extends State<AppEntry> {
     final verseProvider = context.read<VerseProvider>();
     await verseProvider.init(locale: localeProvider.locale.languageCode);
 
-    final settingsProvider = context.read<SettingsProvider>();
-    await settingsProvider.init();
+    final wallpaperState = context.read<WallpaperState>();
+    await wallpaperState.init();
+
+    final schedulerConfig = context.read<SchedulerConfig>();
+    await schedulerConfig.init();
+
+    final appearanceSettings = context.read<AppearanceSettings>();
+    await appearanceSettings.init();
   }
 
   @override
   Widget build(BuildContext context) {
     final localeProvider = context.watch<LocaleProvider>();
     final verseProvider = context.watch<VerseProvider>();
-    final settingsProvider = context.watch<SettingsProvider>();
+    final wallpaperState = context.watch<WallpaperState>();
 
     if (!localeProvider.isInitialized ||
         verseProvider.isLoading ||
-        settingsProvider.isLoading) {
+        wallpaperState.isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );

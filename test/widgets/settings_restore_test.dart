@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
 import 'package:vers_reminder/shared/widgets/async_action_button.dart';
 
 /// Minimal widget that replicates the restore tile from SettingsScreen to
@@ -16,7 +16,7 @@ class _RestoreSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = context.watch<SettingsProvider>();
+    final wallpaper = context.watch<WallpaperState>();
 
     return Scaffold(
       body: ListView(
@@ -31,7 +31,7 @@ class _RestoreSection extends StatelessWidget {
             icon: Icons.restore,
             label: l10n.restoreOriginalWallpaper,
             style: AsyncActionButtonStyle.tile,
-            enabled: settings.hasBackup,
+            enabled: wallpaper.hasBackup,
             onPressed: () async {/* restore handler */},
           ),
         ],
@@ -45,13 +45,13 @@ void main() {
       (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    final settingsProvider = SettingsProvider();
+    final wallpaperState = WallpaperState();
     final localeProvider = LocaleProvider();
     await tester.runAsync(() => localeProvider.init());
 
     await tester.pumpWidget(MultiProvider(
       providers: [
-        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<WallpaperState>.value(value: wallpaperState),
         ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
       ],
       child: MaterialApp(
@@ -77,8 +77,8 @@ void main() {
       (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    final settingsProvider = SettingsProvider();
-    settingsProvider.setHasBackup(true);
+    final wallpaper = WallpaperState();
+    wallpaper.setHasBackup(true);
 
     final localeProvider = LocaleProvider();
     await tester.runAsync(() => localeProvider.init());

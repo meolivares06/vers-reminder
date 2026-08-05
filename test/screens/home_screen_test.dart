@@ -10,7 +10,9 @@ import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/scheduler_config.dart';
+import 'package:vers_reminder/settings/appearance_settings.dart';
 import 'package:vers_reminder/verses/verse_provider.dart';
 import 'package:vers_reminder/home/home_screen.dart';
 
@@ -60,20 +62,22 @@ void main() {
         .setMockMethodCallHandler(_packageInfoChannel, null);
   });
 
-  Future<SettingsProvider> pumpHome(
+  Future<WallpaperState> pumpHome(
     WidgetTester tester, {
-    SettingsProvider? settings,
+    WallpaperState? wallpaper,
   }) async {
-    final settingsProvider = settings ?? SettingsProvider();
+    final wallpaperState = wallpaper ?? WallpaperState();
     final localeProvider = LocaleProvider();
     await localeProvider.init();
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           Provider<EventBus>.value(value: EventBus.instance),
-          ChangeNotifierProvider<SettingsProvider>.value(
-            value: settingsProvider,
+          ChangeNotifierProvider<WallpaperState>.value(
+            value: wallpaperState,
           ),
+          ChangeNotifierProvider<SchedulerConfig>.value(value: SchedulerConfig()),
+          ChangeNotifierProvider<AppearanceSettings>.value(value: AppearanceSettings()),
           ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
           ChangeNotifierProvider<VerseProvider>.value(value: VerseProvider()),
         ],
@@ -91,7 +95,7 @@ void main() {
     // F6: allow async File.exists() to complete and setState to rebuild.
     await tester.pump(const Duration(milliseconds: 200));
     await tester.pump();
-    return settingsProvider;
+    return wallpaperState;
   }
 
   testWidgets('Home no longer has an About tile — About is in Settings', (
@@ -201,10 +205,9 @@ void main() {
       'gold FAB on Home (idx 0), add-verse FAB on verse list (idx 1), '
       'never both',
       (tester) async {
-        final wallpaperPath = _createTempPng();
-        final settings = SettingsProvider()
+        final wallpaper = WallpaperState()
           ..setWallpaperCard(path: wallpaperPath);
-        await pumpHome(tester, settings: settings);
+        await pumpHome(tester, wallpaper: wallpaper);
 
         final goldFab = find.widgetWithIcon(
           FloatingActionButton,
@@ -243,16 +246,16 @@ void main() {
       tester,
     ) async {
       final wallpaperPath = _createTempPng();
-      final settings = SettingsProvider()
+      final wallpaper = WallpaperState()
         ..setWallpaperCard(path: wallpaperPath, permissionGranted: true);
-      await pumpHome(tester, settings: settings);
-      expect(settings.status, WallpaperStatus.idle);
+      await pumpHome(tester, wallpaper: wallpaper);
+      expect(wallpaper.status, WallpaperStatus.idle);
 
       await tester.tap(find.byIcon(Icons.refresh));
       await tester.pump();
 
       expect(
-        settings.status,
+        wallpaper.status,
         WallpaperStatus.noCategories,
         reason: 'tapping the gold FAB runs the permission-gated trigger path',
       );
@@ -262,8 +265,8 @@ void main() {
       tester,
     ) async {
       final wallpaperPath = _createTempPng();
-      final settings = SettingsProvider()..setWallpaperCard(path: wallpaperPath);
-      await pumpHome(tester, settings: settings);
+      final wallpaper = WallpaperState()..setWallpaperCard(path: wallpaperPath);
+      await pumpHome(tester, wallpaper: wallpaper);
 
       await tester.tap(find.byIcon(Icons.refresh));
       await tester.pumpAndSettle();
@@ -274,7 +277,7 @@ void main() {
         reason: 'FAB surfaces the permission dialog when access is missing',
       );
       expect(
-        settings.status,
+        wallpaper.status,
         WallpaperStatus.idle,
         reason: 'no generation starts until permission is granted',
       );

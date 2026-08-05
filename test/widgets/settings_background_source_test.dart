@@ -10,7 +10,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vers_reminder/shared/database_service.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/settings/appearance_settings.dart';
 
 /// Replicates the background source section from SettingsScreen to allow
 /// widget-level testing of the SegmentedButton visibility, thumbnail,
@@ -27,7 +27,7 @@ class _BackgroundSourceSectionState extends State<_BackgroundSourceSection> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = context.watch<SettingsProvider>();
+    final settings = context.watch<AppearanceSettings>();
 
     return Scaffold(
       body: ListView(
@@ -102,13 +102,13 @@ void main() {
 
     testWidgets('SegmentedButton is always visible (no probe needed)',
         (tester) async {
-      final settings = SettingsProvider();
+      final settings = AppearanceSettings();
       final locale = LocaleProvider();
       await tester.runAsync(() => locale.init());
 
       await tester.pumpWidget(MultiProvider(
         providers: [
-          ChangeNotifierProvider<SettingsProvider>.value(value: settings),
+          ChangeNotifierProvider<AppearanceSettings>.value(value: settings),
           ChangeNotifierProvider<LocaleProvider>.value(value: locale),
         ],
         child: MaterialApp(
@@ -127,13 +127,13 @@ void main() {
 
     testWidgets('toggle to Mío and back to App preserves state',
         (tester) async {
-      final settings = SettingsProvider();
+      final settings = AppearanceSettings();
       final locale = LocaleProvider();
       await tester.runAsync(() => locale.init());
 
       await tester.pumpWidget(MultiProvider(
         providers: [
-          ChangeNotifierProvider<SettingsProvider>.value(value: settings),
+          ChangeNotifierProvider<AppearanceSettings>.value(value: settings),
           ChangeNotifierProvider<LocaleProvider>.value(value: locale),
         ],
         child: MaterialApp(
@@ -180,7 +180,7 @@ void main() {
         'user_background_path': testImageFile.path,
       });
 
-      final settings = SettingsProvider();
+      final settings = AppearanceSettings();
       final locale = LocaleProvider();
       await tester.runAsync(() async {
         await locale.init();
@@ -189,7 +189,7 @@ void main() {
 
       await tester.pumpWidget(MultiProvider(
         providers: [
-          ChangeNotifierProvider<SettingsProvider>.value(value: settings),
+          ChangeNotifierProvider<AppearanceSettings>.value(value: settings),
           ChangeNotifierProvider<LocaleProvider>.value(value: locale),
         ],
         child: MaterialApp(

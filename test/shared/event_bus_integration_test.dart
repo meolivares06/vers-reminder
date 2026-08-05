@@ -3,12 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/event_bus/events.dart';
-import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
 
 /// Integration tests for Phase 2 event bus wiring.
 ///
 /// Prove that modules communicate via typed events without direct imports.
-/// The SettingsProvider constructor registers its listeners, so widget tests
+/// The WallpaperState constructor registers its listeners, so widget tests
 /// can verify the full publish→subscribe flow without a database.
 
 void main() {
@@ -16,10 +16,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  group('RefreshWallpaper → SettingsProvider flow', () {
+  group('RefreshWallpaper → WallpaperState flow', () {
     test('emitting RefreshWallpaper triggers wallpaper generation path', () {
-      // SettingsProvider constructor registers RefreshWallpaper listener
-      final settings = SettingsProvider();
+      // WallpaperState constructor registers RefreshWallpaper listener
+      final wallpaper = WallpaperState();
 
       // Emit the same event that home_screen.dart would emit
       EventBus.instance.emit(const RefreshWallpaper(locale: 'en'));
@@ -27,20 +27,20 @@ void main() {
       // triggerNow runs async — but it will update status to noCategories
       // (no active categories in a fresh provider with no DB)
       // The listener is async; we verify status transitions happen
-      expect(settings.status.name, anyOf('noCategories', 'idle', 'generating'));
+      expect(wallpaper.status.name, anyOf('noCategories', 'idle', 'generating'));
     });
 
     test('RefreshWallpaper listener triggers noCategories on empty provider',
         () async {
-      // Creating a SettingsProvider registers the RefreshWallpaper listener
+      // Creating a WallpaperState registers the RefreshWallpaper listener
       // in its constructor. Emitting RefreshWallpaper causes the handler
       // to call triggerNow — which short-circuits with noCategories when
-      // _activeCategoryIds is empty (no DB access needed).
-      final settings = SettingsProvider();
+      // active category ids are empty (no DB access needed).
+      final wallpaper = WallpaperState();
 
       await EventBus.instance.emit(const RefreshWallpaper(locale: 'en'));
 
-      expect(settings.status.name, 'noCategories');
+      expect(wallpaper.status.name, 'noCategories');
     });
   });
 
@@ -108,7 +108,7 @@ void main() {
       // home_screen imports no wallpaper/scheduler/notifications types
       // (verified by the WallpaperStatus import removal in home_screen.dart)
 
-      // Instead, home_screen emits RefreshWallpaper — which SettingsProvider
+      // Instead, home_screen emits RefreshWallpaper — which WallpaperState
       // receives via its constructor-registered listener.
       //
       // This test proves the wiring: a listener registered on one "module"

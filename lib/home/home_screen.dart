@@ -7,7 +7,7 @@ import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
 import 'package:vers_reminder/verses/verse_provider.dart';
 import 'package:vers_reminder/shared/theme/app_theme.dart';
 import 'package:vers_reminder/verses/verse_form_screen.dart';
@@ -69,9 +69,9 @@ class _HomeScreenState extends State<HomeScreen> {
   /// a [RefreshWallpaper] event via the event bus.
   Future<void> _handleFabPressed() async {
     final l10n = AppLocalizations.of(context)!;
-    final settings = context.read<SettingsProvider>();
-    if (!settings.wallpaperPermissionGranted) {
-      _showPermissionDialog(settings, l10n);
+    final wallpaper = context.read<WallpaperState>();
+    if (!wallpaper.wallpaperPermissionGranted) {
+      _showPermissionDialog(wallpaper, l10n);
       return;
     }
     final locale = context.read<LocaleProvider>().locale.languageCode;
@@ -89,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showPermissionDialog(
-    SettingsProvider settings,
+    WallpaperState wallpaper,
     AppLocalizations l10n,
   ) {
     showDialog(
@@ -105,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
           FilledButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
-              await settings.grantWallpaperPermission();
+              await wallpaper.grantPermission();
               try {
                 final locale =
                     context.read<LocaleProvider>().locale.languageCode;
@@ -126,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = context.watch<SettingsProvider>();
+    final wallpaper = context.watch<WallpaperState>();
 
     // Show Snackbar when wallpaper generation fails
     if (_lastWallpaperError) {
@@ -161,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [
           _HomeTab(
-            settings: settings,
+            wallpaper: wallpaper,
             onFabPressed: _handleFabPressed,
           ),
           const VerseListScreen(),
@@ -195,10 +195,10 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _HomeTab extends StatefulWidget {
-  final SettingsProvider settings;
+  final WallpaperState wallpaper;
   final VoidCallback? onFabPressed;
 
-  const _HomeTab({required this.settings, this.onFabPressed});
+  const _HomeTab({required this.wallpaper, this.onFabPressed});
 
   @override
   State<_HomeTab> createState() => _HomeTabState();
@@ -212,7 +212,7 @@ class _HomeTabState extends State<_HomeTab> {
   @override
   void initState() {
     super.initState();
-    final path = widget.settings.lastWallpaperPath;
+    final path = widget.wallpaper.lastWallpaperPath;
     if (path != null) {
       // Optimistic: assume the file exists (most real-world wallpapers
       // do). The async check corrects this on the next frame if the
@@ -220,18 +220,18 @@ class _HomeTabState extends State<_HomeTab> {
       _wallpaperFileExists = true;
       _lastCheckedPath = path;
     }
-    widget.settings.addListener(_onSettingsChanged);
+    widget.wallpaper.addListener(_onWallpaperChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkFile());
   }
 
   @override
   void dispose() {
-    widget.settings.removeListener(_onSettingsChanged);
+    widget.wallpaper.removeListener(_onWallpaperChanged);
     super.dispose();
   }
 
-  void _onSettingsChanged() {
-    final path = widget.settings.lastWallpaperPath;
+  void _onWallpaperChanged() {
+    final path = widget.wallpaper.lastWallpaperPath;
     if (path != null && path != _lastCheckedPath) {
       _lastCheckedPath = path;
       _wallpaperFileExists = false; // reset — re-check async
@@ -240,7 +240,7 @@ class _HomeTabState extends State<_HomeTab> {
   }
 
   void _checkFile() {
-    final path = widget.settings.lastWallpaperPath;
+    final path = widget.wallpaper.lastWallpaperPath;
     if (path != null) {
       File(path).exists().then((exists) {
         if (mounted && exists != _wallpaperFileExists) {
@@ -252,11 +252,11 @@ class _HomeTabState extends State<_HomeTab> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = widget.settings;
+    final wallpaper = widget.wallpaper;
     final l10n = AppLocalizations.of(context)!;
     final verseProvider = context.watch<VerseProvider>();
 
-    final path = settings.lastWallpaperPath;
+    final path = wallpaper.lastWallpaperPath;
 
     // The wallpaper fills the available body height with a 12px margin.
     // The gold FAB is overlaid directly on the image — no fixed sizing needed.
@@ -273,9 +273,9 @@ class _HomeTabState extends State<_HomeTab> {
                 fit: StackFit.expand,
                 children: [
                   InkWell(
-                    onTap: _triggerNow(settings, verseProvider, l10n),
+                    onTap: _triggerNow(wallpaper, verseProvider, l10n),
                     child: Image.file(
-                      File(settings.lastWallpaperPath!),
+                      File(wallpaper.lastWallpaperPath!),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -304,7 +304,7 @@ class _HomeTabState extends State<_HomeTab> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          if (settings.lastWallpaperTimestamp
+                          if (wallpaper.lastWallpaperTimestamp
                               case final DateTime ts)
                             Text(
                               l10n.updatedAtLabel(
@@ -335,7 +335,7 @@ class _HomeTabState extends State<_HomeTab> {
                 ],
               )
             : InkWell(
-                onTap: _triggerNow(settings, verseProvider, l10n),
+                onTap: _triggerNow(wallpaper, verseProvider, l10n),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -364,13 +364,13 @@ class _HomeTabState extends State<_HomeTab> {
   /// Returns a trigger callback that emits [RefreshWallpaper] via the event
   /// bus when wallpaper permission was granted.
   VoidCallback _triggerNow(
-    SettingsProvider settings,
+    WallpaperState wallpaper,
     VerseProvider verseProvider,
     AppLocalizations l10n,
   ) {
     return () {
       try {
-        if (settings.wallpaperPermissionGranted) {
+        if (wallpaper.wallpaperPermissionGranted) {
           final locale =
               context.read<LocaleProvider>().locale.languageCode;
           context

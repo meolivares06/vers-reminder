@@ -5,7 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/scheduler_config.dart';
+import 'package:vers_reminder/settings/appearance_settings.dart';
 import 'package:vers_reminder/verses/verse_provider.dart';
 import 'package:vers_reminder/home/home_screen.dart';
 import 'package:vers_reminder/settings/settings_screen.dart';
@@ -15,8 +17,10 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<SettingsProvider>.value(
-              value: SettingsProvider()),
+          ChangeNotifierProvider<WallpaperState>.value(
+              value: WallpaperState()),
+          ChangeNotifierProvider<SchedulerConfig>.value(value: SchedulerConfig()),
+          ChangeNotifierProvider<AppearanceSettings>.value(value: AppearanceSettings()),
           ChangeNotifierProvider<LocaleProvider>.value(value: LocaleProvider()),
           ChangeNotifierProvider<VerseProvider>.value(value: VerseProvider()),
         ],
@@ -54,8 +58,10 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<SettingsProvider>.value(
-              value: SettingsProvider()),
+          ChangeNotifierProvider<WallpaperState>.value(
+              value: WallpaperState()),
+          ChangeNotifierProvider<SchedulerConfig>.value(value: SchedulerConfig()),
+          ChangeNotifierProvider<AppearanceSettings>.value(value: AppearanceSettings()),
           ChangeNotifierProvider<LocaleProvider>.value(
               value: localeProvider),
           ChangeNotifierProvider<VerseProvider>.value(value: VerseProvider()),
