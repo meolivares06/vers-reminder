@@ -3,8 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:vers_reminder/shared/event_bus/event_bus.dart';
+import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
 import 'package:vers_reminder/shared/settings_provider.dart';
 import 'package:vers_reminder/verses/verse_provider.dart';
@@ -22,7 +23,34 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  WallpaperStatus _previousWallpaperStatus = WallpaperStatus.idle;
+  bool _lastWallpaperError = false;
+  bool _lastWallpaperNoCategories = false;
+  String? _lastErrorPayload;
+
+  @override
+  void initState() {
+    super.initState();
+    final bus = EventBus.instance;
+    bus.on<WallpaperGenerated>((event) async {
+      if (!mounted) return;
+      setState(() {
+        _lastWallpaperError = false;
+        _lastErrorPayload = null;
+      });
+    });
+    bus.on<SettingChanged>((event) async {
+      if (!mounted) return;
+      if (event.key == 'wallpaper_error') {
+        setState(() {
+          _lastWallpaperError = true;
+        });
+      } else if (event.key == 'no_categories') {
+        setState(() {
+          _lastWallpaperNoCategories = true;
+        });
+      }
+    });
+  }
 
   Future<void> _openVerseForm(BuildContext context) async {
     await Navigator.of(
@@ -37,34 +65,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Shared permission-gated trigger for the gold Home FAB (mirrors the
   /// behavior of the removed full-width "Change now" button): shows the
-  /// permission dialog when storage permission is missing, otherwise starts
-  /// generation and reports the no-categories state via a snackbar.
+  /// permission dialog when storage permission is missing, otherwise emits
+  /// a [RefreshWallpaper] event via the event bus.
   Future<void> _handleFabPressed() async {
     final l10n = AppLocalizations.of(context)!;
     final settings = context.read<SettingsProvider>();
-    final verseProvider = context.read<VerseProvider>();
     if (!settings.wallpaperPermissionGranted) {
-      _showPermissionDialog(settings, verseProvider, l10n);
+      _showPermissionDialog(settings, l10n);
       return;
     }
-    await settings.triggerNow(
-      verseProvider: verseProvider,
-      locale: context.read<LocaleProvider>().locale.languageCode,
-    );
+    final locale = context.read<LocaleProvider>().locale.languageCode;
+    await context.read<EventBus>().emit(RefreshWallpaper(locale: locale));
     if (!mounted) return;
-    if (settings.status == WallpaperStatus.noCategories) {
+    if (_lastWallpaperNoCategories) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.selectCategoryStatus),
           behavior: SnackBarBehavior.floating,
         ),
       );
+      _lastWallpaperNoCategories = false;
     }
   }
 
   void _showPermissionDialog(
     SettingsProvider settings,
-    VerseProvider verseProvider,
     AppLocalizations l10n,
   ) {
     showDialog(
@@ -82,12 +107,13 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.of(ctx).pop();
               await settings.grantWallpaperPermission();
               try {
-                settings.triggerNow(
-                  verseProvider: verseProvider,
-                  locale: context.read<LocaleProvider>().locale.languageCode,
-                );
+                final locale =
+                    context.read<LocaleProvider>().locale.languageCode;
+                await context
+                    .read<EventBus>()
+                    .emit(RefreshWallpaper(locale: locale));
               } catch (e) {
-                debugPrint('triggerNow failed: $e');
+                debugPrint('RefreshWallpaper emit failed: $e');
               }
             },
             child: Text(l10n.changeNow),
@@ -103,21 +129,21 @@ class _HomeScreenState extends State<HomeScreen> {
     final settings = context.watch<SettingsProvider>();
 
     // Show Snackbar when wallpaper generation fails
-    if (settings.status == WallpaperStatus.error &&
-        _previousWallpaperStatus != WallpaperStatus.error) {
+    if (_lastWallpaperError) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${l10n.generatingError}: ${settings.statusPayload ?? ''}',
+                '${l10n.generatingError}: ${_lastErrorPayload ?? ''}',
               ),
             ),
           );
         }
       });
+      _lastWallpaperError = false;
+      _lastErrorPayload = null;
     }
-    _previousWallpaperStatus = settings.status;
 
     return Scaffold(
       appBar: AppBar(
@@ -335,9 +361,8 @@ class _HomeTabState extends State<_HomeTab> {
     );
   }
 
-  /// Returns a trigger callback that kicks off generation when wallpaper
-  /// permission was granted (shared by the wallpaper-card tap affordance and
-  /// the empty-state tap, both of which remain silent when permission is off).
+  /// Returns a trigger callback that emits [RefreshWallpaper] via the event
+  /// bus when wallpaper permission was granted.
   VoidCallback _triggerNow(
     SettingsProvider settings,
     VerseProvider verseProvider,
@@ -346,13 +371,14 @@ class _HomeTabState extends State<_HomeTab> {
     return () {
       try {
         if (settings.wallpaperPermissionGranted) {
-          settings.triggerNow(
-            verseProvider: verseProvider,
-            locale: context.read<LocaleProvider>().locale.languageCode,
-          );
+          final locale =
+              context.read<LocaleProvider>().locale.languageCode;
+          context
+              .read<EventBus>()
+              .emit(RefreshWallpaper(locale: locale));
         }
       } catch (e) {
-        debugPrint('triggerNow failed: $e');
+        debugPrint('RefreshWallpaper emit failed: $e');
       }
     };
   }

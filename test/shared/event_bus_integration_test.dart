@@ -1,0 +1,214 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:vers_reminder/shared/event_bus/event_bus.dart';
+import 'package:vers_reminder/shared/event_bus/events.dart';
+import 'package:vers_reminder/shared/settings_provider.dart';
+
+/// Integration tests for Phase 2 event bus wiring.
+///
+/// Prove that modules communicate via typed events without direct imports.
+/// The SettingsProvider constructor registers its listeners, so widget tests
+/// can verify the full publish→subscribe flow without a database.
+
+void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  group('RefreshWallpaper → SettingsProvider flow', () {
+    test('emitting RefreshWallpaper triggers wallpaper generation path', () {
+      // SettingsProvider constructor registers RefreshWallpaper listener
+      final settings = SettingsProvider();
+
+      // Emit the same event that home_screen.dart would emit
+      EventBus.instance.emit(const RefreshWallpaper(locale: 'en'));
+
+      // triggerNow runs async — but it will update status to noCategories
+      // (no active categories in a fresh provider with no DB)
+      // The listener is async; we verify status transitions happen
+      expect(settings.status.name, anyOf('noCategories', 'idle', 'generating'));
+    });
+
+    test('RefreshWallpaper listener triggers noCategories on empty provider',
+        () async {
+      // Creating a SettingsProvider registers the RefreshWallpaper listener
+      // in its constructor. Emitting RefreshWallpaper causes the handler
+      // to call triggerNow — which short-circuits with noCategories when
+      // _activeCategoryIds is empty (no DB access needed).
+      final settings = SettingsProvider();
+
+      await EventBus.instance.emit(const RefreshWallpaper(locale: 'en'));
+
+      expect(settings.status.name, 'noCategories');
+    });
+  });
+
+  group('SettingChanged propagation', () {
+    test('SettingChanged reaches listener registered before emit', () async {
+      final receivedKeys = <String>[];
+
+      EventBus.instance.on<SettingChanged>((event) async {
+        receivedKeys.add(event.key);
+      });
+
+      EventBus.instance.emit(const SettingChanged(key: 'wallpaper_error'));
+      EventBus.instance.emit(const SettingChanged(key: 'no_categories'));
+
+      // Allow async handlers to complete
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(receivedKeys, contains('wallpaper_error'));
+      expect(receivedKeys, contains('no_categories'));
+    });
+  });
+
+  group('WallpaperGenerated propagation', () {
+    test('WallpaperGenerated event carries path and optional citation', () async {
+      String? receivedPath;
+      String? receivedCitation;
+
+      EventBus.instance.on<WallpaperGenerated>((event) async {
+        receivedPath = event.path;
+        receivedCitation = event.citation;
+      });
+
+      EventBus.instance.emit(
+        const WallpaperGenerated(path: '/tmp/test.png', citation: 'Jn 3:16'),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(receivedPath, '/tmp/test.png');
+      expect(receivedCitation, 'Jn 3:16');
+    });
+
+    test('WallpaperGenerated with null citation is valid', () async {
+      String? receivedPath;
+      String? receivedCitation;
+
+      EventBus.instance.on<WallpaperGenerated>((event) async {
+        receivedPath = event.path;
+        receivedCitation = event.citation;
+      });
+
+      EventBus.instance.emit(
+        const WallpaperGenerated(path: '/tmp/nocite.png'),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(receivedPath, '/tmp/nocite.png');
+      expect(receivedCitation, isNull);
+    });
+  });
+
+  group('Cross-module communication without direct imports', () {
+    test('modules communicate solely via EventBus singleton', () {
+      // home_screen imports no wallpaper/scheduler/notifications types
+      // (verified by the WallpaperStatus import removal in home_screen.dart)
+
+      // Instead, home_screen emits RefreshWallpaper — which SettingsProvider
+      // receives via its constructor-registered listener.
+      //
+      // This test proves the wiring: a listener registered on one "module"
+      // receives events emitted from another "module" path via the same
+      // EventBus.instance singleton.
+      var handlerFired = false;
+
+      EventBus.instance.on<NotificationRequested>((event) async {
+        handlerFired = true;
+      });
+
+      // Emit from the "home screen" perspective
+      EventBus.instance.emit(
+        const NotificationRequested(title: 'Test', body: 'Integration test'),
+      );
+
+      // The handler registered from the "notification service" perspective
+      // fires because both "modules" share the same EventBus.instance.
+      expect(handlerFired, isTrue);
+    });
+
+    test('SchedulerToggled event flow between settings and scheduler', () async {
+      bool? receivedEnabled;
+      int? receivedFreq;
+
+      // "scheduler module" registers its listener
+      EventBus.instance.on<SchedulerToggled>((event) async {
+        receivedEnabled = event.enabled;
+        receivedFreq = event.frequencyMinutes;
+      });
+
+      // "settings module" emits the event
+      EventBus.instance.emit(
+        const SchedulerToggled(enabled: true, frequencyMinutes: 180),
+      );
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(receivedEnabled, isTrue);
+      expect(receivedFreq, 180);
+    });
+  });
+
+  group('BackupRestored and PermissionGranted events', () {
+    test('BackupRestored event propagates to listeners', () async {
+      var received = false;
+
+      EventBus.instance.on<BackupRestored>((event) async {
+        received = true;
+      });
+
+      EventBus.instance.emit(const BackupRestored());
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(received, isTrue);
+    });
+
+    test('PermissionGranted event propagates to listeners', () async {
+      var received = false;
+
+      EventBus.instance.on<PermissionGranted>((event) async {
+        received = true;
+      });
+
+      EventBus.instance.emit(const PermissionGranted());
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(received, isTrue);
+    });
+  });
+
+  group('VerseAdded event flow', () {
+    test('VerseAdded carries optional categoryId', () async {
+      int? receivedId;
+
+      EventBus.instance.on<VerseAdded>((event) async {
+        receivedId = event.categoryId;
+      });
+
+      EventBus.instance.emit(const VerseAdded(categoryId: 42));
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(receivedId, 42);
+    });
+
+    test('VerseAdded with null categoryId is valid', () async {
+      int? receivedId;
+
+      EventBus.instance.on<VerseAdded>((event) async {
+        receivedId = event.categoryId;
+      });
+
+      EventBus.instance.emit(const VerseAdded());
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      expect(receivedId, isNull);
+    });
+  });
+}

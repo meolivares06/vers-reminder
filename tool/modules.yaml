@@ -83,3 +83,39 @@ modules:
       - l10n/generated/app_localizations_en.dart
       - l10n/generated/app_localizations_es.dart
       - l10n/generated/app_localizations_pt.dart
+      - event_bus/event_bus.dart
+      - event_bus/events.dart
+
+events:
+  RefreshWallpaper:
+    emitters: [home, settings]
+    receivers: [shared/settings_provider]
+    replaces: home→wallpaper triggerNow, settings→wallpaper triggerNow
+  WallpaperGenerated:
+    emitters: [shared/settings_provider]
+    receivers: [home]
+    replaces: home→wallpaper WallpaperStatus polling
+  SettingChanged:
+    emitters: [shared/settings_provider]
+    receivers: [home]
+    replaces: home→settings wallpaper status polling
+  SchedulerToggled:
+    emitters: [shared/settings_provider]
+    receivers: [scheduler]
+    replaces: settings_provider→WallpaperScheduler direct calls
+  NotificationRequested:
+    emitters: [shared/settings_provider]
+    receivers: [notifications]
+    replaces: settings_provider→NotificationService direct calls
+  PermissionGranted:
+    emitters: [settings]
+    receivers: []
+    replaces: cross-module permission state query
+  BackupRestored:
+    emitters: [backup]
+    receivers: []
+    replaces: backup→home direct notification
+  VerseAdded:
+    emitters: [verses]
+    receivers: [home, settings]
+    replaces: verses→home/settings direct reload calls

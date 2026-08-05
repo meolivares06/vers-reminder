@@ -1,3 +1,5 @@
+export 'event_bus/event_bus.dart';
+export 'event_bus/events.dart';
 export 'database_service.dart';
 export 'settings_provider.dart';
 export 'locale_provider.dart';

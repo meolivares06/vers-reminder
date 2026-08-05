@@ -1,5 +1,8 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'package:vers_reminder/shared/event_bus/event_bus.dart';
+import 'package:vers_reminder/shared/event_bus/events.dart';
+
 class NotificationService {
   static const _channelId = 'vers_reminder_status';
   static const _channelName = 'Rotation Status';
@@ -22,6 +25,15 @@ class NotificationService {
       // Plugin init failure is non-fatal — notifications simply won't appear
       // but the app continues to work normally.
     }
+
+    // Listen for notification requests via the event bus
+    EventBus.instance.on<NotificationRequested>((event) async {
+      if (event.title.isEmpty && event.body.isEmpty) {
+        await cancel();
+      } else {
+        await show(event.body.isNotEmpty ? event.body : event.title);
+      }
+    });
   }
 
   static Future<void> show(String body) async {

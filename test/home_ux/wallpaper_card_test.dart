@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
@@ -63,6 +64,7 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
+          Provider<EventBus>.value(value: EventBus.instance),
           ChangeNotifierProvider<SettingsProvider>.value(value: settings),
           ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
           ChangeNotifierProvider<VerseProvider>.value(value: VerseProvider()),

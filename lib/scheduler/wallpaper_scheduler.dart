@@ -5,6 +5,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:workmanager/workmanager.dart';
 
+import 'package:vers_reminder/shared/event_bus/event_bus.dart';
+import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/wallpaper/wallpaper_generator.dart';
 
 const String _taskName = 'wallpaperChange';
@@ -50,6 +52,15 @@ void callbackDispatcher() {
 class WallpaperScheduler {
   static Future<void> init() async {
     await Workmanager().initialize(callbackDispatcher);
+
+    // Listen for scheduler state changes via the event bus
+    EventBus.instance.on<SchedulerToggled>((event) async {
+      if (event.enabled && event.frequencyMinutes != null) {
+        await registerPeriodic(event.frequencyMinutes!);
+      } else if (!event.enabled) {
+        await cancel();
+      }
+    });
   }
 
   static Future<void> registerPeriodic(int frequencyMinutes) async {
