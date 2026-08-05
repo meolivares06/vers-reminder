@@ -1,7 +1,6 @@
 export 'domain/category.dart';
 export 'domain/database_service.dart';
 export 'application/locale_provider.dart';
-export 'application/settings_provider.dart';
 export 'application/sweep_utils.dart';
 export 'event_bus/event_bus.dart';
 export 'event_bus/events.dart';

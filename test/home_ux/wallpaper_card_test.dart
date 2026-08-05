@@ -257,23 +257,23 @@ void main() {
   // ── F6 RED: Async file check replaces existsSync in build ──
 
   group('F6 async file check (UX-HOME-001)', () {
-    test('F6-RED existsSync absent from _HomeTabState.build', () {
+    test('F6-RED existsSync absent from _WallpaperCardState.build', () {
       final source =
-          File('lib/home/home_screen.dart').readAsStringSync();
+          File('lib/home/widgets/wallpaper_card.dart').readAsStringSync();
 
-      // Locate the _HomeTabState.build() method.
+      // Locate the _WallpaperCardState.build() method.
       final buildStart = source.indexOf('Widget build(BuildContext context) {',
-          source.indexOf('class _HomeTabState'));
+          source.indexOf('class _WallpaperCardState'));
       expect(buildStart, greaterThan(0),
-          reason: '_HomeTabState.build method must exist');
+          reason: '_WallpaperCardState.build method must exist');
 
       // Find the closing brace of build() (scan forward from the method body).
       final buildEnd = _findMethodEnd(source, buildStart);
       final buildBody = source.substring(buildStart, buildEnd);
 
-      // RED: existsSync must NOT appear inside _HomeTabState.build().
+      // RED: existsSync must NOT appear inside _WallpaperCardState.build().
       expect(buildBody.contains('existsSync'), isFalse,
-          reason: '_HomeTabState.build() must not call File.existsSync() — '
+          reason: '_WallpaperCardState.build() must not call File.existsSync() — '
               'the existence check must use the cached _wallpaperFileExists '
               'flag updated asynchronously');
     });

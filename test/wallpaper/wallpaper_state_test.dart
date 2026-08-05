@@ -403,7 +403,7 @@ void main() {
   });
 }
 
-// ── Fakes (same pattern as settings_provider_test.dart) ──
+// ── Fakes (same pattern as the original provider test fakes) ──
 
 class _FakeWallpaperGenerator implements WallpaperGenerator {
   @override

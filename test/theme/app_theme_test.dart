@@ -11,8 +11,8 @@ import 'package:vers_reminder/shared/theme/app_theme.dart';
 const List<String> _batchAEditableFiles = [
   'lib/main.dart',
   'lib/shared/widgets/verse_tile.dart',
-  'lib/settings/settings_screen.dart',
-  'lib/home/home_screen.dart',
+  'lib/settings/infrastructure/settings_screen.dart',
+  'lib/home/application/home_container.dart',
   'lib/shared/widgets/async_action_button.dart',
 ];
 

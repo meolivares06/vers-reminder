@@ -128,45 +128,45 @@ void main() {
   group('F9 RED — triggerNow async error boundaries', () {
     test('F9-RED dialog triggerNow callback wrapped in try/catch', () {
       final source =
-          File('lib/home/home_screen.dart').readAsStringSync();
+          File('lib/home/application/home_container.dart').readAsStringSync();
 
       // Find the permission dialog FilledButton onPressed callback
       final showDialogIdx = source.indexOf('_showPermissionDialog');
       expect(showDialogIdx, greaterThan(0));
 
-      // After grantWallpaperPermission(), the RefreshWallpaper emission at ~L90
-      // must be wrapped in try/catch with debugPrint logging
-      final grantIdx = source.indexOf('grantWallpaperPermission',
-          showDialogIdx);
+      // After grantPermission(), the RefreshWallpaper emission must be
+      // wrapped in try/catch with debugPrint logging
+      final grantIdx = source.indexOf('grantPermission', showDialogIdx);
       expect(grantIdx, greaterThan(0));
 
-      // The try/catch must appear AFTER grantWallpaperPermission
+      // The try/catch must appear AFTER grantPermission
       // and wrap the RefreshWallpaper emit call
       final tryIdx = source.indexOf('try {', grantIdx);
       expect(tryIdx, greaterThan(0),
           reason: 'F9 fix: dialog RefreshWallpaper emit must be wrapped in '
-              'try/catch at ~L90 so async exceptions from the unawaited call '
+              'try/catch so async exceptions from the unawaited call '
               'are logged');
       final catchIdx = source.indexOf('RefreshWallpaper emit failed', tryIdx);
       expect(catchIdx, greaterThan(0),
           reason: 'F9 fix: catch must log RefreshWallpaper failures via debugPrint');
     });
 
-    test('F9-RED _triggerNow VoidCallback body wrapped in try/catch', () {
+    test('F9-RED _handleFabPressed RefreshWallpaper emit wrapped in try/catch', () {
       final source =
-          File('lib/home/home_screen.dart').readAsStringSync();
+          File('lib/home/application/home_container.dart').readAsStringSync();
 
-      // Find the _triggerNow method
-      final triggerNowIdx = source.indexOf('VoidCallback _triggerNow(');
-      expect(triggerNowIdx, greaterThan(0),
-          reason: '_triggerNow method must exist');
+      // Find the _handleFabPressed method
+      final fabIdx = source.indexOf('_handleFabPressed');
+      expect(fabIdx, greaterThan(0),
+          reason: '_handleFabPressed method must exist');
 
-      // The body of _triggerNow (the anonymous VoidCallback at ~L345)
-      // must wrap RefreshWallpaper emit in try/catch
-      final tryIdx = source.indexOf('try {', triggerNowIdx);
+      // The FAB emit path must wrap the RefreshWallpaper emit in try/catch
+      // so sync exceptions from the emit path are logged.
+      final tryIdx = source.indexOf('try {', fabIdx);
       expect(tryIdx, greaterThan(0),
-          reason: 'F9 fix: _triggerNow body at ~L345 must wrap '
-              'RefreshWallpaper emit in try/catch so sync exceptions are caught');
+          reason: 'F9 fix: _handleFabPressed must wrap the RefreshWallpaper '
+              'emit in try/catch so sync exceptions from the emit path are '
+              'logged');
 
       final emitIdx = source.indexOf('RefreshWallpaper(locale:', tryIdx);
       expect(emitIdx, greaterThan(tryIdx),

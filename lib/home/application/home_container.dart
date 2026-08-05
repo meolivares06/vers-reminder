@@ -70,7 +70,11 @@ class _HomeContainerState extends State<HomeContainer> {
       return;
     }
     final locale = context.read<LocaleProvider>().locale.languageCode;
-    await context.read<EventBus>().emit(RefreshWallpaper(locale: locale));
+    try {
+      await context.read<EventBus>().emit(RefreshWallpaper(locale: locale));
+    } catch (e) {
+      debugPrint('RefreshWallpaper emit failed: $e');
+    }
     if (!mounted) return;
     if (_lastWallpaperNoCategories) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -162,10 +166,14 @@ class _HomeContainerState extends State<HomeContainer> {
             wallpaperPermissionGranted: wallpaper.wallpaperPermissionGranted,
             onTap: () {
               if (wallpaper.wallpaperPermissionGranted) {
-                final locale = localeProvider.locale.languageCode;
-                context
-                    .read<EventBus>()
-                    .emit(RefreshWallpaper(locale: locale));
+                try {
+                  final locale = localeProvider.locale.languageCode;
+                  context
+                      .read<EventBus>()
+                      .emit(RefreshWallpaper(locale: locale));
+                } catch (e) {
+                  debugPrint('RefreshWallpaper emit failed: $e');
+                }
               }
             },
             onFabPressed: _handleFabPressed,

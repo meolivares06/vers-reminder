@@ -85,7 +85,7 @@ void main() {
 
     await tester.pumpWidget(MultiProvider(
       providers: [
-        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<WallpaperState>.value(value: wallpaper),
         ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
       ],
       child: MaterialApp(

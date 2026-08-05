@@ -339,7 +339,8 @@ void main() {
     // ── F8 RED: renderOnly error logging ──
     test('F8-RED renderOnly catch block logs error via debugPrint', () {
       final source =
-          File('lib/wallpaper/wallpaper_generator.dart').readAsStringSync();
+          File('lib/wallpaper/infrastructure/wallpaper_generator.dart')
+              .readAsStringSync();
 
       // Find the renderOnly method
       final renderOnlyIdx = source.indexOf('Future<String?> renderOnly(');
@@ -358,7 +359,8 @@ void main() {
     // ── F10 RED: compute fallback error logging ──
     test('F10-RED compute fallback catch logs isolate error via debugPrint', () {
       final source =
-          File('lib/wallpaper/wallpaper_generator.dart').readAsStringSync();
+          File('lib/wallpaper/infrastructure/wallpaper_generator.dart')
+              .readAsStringSync();
 
       // Find the compute/_encodePngWorker area
       final computeIdx = source.indexOf('compute(_encodePngWorker');
@@ -626,7 +628,8 @@ void main() {
     // ── Task 1.1 RED: F1 — PictureRecorder disposal ──
     test('finally block contains null-guarded picture dispose pattern', () {
       final source =
-          File('lib/wallpaper/wallpaper_generator.dart').readAsStringSync();
+          File('lib/wallpaper/infrastructure/wallpaper_generator.dart')
+              .readAsStringSync();
 
       // After fix: ui.Picture? picture declared before try block
       expect(
@@ -674,7 +677,8 @@ void main() {
       '(reverse-creation order)',
       () {
         final source =
-            File('lib/wallpaper/wallpaper_generator.dart').readAsStringSync();
+            File('lib/wallpaper/infrastructure/wallpaper_generator.dart')
+              .readAsStringSync();
 
         final textDisposeIdx = source.indexOf('textPainter.dispose()');
         final citationDisposeIdx = source.indexOf(

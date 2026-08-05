@@ -611,8 +611,14 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<SettingsProvider>.value(
-            value: SettingsProvider(),
+          ChangeNotifierProvider<WallpaperState>.value(
+            value: WallpaperState(),
+          ),
+          ChangeNotifierProvider<SchedulerConfig>.value(
+            value: SchedulerConfig(),
+          ),
+          ChangeNotifierProvider<AppearanceSettings>.value(
+            value: AppearanceSettings(),
           ),
           ChangeNotifierProvider<LocaleProvider>.value(value: LocaleProvider()),
           ChangeNotifierProvider<VerseProvider>.value(value: VerseProvider()),
@@ -650,8 +656,14 @@ Future<void> _pumpAboutScreen(
   await tester.pumpWidget(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<SettingsProvider>.value(
-          value: SettingsProvider(),
+        ChangeNotifierProvider<WallpaperState>.value(
+          value: WallpaperState(),
+        ),
+        ChangeNotifierProvider<SchedulerConfig>.value(
+          value: SchedulerConfig(),
+        ),
+        ChangeNotifierProvider<AppearanceSettings>.value(
+          value: AppearanceSettings(),
         ),
         ChangeNotifierProvider<LocaleProvider>.value(value: LocaleProvider()),
         ChangeNotifierProvider<VerseProvider>.value(value: VerseProvider()),

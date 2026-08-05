@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/verses/domain/verse.dart';
 import 'package:vers_reminder/verses/application/verse_provider.dart';
-import 'package:vers_reminder/verses/infrastructure/category_create_dialog.dart';
+import 'package:vers_reminder/verses/widgets/category_create_dialog.dart';
 
 class VerseFormScreen extends StatefulWidget {
   final Verse? verse;
