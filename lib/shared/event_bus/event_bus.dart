@@ -36,7 +36,11 @@ class EventBus {
     final handlers = _handlers[T];
     if (handlers == null || handlers.isEmpty) return;
 
-    for (final handler in handlers) {
+    // Copy to avoid concurrent modification if a handler calls on<T>()
+    // during dispatch (e.g., re-registering listeners after lifecycle events).
+    final snapshot = List<Function>.from(handlers);
+
+    for (final handler in snapshot) {
       try {
         await (handler as Future<void> Function(T))(event);
       } catch (_) {

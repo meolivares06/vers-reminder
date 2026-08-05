@@ -10,7 +10,9 @@ import 'package:provider/provider.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/scheduler_config.dart';
+import 'package:vers_reminder/settings/appearance_settings.dart';
 import 'package:vers_reminder/verses/verse_provider.dart';
 import 'package:vers_reminder/wallpaper/image_cache_service.dart';
 import 'package:vers_reminder/settings/update_service.dart';
@@ -89,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final generation = ++_previewGeneration;
 
     final verseProvider = context.read<VerseProvider>();
-    final settings = context.read<SettingsProvider>();
+    final appearance = context.read<AppearanceSettings>();
     final locale = context.read<LocaleProvider>().locale.languageCode;
 
     final allVerses = verseProvider.groupedVerses.values
@@ -133,12 +135,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         locale: locale,
         previewWidth: previewWidth,
         previewHeight: 100,
-        horizontalOffset: settings.horizontalOffset,
-        verticalAlignment: settings.verticalAlignment,
-        fontScale: settings.fontScale,
-        calibratedInset: settings.calibratedInset,
+        horizontalOffset: appearance.horizontalOffset,
+        verticalAlignment: appearance.verticalAlignment,
+        fontScale: appearance.fontScale,
+        calibratedInset: appearance.calibratedInset,
         previewImagePath: _previewImagePath,
-        useMyWallpaper: settings.useMyWallpaper,
+        useMyWallpaper: appearance.useMyWallpaper,
       );
 
       if (!mounted || generation != _previewGeneration) return;
@@ -157,10 +159,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _onMioSelected() async {
-    final settings = context.read<SettingsProvider>();
+    final appearance = context.read<AppearanceSettings>();
     final l10n = AppLocalizations.of(context)!;
 
-    if (settings.userBackgroundPath == null) {
+    if (appearance.userBackgroundPath == null) {
       // No image stored — open picker automatically
       try {
         final picker = ImagePicker();
@@ -170,15 +172,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         if (pickedImage == null) {
           // User cancelled — revert to App
-          await settings.setUseMyWallpaper(false);
+          await appearance.setUseMyWallpaper(false);
           return;
         }
 
         final appDir = await getApplicationDocumentsDirectory();
         final destPath = '${appDir.path}/user_background.png';
         await File(pickedImage.path).copy(destPath);
-        await settings.setUserBackgroundPath(destPath);
-        await settings.setUseMyWallpaper(true);
+        await appearance.setUserBackgroundPath(destPath);
+        await appearance.setUseMyWallpaper(true);
         _previewImagePath = null;
         _schedulePreview();
 
@@ -199,18 +201,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           );
         }
-        await settings.setUseMyWallpaper(false);
+        await appearance.setUseMyWallpaper(false);
       }
     } else {
       // Image already stored — just toggle
-      await settings.setUseMyWallpaper(true);
+      await appearance.setUseMyWallpaper(true);
       _previewImagePath = null;
       _schedulePreview();
     }
   }
 
   Future<void> _onReplaceImage() async {
-    final settings = context.read<SettingsProvider>();
+    final appearance = context.read<AppearanceSettings>();
     final l10n = AppLocalizations.of(context)!;
 
     try {
@@ -224,7 +226,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final appDir = await getApplicationDocumentsDirectory();
       final destPath = '${appDir.path}/user_background.png';
       await File(pickedImage.path).copy(destPath);
-      await settings.setUserBackgroundPath(destPath);
+      await appearance.setUserBackgroundPath(destPath);
       _previewImagePath = null;
       _schedulePreview();
 
@@ -250,8 +252,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showWallpaperPermissionDialog(
     BuildContext context,
-    SettingsProvider settings,
-    VerseProvider verseProvider,
+    WallpaperState wallpaper,
     String locale,
     AppLocalizations l10n,
   ) {
@@ -270,11 +271,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           FilledButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
-              await settings.grantWallpaperPermission();
-              await settings.triggerNow(
-                verseProvider: verseProvider,
-                locale: locale,
-              );
+              await wallpaper.grantPermission();
+              await wallpaper.triggerNow(locale: locale);
             },
             child: Text(l10n.changeNow),
           ),
@@ -321,13 +319,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final settings = context.watch<SettingsProvider>();
+    final wallpaper = context.watch<WallpaperState>();
+    final scheduler = context.watch<SchedulerConfig>();
+    final appearance = context.watch<AppearanceSettings>();
     final verseProvider = context.watch<VerseProvider>();
     final locale = context.watch<LocaleProvider>().locale.languageCode;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
-      body: settings.isLoading
+      body: wallpaper.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(16),
@@ -381,9 +381,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         label: Text(l10n.bottomAlign),
                       ),
                     ],
-                    selected: {settings.verticalAlignment},
+                    selected: {appearance.verticalAlignment},
                     onSelectionChanged: (sel) {
-                      settings.setVerticalAlignment(sel.first);
+                      appearance.setVerticalAlignment(sel.first);
                       _schedulePreview();
                     },
                   ),
@@ -412,21 +412,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             label: Text(l10n.backgroundSourceMine),
                           ),
                         ],
-                        selected: {settings.useMyWallpaper},
+                        selected: {appearance.useMyWallpaper},
                         onSelectionChanged: (sel) {
                           final value = sel.first;
                           if (value) {
                             _onMioSelected();
                           } else {
-                            settings.setUseMyWallpaper(false);
+                            appearance.setUseMyWallpaper(false);
                             _previewImagePath = null;
                             _schedulePreview();
                           }
                         },
                       ),
                       // Thumbnail + Replace button when Mío is selected and image exists
-                      if (settings.useMyWallpaper &&
-                          settings.userBackgroundPath != null)
+                      if (appearance.useMyWallpaper &&
+                          appearance.userBackgroundPath != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 12),
                           child: Column(
@@ -437,7 +437,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   width: 100,
                         height: 100,
                                   child: Image.file(
-                                    File(settings.userBackgroundPath!),
+                                    File(appearance.userBackgroundPath!),
                                     fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) => Container(
                                       color: Theme.of(
@@ -464,13 +464,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // sign: no static left/right Row labels, no duplicate text node.
                 // Direction word comes from the localized offsetLabel(direction, value).
                 Slider(
-                  value: settings.horizontalOffset.toDouble(),
+                  value: appearance.horizontalOffset.toDouble(),
                   min: -20,
                   max: 20,
                   divisions: 40,
-                  label: settings.horizontalOffset.toString(),
+                  label: appearance.horizontalOffset.toString(),
                   onChanged: (v) {
-                    settings.setHorizontalOffset(v.round());
+                    appearance.setHorizontalOffset(v.round());
                     _schedulePreview();
                   },
                 ),
@@ -482,13 +482,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Text('A-'),
                     Expanded(
                       child: Slider(
-                        value: settings.fontScale,
+                        value: appearance.fontScale,
                         min: 0.6,
                         max: 1.8,
                         divisions: 24,
-                        label: settings.fontScale.toStringAsFixed(2),
+                        label: appearance.fontScale.toStringAsFixed(2),
                         onChanged: (v) {
-                          settings.setFontScale(
+                          appearance.setFontScale(
                             double.parse(v.toStringAsFixed(2)),
                           );
                           _schedulePreview();
@@ -501,16 +501,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 // ── Restore original wallpaper ──
                 const SizedBox(height: 8),
-                Consumer<SettingsProvider>(
-                  builder: (context, settings, _) {
-                    return AsyncActionButton(
-                      icon: Icons.restore,
-                      label: l10n.restoreOriginalWallpaper,
-                      style: AsyncActionButtonStyle.tile,
-                      enabled: settings.hasBackup,
-                      onPressed: () => _showRestoreDialog(context, l10n),
-                    );
-                  },
+                AsyncActionButton(
+                  icon: Icons.restore,
+                  label: l10n.restoreOriginalWallpaper,
+                  style: AsyncActionButtonStyle.tile,
+                  enabled: wallpaper.hasBackup,
+                  onPressed: () => _showRestoreDialog(context, l10n),
                 ),
 
                 // ── Scheduling ──
@@ -520,13 +516,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 SwitchListTile(
                   title: Text(l10n.autoChange),
-                  subtitle: settings.isEnabled
-                      ? Text(_frequencyLabel(settings.frequencyMinutes, l10n))
+                  subtitle: scheduler.isEnabled
+                      ? Text(_frequencyLabel(scheduler.frequencyMinutes, l10n))
                       : null,
-                  value: settings.isEnabled,
-                  onChanged: (v) => settings.setEnabled(v),
+                  value: scheduler.isEnabled,
+                  onChanged: (v) => scheduler.setEnabled(v),
                 ),
-                if (settings.isEnabled)
+                if (scheduler.isEnabled)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: ChipTheme(
@@ -545,13 +541,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             .map(
                               (freq) => ChoiceChip(
                                 label: Text(_frequencyLabel(freq, l10n)),
-                                selected: settings.frequencyMinutes == freq,
+                                selected: scheduler.frequencyMinutes == freq,
                                 // Gold tint on the selected control via
                                 // colorScheme.secondary.
                                 selectedColor: Theme.of(
                                   context,
                                 ).colorScheme.secondary,
-                                onSelected: (_) => settings.setFrequency(freq),
+                                onSelected: (_) => scheduler.setFrequency(freq),
                               ),
                             )
                             .toList(),
@@ -573,8 +569,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       tooltip: l10n.selectAll,
                       onPressed: () {
                         for (final cat in verseProvider.categories) {
-                          if (!settings.activeCategoryIds.contains(cat.id)) {
-                            settings.toggleCategory(cat.id!);
+                          if (!scheduler.activeCategoryIds.contains(cat.id)) {
+                            scheduler.toggleCategory(cat.id!);
                           }
                         }
                       },
@@ -584,8 +580,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       tooltip: l10n.clearAll,
                       onPressed: () {
                         for (final cat in verseProvider.categories) {
-                          if (settings.activeCategoryIds.contains(cat.id)) {
-                            settings.toggleCategory(cat.id!);
+                          if (scheduler.activeCategoryIds.contains(cat.id)) {
+                            scheduler.toggleCategory(cat.id!);
                           }
                         }
                       },
@@ -595,8 +591,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ...verseProvider.categories.map(
                   (cat) => CheckboxListTile(
                     title: Text(cat.name),
-                    value: settings.activeCategoryIds.contains(cat.id),
-                    onChanged: (_) => settings.toggleCategory(cat.id!),
+                    value: scheduler.activeCategoryIds.contains(cat.id),
+                    onChanged: (_) => scheduler.toggleCategory(cat.id!),
                   ),
                 ),
 
@@ -610,11 +606,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   label: l10n.changeNow,
                   style: AsyncActionButtonStyle.filled,
                   onPressed: () async {
-                    if (!settings.wallpaperPermissionGranted) {
+                    if (!wallpaper.wallpaperPermissionGranted) {
                       _showWallpaperPermissionDialog(
                         context,
-                        settings,
-                        verseProvider,
+                        wallpaper,
                         locale,
                         l10n,
                       );
@@ -624,17 +619,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     // Resolve the theme error tint before the async gap so the
                     // SnackBar text can use it without a post-await context use.
                     final errorColor = Theme.of(context).colorScheme.error;
-                    await settings.triggerNow(
-                      verseProvider: verseProvider,
-                      locale: locale,
-                    );
+                    await wallpaper.triggerNow(locale: locale);
                     if (!mounted) return;
-                    final status = settings.status;
+                    final status = wallpaper.status;
                     if (status == WallpaperStatus.updated) {
                       messenger.showSnackBar(
                         SnackBar(
                           content: Text(
-                            l10n.wallpaperUpdated(settings.statusPayload ?? ''),
+                            l10n.wallpaperUpdated(wallpaper.statusPayload ?? ''),
                           ),
                           behavior: SnackBarBehavior.floating,
                           action: SnackBarAction(label: 'OK', onPressed: () {}),
@@ -660,18 +652,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     }
                   },
                 ),
-                // TODO(#image-module-audit): Re-evaluate if calibration is needed after Canvas pipeline.
-                //       Kept commented until further testing on device.
-                // const SizedBox(height: 8),
-                // OutlinedButton.icon(
-                //   icon: const Icon(Icons.tune),
-                //   label: Text(l10n.calibrateButton),
-                //   onPressed: () => Navigator.of(context).push(
-                //     MaterialPageRoute(
-                //       builder: (_) => const CalibrationScreen(),
-                //     ),
-                //   ),
-                // ),
 
                 // ── About ──
                 const Divider(),

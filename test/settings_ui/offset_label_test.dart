@@ -5,16 +5,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/settings/appearance_settings.dart';
+import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/scheduler_config.dart';
 import 'package:vers_reminder/verses/verse_provider.dart';
 import 'package:vers_reminder/settings/settings_screen.dart';
 
 void main() {
-  Future<void> pumpSettings(WidgetTester tester, SettingsProvider settings) async {
+  Future<void> pumpSettings(WidgetTester tester, AppearanceSettings appearance) async {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<SettingsProvider>.value(value: settings),
+          ChangeNotifierProvider<AppearanceSettings>.value(value: appearance),
+          ChangeNotifierProvider<WallpaperState>.value(value: WallpaperState()),
+          ChangeNotifierProvider<SchedulerConfig>.value(value: SchedulerConfig()),
           ChangeNotifierProvider<LocaleProvider>.value(value: LocaleProvider()),
           ChangeNotifierProvider<VerseProvider>.value(value: VerseProvider()),
         ],
@@ -35,7 +39,7 @@ void main() {
       (tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
-    final settings = SettingsProvider();
+    final settings = AppearanceSettings();
     settings.setHorizontalOffset(-5);
 
     await pumpSettings(tester, settings);
@@ -51,7 +55,7 @@ void main() {
       (tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
-    final settings = SettingsProvider();
+    final settings = AppearanceSettings();
     settings.setHorizontalOffset(5);
 
     await pumpSettings(tester, settings);
@@ -65,7 +69,7 @@ void main() {
       (tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
-    final settings = SettingsProvider();
+    final settings = AppearanceSettings();
     settings.setHorizontalOffset(0);
 
     await pumpSettings(tester, settings);

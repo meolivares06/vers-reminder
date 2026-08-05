@@ -9,7 +9,9 @@ import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
 import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/shared/settings_provider.dart';
+import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/scheduler_config.dart';
+import 'package:vers_reminder/settings/appearance_settings.dart';
 import 'package:vers_reminder/verses/verse_provider.dart';
 import 'package:vers_reminder/home/home_screen.dart';
 
@@ -55,17 +57,23 @@ void main() {
     }
   });
 
-  Future<SettingsProvider> pumpHome(
+  Future<WallpaperState> pumpHome(
     WidgetTester tester,
-    SettingsProvider settings, {
-    Locale locale = const Locale('en'),
+    WallpaperState wallpaper, {
+    Locale locale = const Locale('es'),
   }) async {
     final localeProvider = LocaleProvider();
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           Provider<EventBus>.value(value: EventBus.instance),
-          ChangeNotifierProvider<SettingsProvider>.value(value: settings),
+          ChangeNotifierProvider<WallpaperState>.value(value: wallpaper),
+          ChangeNotifierProvider<SchedulerConfig>.value(
+            value: SchedulerConfig(),
+          ),
+          ChangeNotifierProvider<AppearanceSettings>.value(
+            value: AppearanceSettings(),
+          ),
           ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
           ChangeNotifierProvider<VerseProvider>.value(value: VerseProvider()),
         ],
@@ -83,16 +91,18 @@ void main() {
     // F6: allow async File.exists() to complete and setState to rebuild.
     await tester.pump(const Duration(milliseconds: 200));
     await tester.pump();
-    return settings;
+    // Extra settle for localization to load and text to render.
+    await tester.pumpAndSettle(const Duration(milliseconds: 500));
+    return wallpaper;
   }
 
   testWidgets(
     'UX-HOME-001 card shows Current wallpaper + Updated label when path and '
     'timestamp are set',
     (tester) async {
-      final settings = SettingsProvider()
+      final wallpaper = WallpaperState()
         ..setWallpaperCard(path: wallpaperPath, timestamp: DateTime.now());
-      await pumpHome(tester, settings);
+      await pumpHome(tester, wallpaper);
 
       expect(
         find.text('Current wallpaper'),
@@ -116,21 +126,21 @@ void main() {
   testWidgets('UX-HOME-002 tapping the card triggers generation', (
     tester,
   ) async {
-    final settings = SettingsProvider()
+    final wallpaper = WallpaperState()
       ..setWallpaperCard(
         path: wallpaperPath,
         timestamp: DateTime.now(),
         permissionGranted: true,
       );
-    await pumpHome(tester, settings);
-    expect(settings.status, WallpaperStatus.idle);
+    await pumpHome(tester, wallpaper);
+    expect(wallpaper.status, WallpaperStatus.idle);
 
     await tester.tap(find.byIcon(Icons.refresh));
     await tester.pump();
 
     // FAB overlay triggers generation via the same permission-gated path.
     expect(
-      settings.status,
+      wallpaper.status,
       WallpaperStatus.noCategories,
       reason: 'tapping the card runs the permission-gated trigger',
     );
@@ -139,9 +149,9 @@ void main() {
   testWidgets('UX-HOME-001 empty state shows prompt and no caption', (
     tester,
   ) async {
-    final settings = SettingsProvider()
+    final wallpaper = WallpaperState()
       ..setWallpaperCard(path: null, timestamp: null);
-    await pumpHome(tester, settings);
+    await pumpHome(tester, wallpaper);
 
     expect(
       find.text('No wallpaper yet. Tap to generate your first one.'),
@@ -164,9 +174,9 @@ void main() {
     'UX-HOME-001 card fills >90% of visible home height when wallpaper '
     'exists',
     (tester) async {
-      final settings = SettingsProvider()
+      final wallpaper = WallpaperState()
         ..setWallpaperCard(path: wallpaperPath, timestamp: DateTime.now());
-      await pumpHome(tester, settings);
+      await pumpHome(tester, wallpaper);
 
       final bodyHeight = tester.getSize(find.byType(IndexedStack)).height;
       final cardHeight = tester.getSize(find.byType(Card)).height;
@@ -185,9 +195,9 @@ void main() {
   testWidgets(
     'UX-HOME-001 empty-state card keeps the same height fraction',
     (tester) async {
-      final settings = SettingsProvider()
+      final wallpaper = WallpaperState()
         ..setWallpaperCard(path: null, timestamp: null);
-      await pumpHome(tester, settings);
+      await pumpHome(tester, wallpaper);
 
       final bodyHeight = tester.getSize(find.byType(IndexedStack)).height;
       final cardHeight = tester.getSize(find.byType(Card)).height;
@@ -206,12 +216,12 @@ void main() {
 
   group('relative time caption buckets', () {
     Future<void> pumpWithOffset(WidgetTester tester, Duration age) async {
-      final settings = SettingsProvider()
+      final wallpaper = WallpaperState()
         ..setWallpaperCard(
           path: wallpaperPath,
           timestamp: DateTime.now().subtract(age),
         );
-      await pumpHome(tester, settings);
+      await pumpHome(tester, wallpaper);
     }
 
     testWidgets('under one minute renders the zero-minute caption', (
@@ -272,9 +282,9 @@ void main() {
       'F6-GREEN card renders with cached _wallpaperFileExists flag after '
       'existsSync removal',
       (tester) async {
-        final settings = SettingsProvider()
+        final wallpaper = WallpaperState()
           ..setWallpaperCard(path: wallpaperPath, timestamp: DateTime.now());
-        await pumpHome(tester, settings);
+        await pumpHome(tester, wallpaper);
         // Allow the async file-existence check to settle.
         await tester.pump(const Duration(milliseconds: 200));
 
