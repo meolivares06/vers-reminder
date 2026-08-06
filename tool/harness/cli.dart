@@ -24,9 +24,11 @@ class HarnessCli {
   /// Whether the parsed arguments represent a valid configuration.
   ///
   /// For "test" subcommand, at least one mode flag (--impact, --all, --integration)
-  /// must be specified.
+  /// must be specified. "validate" and "check-decoupling" require no flags.
   bool get isValid {
     if (subcommand == 'validate') return true;
+    if (subcommand == 'check-decoupling') return true;
+    if (subcommand == 'check-tdd') return true;
     if (subcommand == 'test') {
       return impactFlag || allFlag || integrationFlag;
     }
@@ -38,8 +40,10 @@ class HarnessCli {
       'Usage: dart run tool/harness.dart <command> [flags]\n'
       '\n'
       'Commands:\n'
-      '  test       Run tests (requires --impact, --all, or --integration)\n'
-      '  validate   Check modules.yaml graph consistency\n'
+      '  test              Run tests (requires --impact, --all, or --integration)\n'
+      '  validate          Check modules.yaml graph consistency\n'
+      '  check-decoupling  Scan imports against modules.yaml, report violations\n'
+      '  check-tdd         Validate that code changes have test coverage\n'
       '\n'
       'Flags for "test":\n'
       '  --impact        Run only tests affected by current git diff\n'

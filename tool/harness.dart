@@ -9,7 +9,11 @@ library harness;
 
 import 'dart:io';
 
+import 'package:yaml/yaml.dart';
+
 import 'harness/cli.dart';
+import 'harness/decoupling_check.dart';
+import 'harness/tdd_check.dart';
 import 'harness/git.dart';
 import 'harness/impact_calculator.dart';
 import 'harness/integration_runner.dart';
@@ -28,6 +32,10 @@ void main(List<String> args) async {
     switch (cli.subcommand) {
       case 'validate':
         await _handleValidate();
+      case 'check-decoupling':
+        await _handleCheckDecoupling();
+      case 'check-tdd':
+        await _handleCheckTdd();
       case 'test':
         await _handleTest(cli);
       default:
@@ -135,4 +143,53 @@ Future<void> _handleTest(HarnessCli cli) async {
   }
 
   exit(exitCode);
+}
+
+Future<void> _handleCheckDecoupling() async {
+  final yamlPath = 'tool/modules.yaml';
+  final yamlFile = File(yamlPath);
+
+  if (!yamlFile.existsSync()) {
+    stderr.writeln('modules.yaml not found at $yamlPath');
+    exit(1);
+  }
+
+  final yamlContent = yamlFile.readAsStringSync();
+  final doc = loadYaml(yamlContent) as YamlMap;
+  final graph = ModuleGraph.fromYaml(yamlContent);
+
+  final eventsSection = doc['events'];
+  final events = (eventsSection is YamlMap) ? eventsSection : YamlMap();
+
+  final check = DecouplingCheck(graph: graph, eventsSection: events);
+  final violations = check.run();
+
+  if (violations.isEmpty) {
+    stdout.writeln('✅ No decoupling violations found — all imports comply with modules.yaml.');
+    exit(0);
+  } else {
+    stderr.writeln('❌ ${violations.length} decoupling violation(s) detected:');
+    for (final v in violations) {
+      stderr.writeln('  • $v');
+    }
+    exit(violations.length);
+  }
+}
+
+Future<void> _handleCheckTdd() async {
+  final check = TddCheck();
+  final violations = check.run();
+
+  if (violations.isEmpty) {
+    stdout.writeln('✅ TDD compliance — all code changes have test coverage.');
+    exit(0);
+  }
+
+  final hasErrors = violations.any((v) => v.startsWith('TDD ERROR'));
+  final label = hasErrors ? 'ERROR(s) and warning(s)' : 'warning(s)';
+  stderr.writeln('❌ TDD ${violations.length} $label:');
+  for (final v in violations) {
+    stderr.writeln('  • $v');
+  }
+  exit(violations.length);
 }
