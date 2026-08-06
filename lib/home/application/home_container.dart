@@ -50,6 +50,10 @@ class _HomeContainerState extends State<HomeContainer> {
         });
       }
     });
+    bus.on<BackupRestored>((event) async {
+      if (!mounted) return;
+      setState(() {});
+    });
   }
 
   Future<void> _openVerseForm(BuildContext context) async {

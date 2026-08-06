@@ -160,7 +160,9 @@ void main() {
         received = true;
       });
 
-      EventBus.instance.emit(const BackupRestored());
+      EventBus.instance.emit(
+        const BackupRestored(success: true, operation: 'backup'),
+      );
 
       await Future<void>.delayed(const Duration(milliseconds: 50));
 

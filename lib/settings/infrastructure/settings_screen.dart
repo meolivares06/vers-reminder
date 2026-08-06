@@ -16,7 +16,8 @@ import 'package:vers_reminder/settings/application/appearance_settings.dart';
 import 'package:vers_reminder/verses/application/verse_provider.dart';
 import 'package:vers_reminder/wallpaper/infrastructure/image_cache_service.dart';
 import 'package:vers_reminder/settings/infrastructure/update_service.dart';
-import 'package:vers_reminder/backup/infrastructure/wallpaper_backup_service.dart';
+import 'package:vers_reminder/shared/event_bus/event_bus.dart';
+import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/wallpaper/infrastructure/wallpaper_generator.dart';
 import 'package:vers_reminder/shared/theme/app_theme.dart';
 import 'package:vers_reminder/shared/widgets/async_action_button.dart';
@@ -71,6 +72,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _schedulePreview();
+    });
+    EventBus.instance.on<BackupRestored>((event) async {
+      if (!mounted) return;
+      if (event.operation == 'restore') {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(event.success
+                ? l10n.restoreSuccess
+                : l10n.restoreError),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     });
   }
 
@@ -305,15 +320,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (confirmed != true || !mounted) return;
 
-    final success = await WallpaperBackupService.instance.restoreOriginal();
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(success ? l10n.restoreSuccess : l10n.restoreError),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    EventBus.instance.emit(const BackupRequested(operation: 'restore'));
   }
 
   @override
