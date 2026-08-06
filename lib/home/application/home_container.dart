@@ -159,6 +159,11 @@ class _HomeContainerState extends State<HomeContainer> {
         title:
             Text(_currentIndex == 0 ? 'Vers Reminder' : l10n.verseListTitle),
         actions: [
+          if (scheduler.isEnabled)
+            const Padding(
+              padding: EdgeInsets.only(right: 4),
+              child: Icon(Icons.circle, size: 10, color: Colors.green),
+            ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => Navigator.of(context).push(
