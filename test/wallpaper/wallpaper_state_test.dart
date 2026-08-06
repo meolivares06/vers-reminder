@@ -356,6 +356,66 @@ void main() {
           reason: 'RefreshWallpaper event must trigger generation');
     });
 
+    // ── F2: BackupRequested emit from triggerNow ──
+    test('triggerNow emits BackupRequested via event bus', () async {
+      await DatabaseService.instance.insertCategory('Cat 1', isSeed: true);
+      await DatabaseService.instance.insertVerse(
+        Verse(textEs: 'Texto', citation: 'Juan 3:16'),
+        [1],
+      );
+      await DatabaseService.instance.updateAppConfig({
+        'active_category_ids': '[1]',
+        'scheduler_enabled': 1,
+      });
+
+      final fake = _FakeWallpaperGenerator();
+      final state = WallpaperState(wallpaperGenerator: fake);
+      await state.init();
+
+      // hasBackup starts false, so triggerNow should request a backup
+      BackupRequested? received;
+      EventBus.instance.on<BackupRequested>((event) async {
+        received = event;
+      });
+
+      await state.triggerNow(locale: 'es');
+
+      expect(received, isNotNull,
+          reason: 'triggerNow must emit BackupRequested instead of '
+              'calling WallpaperBackupService.instance.backupCurrent() directly');
+      expect(received!.operation, 'backup');
+    });
+
+    test('triggerNow skips BackupRequested when backup already exists',
+        () async {
+      await DatabaseService.instance.insertCategory('Cat 1', isSeed: true);
+      await DatabaseService.instance.insertVerse(
+        Verse(textEs: 'Texto', citation: 'Juan 3:16'),
+        [1],
+      );
+      await DatabaseService.instance.updateAppConfig({
+        'active_category_ids': '[1]',
+        'scheduler_enabled': 1,
+      });
+
+      final fake = _FakeWallpaperGenerator();
+      final state = WallpaperState(wallpaperGenerator: fake);
+      await state.init();
+
+      // Set hasBackup to true via test seam, simulating a prior backup
+      state.setHasBackup(true);
+
+      BackupRequested? received;
+      EventBus.instance.on<BackupRequested>((event) async {
+        received = event;
+      });
+
+      await state.triggerNow(locale: 'es');
+
+      expect(received, isNull,
+          reason: 'when hasBackup is true, no BackupRequested is emitted');
+    });
+
     // ── F3 non-blocking init ──
     test('init sets isLoading=false', () async {
       final state = WallpaperState();

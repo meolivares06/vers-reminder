@@ -8,7 +8,6 @@ import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_result.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
-import 'package:vers_reminder/backup/infrastructure/wallpaper_backup_service.dart';
 import 'package:vers_reminder/wallpaper/infrastructure/wallpaper_generator.dart';
 
 /// Manages wallpaper generation state and triggers.
@@ -19,11 +18,21 @@ import 'package:vers_reminder/wallpaper/infrastructure/wallpaper_generator.dart'
 ///
 /// Communication with other modules uses [EventBus]:
 /// - Listens for [RefreshWallpaper] to trigger generation
-/// - Emits [WallpaperGenerated], [SettingChanged], and [NotificationRequested]
+/// - Listens for [BackupRestored] to update backup state
+/// - Emits [WallpaperGenerated], [SettingChanged], [BackupRequested],
+///   and [NotificationRequested]
 class WallpaperState extends ChangeNotifier {
+  static const _backupFlagKey = 'has_wallpaper_backup';
+
   WallpaperState({this.wallpaperGenerator}) {
     EventBus.instance.on<RefreshWallpaper>((event) async {
       await triggerNow(locale: event.locale);
+    });
+    EventBus.instance.on<BackupRestored>((event) async {
+      if (event.operation == 'backup' && event.success) {
+        _hasBackup = true;
+        notifyListeners();
+      }
     });
   }
 
@@ -102,7 +111,7 @@ class WallpaperState extends ChangeNotifier {
     _lastWallpaperTimestamp = _parseTimestamp(
       prefs.getString('last_wallpaper_timestamp'),
     );
-    _hasBackup = prefs.getBool(WallpaperBackupService.backupFlagKey) ?? false;
+    _hasBackup = prefs.getBool(_backupFlagKey) ?? false;
     _useMyWallpaper = prefs.getBool('use_my_wallpaper') ?? false;
     _userBackgroundPath = prefs.getString('user_background_path');
 
@@ -197,11 +206,7 @@ class WallpaperState extends ChangeNotifier {
 
     // Auto-backup original wallpaper on first trigger
     if (!_hasBackup) {
-      final saved = await WallpaperBackupService.instance.backupCurrent();
-      if (saved) {
-        _hasBackup = true;
-        notifyListeners();
-      }
+      EventBus.instance.emit(const BackupRequested(operation: 'backup'));
     }
 
     // Read appearance settings from SharedPreferences at runtime so
