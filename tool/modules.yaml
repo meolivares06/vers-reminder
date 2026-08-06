@@ -113,5 +113,9 @@ events:
     replaces: WallpaperState/SchedulerConfig→NotificationService direct calls
   BackupRestored:
     emitters: [backup]
-    receivers: []
+    receivers: [wallpaper/application/wallpaper_state, settings, home]
     replaces: backup→home direct notification
+  BackupRequested:
+    emitters: [wallpaper/application/wallpaper_state, settings]
+    receivers: [backup]
+    replaces: WallpaperState/SettingsScreen→WallpaperBackupService direct calls
