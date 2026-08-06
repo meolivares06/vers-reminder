@@ -18,6 +18,7 @@ import 'package:vers_reminder/scheduler/infrastructure/wallpaper_scheduler.dart'
 import 'package:vers_reminder/shared/theme/app_theme.dart';
 import 'package:vers_reminder/wallpaper/infrastructure/image_cache_service.dart';
 import 'package:vers_reminder/notifications/infrastructure/notification_service.dart';
+import 'package:vers_reminder/backup/infrastructure/wallpaper_backup_service.dart';
 import 'package:vers_reminder/wallpaper/infrastructure/temp_cleanup_service.dart';
 
 void main() async {
@@ -51,6 +52,7 @@ void main() async {
   await ImageCacheService.instance.init();
   await WallpaperScheduler.init();
   await NotificationService.init();
+  WallpaperBackupService.init();
 
   // Fire-and-forget cleanup of stale temp wallpapers (non-blocking)
   unawaited(TempCleanupService.instance.cleanTempWallpapers());

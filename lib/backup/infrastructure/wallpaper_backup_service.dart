@@ -6,6 +6,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallpaper_manager_flutter/wallpaper_manager_flutter.dart';
 
+import 'package:vers_reminder/shared/event_bus/event_bus.dart';
+import 'package:vers_reminder/shared/event_bus/events.dart';
+
 /// Orchestrates saving and restoring the user's original Android wallpaper.
 ///
 /// Singleton pattern matching [ImageCacheService] conventions.
@@ -20,6 +23,37 @@ class WallpaperBackupService {
 
   static final WallpaperBackupService instance = WallpaperBackupService._internal();
   WallpaperBackupService._internal();
+
+  /// Registers the [BackupRequested] → [BackupRestored] event handler.
+  ///
+  /// Must be called once at startup (in `main()`). Dispatches to
+  /// [backupCurrent] or [restoreOriginal] depending on the
+  /// [BackupRequested.operation] field and emits [BackupRestored]
+  /// with the result.
+  ///
+  /// Idempotent — multiple calls register a single handler.
+  static bool _initCalled = false;
+
+  static void init() {
+    if (_initCalled) return;
+    _initCalled = true;
+
+    EventBus.instance.on<BackupRequested>((event) async {
+      final ok = event.operation == 'backup'
+          ? await instance.backupCurrent()
+          : await instance.restoreOriginal();
+      EventBus.instance.emit(BackupRestored(
+        success: ok,
+        operation: event.operation,
+      ));
+    });
+  }
+
+  /// Test seam — resets the init flag so [init] can be called again
+  /// in a fresh test context.
+  static void resetForTesting() {
+    _initCalled = false;
+  }
 
   /// Reads the current Android wallpaper via MethodChannel and saves it as PNG.
   ///
