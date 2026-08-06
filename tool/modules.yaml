@@ -36,7 +36,7 @@ modules:
 
   home:
     path: lib/home
-    deps: [shared, wallpaper, settings, verses]
+    deps: [shared, wallpaper, settings, verses, scheduler]
     barrel: lib/home/home.dart
     files:
       - application/home_container.dart
