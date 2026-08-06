@@ -574,9 +574,10 @@ void main() {
         reason: 'update content moved out of Settings into AboutScreen',
       );
 
-      // Section order is browsable in order: Appearance, Rotation, Categories,
-      // Actions, then the About link (scrolling reveals each below the fold).
-      for (final section in ['Appearance', 'Rotation', 'Actions']) {
+      // Section order is browsable: Appearance, Rotation, Categories,
+      // then the About link (scrolling reveals each below the fold).
+      // The "Apply changes" action is now a FAB, not an inline section.
+      for (final section in ['Appearance', 'Rotation']) {
         await tester.scrollUntilVisible(find.text(section), 150);
         await tester.pump();
         expect(
@@ -604,7 +605,7 @@ void main() {
     },
   );
 
-  testWidgets('Change now renders via the shared loader button', (
+  testWidgets('Apply changes FAB is always visible', (
     tester,
   ) async {
     final service = _FakeUpdateService(checkResult: UpdateCheckResult.empty());
@@ -635,15 +636,11 @@ void main() {
     await tester.pump(const Duration(milliseconds: 350));
     await tester.pump();
 
-    // Change now lives in the Actions section; scroll to it.
-    await tester.scrollUntilVisible(find.text('Change now'), 300);
-    await tester.pump();
-
-    expect(
-      find.byType(AsyncActionButton),
-      findsWidgets,
-      reason: 'Change now now uses the shared inline blocking loader',
-    );
+    // "Apply changes" FAB is always visible — no scrolling needed.
+    expect(find.text('Apply changes'), findsOneWidget,
+        reason: 'Apply changes FAB is always visible in Settings');
+    expect(find.byType(FloatingActionButton), findsOneWidget,
+        reason: 'Settings uses a FAB for the primary action');
   });
 }
 

@@ -376,4 +376,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String nextInApproximatelyMinutes(int minutes) {
     return 'Em ~$minutes min';
   }
+
+  @override
+  String get applyChanges => 'Aplicar alterações';
 }

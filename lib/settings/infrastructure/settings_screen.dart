@@ -323,6 +323,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final verseProvider = context.watch<VerseProvider>();
     final locale = context.watch<LocaleProvider>().locale.languageCode;
 
+    final isGenerating = wallpaper.status == WallpaperStatus.generating;
+
     return Scaffold(
       appBar: AppBar(
           title: Text(l10n.settings),
@@ -603,63 +605,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
 
-                // ── Actions ──
-                const Divider(),
-                SectionHeader(
-                  title: l10n.sectionActions,
-                ),
-                AsyncActionButton(
-                  icon: Icons.wallpaper,
-                  label: l10n.changeNow,
-                  style: AsyncActionButtonStyle.filled,
-                  onPressed: () async {
-                    if (!wallpaper.wallpaperPermissionGranted) {
-                      _showWallpaperPermissionDialog(
-                        context,
-                        wallpaper,
-                        locale,
-                        l10n,
-                      );
-                      return;
-                    }
-                    final messenger = ScaffoldMessenger.of(context);
-                    // Resolve the theme error tint before the async gap so the
-                    // SnackBar text can use it without a post-await context use.
-                    final errorColor = Theme.of(context).colorScheme.error;
-                    await wallpaper.triggerNow(locale: locale);
-                    if (!mounted) return;
-                    final status = wallpaper.status;
-                    if (status == WallpaperStatus.updated) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            l10n.wallpaperUpdated(wallpaper.statusPayload ?? ''),
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                          action: SnackBarAction(label: 'OK', onPressed: () {}),
-                        ),
-                      );
-                    } else if (status == WallpaperStatus.error) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            l10n.generatingError,
-                            style: TextStyle(color: errorColor),
-                          ),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    } else if (status == WallpaperStatus.noCategories) {
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.selectCategoryStatus),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                ),
-
                 // ── About ──
                 const Divider(),
                 ListTile(
@@ -682,6 +627,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 32),
               ],
             ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: isGenerating ? null : () async {
+          if (!wallpaper.wallpaperPermissionGranted) {
+            _showWallpaperPermissionDialog(context, wallpaper, locale, l10n);
+            return;
+          }
+          final messenger = ScaffoldMessenger.of(context);
+          final errorColor = Theme.of(context).colorScheme.error;
+          await wallpaper.triggerNow(locale: locale);
+          if (!mounted) return;
+          final status = wallpaper.status;
+          if (status == WallpaperStatus.updated) {
+            messenger.showSnackBar(SnackBar(
+              content: Text(l10n.wallpaperUpdated(wallpaper.statusPayload ?? '')),
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(label: 'OK', onPressed: () {}),
+            ));
+          } else if (status == WallpaperStatus.error) {
+            messenger.showSnackBar(SnackBar(
+              content: Text(l10n.generatingError, style: TextStyle(color: errorColor)),
+              behavior: SnackBarBehavior.floating,
+            ));
+          } else if (status == WallpaperStatus.noCategories) {
+            messenger.showSnackBar(SnackBar(
+              content: Text(l10n.selectCategoryStatus),
+              behavior: SnackBarBehavior.floating,
+            ));
+          }
+        },
+        icon: isGenerating
+            ? const SizedBox.square(
+                dimension: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            : const Icon(Icons.wallpaper),
+        label: Text(isGenerating ? l10n.generating : l10n.applyChanges),
+      ),
     );
   }
 }

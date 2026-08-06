@@ -238,5 +238,9 @@
         "example": "25"
       }
     }
+  },
+  "applyChanges": "Aplicar cambios",
+  "@applyChanges": {
+    "description": "Etiqueta del FAB en Configuración para regenerar el wallpaper con los ajustes actuales"
   }
 }

@@ -238,5 +238,9 @@
         "example": "25"
       }
     }
+  },
+  "applyChanges": "Aplicar alterações",
+  "@applyChanges": {
+    "description": "Rótulo do FAB em Configurações para regenerar o wallpaper com os ajustes atuais"
   }
 }

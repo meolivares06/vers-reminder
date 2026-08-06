@@ -777,6 +777,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next in ~{minutes} min'**
   String nextInApproximatelyMinutes(int minutes);
+
+  /// FAB label on the Settings screen to regenerate the wallpaper with current settings
+  ///
+  /// In en, this message translates to:
+  /// **'Apply changes'**
+  String get applyChanges;
 }
 
 class _AppLocalizationsDelegate

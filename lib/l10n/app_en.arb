@@ -234,5 +234,9 @@
         "example": "25"
       }
     }
+  },
+  "applyChanges": "Apply changes",
+  "@applyChanges": {
+    "description": "FAB label on the Settings screen to regenerate the wallpaper with current settings"
   }
 }

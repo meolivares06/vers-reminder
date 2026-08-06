@@ -376,4 +376,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String nextInApproximatelyMinutes(int minutes) {
     return 'En ~$minutes min';
   }
+
+  @override
+  String get applyChanges => 'Aplicar cambios';
 }
