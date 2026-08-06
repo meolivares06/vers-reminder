@@ -4,22 +4,16 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:vers_reminder/shared/event_bus/event_bus.dart';
-import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/shared/shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
-import 'package:vers_reminder/scheduler/application/scheduler_config.dart';
-import 'package:vers_reminder/settings/application/appearance_settings.dart';
-import 'package:vers_reminder/verses/application/verse_provider.dart';
-import 'package:vers_reminder/shared/application/locale_provider.dart';
-import 'package:vers_reminder/home/application/home_container.dart';
-import 'package:vers_reminder/scheduler/infrastructure/wallpaper_scheduler.dart';
-import 'package:vers_reminder/shared/theme/app_theme.dart';
-import 'package:vers_reminder/wallpaper/infrastructure/image_cache_service.dart';
-import 'package:vers_reminder/notifications/infrastructure/notification_service.dart';
-import 'package:vers_reminder/backup/infrastructure/wallpaper_backup_service.dart';
-import 'package:vers_reminder/wallpaper/infrastructure/temp_cleanup_service.dart';
+import 'package:vers_reminder/wallpaper/wallpaper.dart';
+import 'package:vers_reminder/scheduler/scheduler.dart';
+import 'package:vers_reminder/settings/settings.dart';
+import 'package:vers_reminder/verses/verses.dart';
+import 'package:vers_reminder/home/home.dart';
+import 'package:vers_reminder/notifications/notifications.dart';
+import 'package:vers_reminder/backup/backup.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

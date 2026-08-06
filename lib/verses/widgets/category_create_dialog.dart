@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/shared/shared.dart';
 
 class CategoryCreateDialog extends StatefulWidget {
   const CategoryCreateDialog({super.key});

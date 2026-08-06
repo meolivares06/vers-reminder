@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:vers_reminder/shared/event_bus/event_bus.dart';
-import 'package:vers_reminder/shared/event_bus/events.dart';
-import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/shared/application/locale_provider.dart';
-import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
-import 'package:vers_reminder/verses/application/verse_provider.dart';
-import 'package:vers_reminder/verses/widgets/verse_form_screen.dart';
-import 'package:vers_reminder/verses/widgets/verse_list_screen.dart';
-import 'package:vers_reminder/settings/infrastructure/settings_screen.dart';
+import 'package:vers_reminder/shared/shared.dart';
+import 'package:vers_reminder/wallpaper/wallpaper.dart';
+import 'package:vers_reminder/verses/verses.dart';
+import 'package:vers_reminder/settings/settings.dart';
 import 'package:vers_reminder/home/widgets/wallpaper_card.dart';
 
 /// Smart container — reads providers, handles FAB logic and permission dialog.

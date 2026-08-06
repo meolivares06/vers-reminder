@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/shared/shared.dart';
 
 /// Dumb widget — empty home state placeholder shown when no wallpaper exists.
 class EmptyHome extends StatelessWidget {

@@ -2,8 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:vers_reminder/shared/theme/app_theme.dart';
-import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'package:vers_reminder/shared/shared.dart';
 
 /// Dumb widget — renders the current wallpaper with timestamp overlay and
 /// optional refresh FAB. All state is passed in via constructor parameters.

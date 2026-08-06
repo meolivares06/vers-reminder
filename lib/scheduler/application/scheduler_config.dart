@@ -2,9 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:vers_reminder/shared/domain/database_service.dart';
-import 'package:vers_reminder/shared/event_bus/event_bus.dart';
-import 'package:vers_reminder/shared/event_bus/events.dart';
+import 'package:vers_reminder/shared/shared.dart';
 
 /// Manages scheduler configuration: enabled state, frequency, and
 /// active verse categories that drive wallpaper generation scheduling.

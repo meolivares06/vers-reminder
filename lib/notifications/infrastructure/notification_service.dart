@@ -1,7 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import 'package:vers_reminder/shared/event_bus/event_bus.dart';
-import 'package:vers_reminder/shared/event_bus/events.dart';
+import 'package:vers_reminder/shared/shared.dart';
 
 class NotificationService {
   static const _channelId = 'vers_reminder_status';

@@ -10,7 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallpaper_manager_flutter/wallpaper_manager_flutter.dart';
 
-import 'package:vers_reminder/shared/domain/verse.dart';
+import 'package:vers_reminder/shared/shared.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_result.dart';
 import 'package:vers_reminder/wallpaper/infrastructure/image_cache_service.dart';
 

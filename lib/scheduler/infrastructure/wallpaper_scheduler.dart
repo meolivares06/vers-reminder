@@ -5,9 +5,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:workmanager/workmanager.dart';
 
-import 'package:vers_reminder/shared/event_bus/event_bus.dart';
-import 'package:vers_reminder/shared/event_bus/events.dart';
-import 'package:vers_reminder/wallpaper/infrastructure/wallpaper_generator.dart';
+import 'package:vers_reminder/shared/shared.dart';
+import 'package:vers_reminder/wallpaper/wallpaper.dart';
 
 const String _taskName = 'wallpaperChange';
 const String _taskUnique = 'periodicWallpaperChange';

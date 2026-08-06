@@ -6,8 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wallpaper_manager_flutter/wallpaper_manager_flutter.dart';
 
-import 'package:vers_reminder/shared/event_bus/event_bus.dart';
-import 'package:vers_reminder/shared/event_bus/events.dart';
+import 'package:vers_reminder/shared/shared.dart';
 
 /// Orchestrates saving and restoring the user's original Android wallpaper.
 ///
