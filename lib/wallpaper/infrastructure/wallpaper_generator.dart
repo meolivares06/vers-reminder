@@ -868,6 +868,13 @@ class WallpaperGenerator {
       // Advance index for the next scheduled run
       await prefs.setInt('pregen_index', index + 1);
 
+      // Persist the generation timestamp so WallpaperState (foreground) picks
+      // it up on the next read and the "Next in ~X min" countdown stays honest.
+      await prefs.setString(
+        'last_wallpaper_timestamp',
+        DateTime.now().toIso8601String(),
+      );
+
       return true;
     } catch (e) {
       // ignore: avoid_print

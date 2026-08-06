@@ -52,7 +52,17 @@ class WallpaperScheduler {
   static Future<void> init() async {
     await Workmanager().initialize(callbackDispatcher);
 
-    // Listen for scheduler state changes via the event bus
+    // Register the periodic task immediately if the scheduler was already
+    // enabled from a previous session. Otherwise it would only register on
+    // the next SchedulerToggled event (which never fires on cold start).
+    final prefs = await SharedPreferences.getInstance();
+    final wasEnabled = prefs.getBool('scheduler_enabled') ?? false;
+    if (wasEnabled) {
+      final freq = prefs.getInt('frequency_minutes') ?? 360;
+      await registerPeriodic(freq);
+    }
+
+    // Listen for runtime scheduler state changes via the event bus.
     EventBus.instance.on<SchedulerToggled>((event) async {
       if (event.enabled && event.frequencyMinutes != null) {
         await registerPeriodic(event.frequencyMinutes!);
