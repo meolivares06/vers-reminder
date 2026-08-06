@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
+import 'package:vers_reminder/shared/event_bus/events.dart';
 
 // ── Test event types ────────────────────────────────────────────────────────
 
@@ -156,6 +157,96 @@ void main() {
 
       expect(log, ['OE1', 'OE2']);
     });
+  });
+
+  // ── Backup events (F2: BackupRequested + BackupRestored) ───────────────────
+
+  group('Backup events', () {
+    test('BackupRequested carries operation field via event bus', () async {
+      final bus = EventBus.instance;
+
+      String? receivedOp;
+      bus.on<BackupRequested>((event) async {
+        receivedOp = event.operation;
+      });
+
+      await bus.emit(const BackupRequested(operation: 'backup'));
+
+      expect(receivedOp, 'backup');
+    });
+
+    test('BackupRequested restore operation is distinct', () async {
+      final bus = EventBus.instance;
+
+      String? receivedOp;
+      bus.on<BackupRequested>((event) async {
+        receivedOp = event.operation;
+      });
+
+      await bus.emit(const BackupRequested(operation: 'restore'));
+
+      expect(receivedOp, 'restore');
+    });
+
+    test('BackupRestored carries success and operation fields', () async {
+      final bus = EventBus.instance;
+
+      BackupRestored? received;
+      bus.on<BackupRestored>((event) async {
+        received = event;
+      });
+
+      await bus.emit(
+        const BackupRestored(success: true, operation: 'backup'),
+      );
+
+      expect(received, isNotNull);
+      expect(received!.success, true);
+      expect(received!.operation, 'backup');
+    });
+
+    test('BackupRestored failure is delivered with success=false', () async {
+      final bus = EventBus.instance;
+
+      BackupRestored? received;
+      bus.on<BackupRestored>((event) async {
+        received = event;
+      });
+
+      await bus.emit(
+        const BackupRestored(success: false, operation: 'restore'),
+      );
+
+      expect(received, isNotNull);
+      expect(received!.success, false);
+      expect(received!.operation, 'restore');
+    });
+
+    test(
+      'BackupRequested → BackupRestored end-to-end chain',
+      () async {
+        final bus = EventBus.instance;
+        final log = <String>[];
+
+        // Simulate: backup service listens for BackupRequested
+        // and emits BackupRestored on completion
+        bus.on<BackupRequested>((event) async {
+          log.add('requested:${event.operation}');
+          await bus.emit(BackupRestored(
+            success: true,
+            operation: event.operation,
+          ));
+        });
+
+        bus.on<BackupRestored>((event) async {
+          log.add('restored:${event.operation}:${event.success}');
+        });
+
+        await bus.emit(const BackupRequested(operation: 'backup'));
+
+        expect(log, ['requested:backup', 'restored:backup:true']);
+      },
+    );
   });
 
   // ── Edge cases ─────────────────────────────────────────────────────────────

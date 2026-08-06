@@ -39,8 +39,23 @@ class SchedulerToggled {
   const SchedulerToggled({required this.enabled, this.frequencyMinutes});
 }
 
+/// Requests backup or restore of the original system wallpaper.
+///
+/// Emitted by [WallpaperState] (backup) and SettingsScreen (restore).
+/// Consumed by [WallpaperBackupService] via [EventBus].
+class BackupRequested {
+  final String operation; // 'backup' | 'restore'
+  const BackupRequested({required this.operation});
+}
+
+/// Signals completion of a backup or restore operation.
+///
+/// Emitted by [WallpaperBackupService] after handling [BackupRequested].
+/// Consumed by [WallpaperState], SettingsScreen, and HomeContainer.
 class BackupRestored {
-  const BackupRestored();
+  final bool success;
+  final String operation; // 'backup' | 'restore'
+  const BackupRestored({required this.success, required this.operation});
 }
 
 class NotificationRequested {
