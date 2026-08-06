@@ -49,28 +49,30 @@ void callbackDispatcher() {
 }
 
 class WallpaperScheduler {
+  /// Test seam — the frequency passed to the last [registerPeriodic] call.
+  /// Reset with [resetForTesting].
+  static int? lastRegisteredFrequency;
+
+  /// Resets test seams between test cases.
+  static void resetForTesting() {
+    lastRegisteredFrequency = null;
+  }
+
   static Future<void> init() async {
-    await Workmanager().initialize(callbackDispatcher);
+    try {
+      await Workmanager().initialize(callbackDispatcher);
+    } catch (_) {
+      // Workmanager platform channel unavailable (e.g. in tests).
+    }
 
     // Register the periodic task on cold start if the scheduler was
     // already enabled in a previous session. Reads the same database
     // table that SchedulerConfig writes to (NOT SharedPreferences).
     try {
-      final dbPath = await getDatabasesPath();
-      final path = p.join(dbPath, 'vers_reminder.db');
-      final db = await openDatabase(path);
-      try {
-        final config = await db.query('app_config', where: 'id = 1');
-        if (config.isNotEmpty) {
-          final enabled = config.first['scheduler_enabled'] == 1;
-          if (enabled) {
-            final freq =
-                config.first['frequency_minutes'] as int? ?? 360;
-            await registerPeriodic(freq);
-          }
-        }
-      } finally {
-        await db.close();
+      final config = await DatabaseService.instance.getAppConfig();
+      if (config['scheduler_enabled'] == 1) {
+        final freq = config['frequency_minutes'] as int? ?? 360;
+        await registerPeriodic(freq);
       }
     } catch (_) {
       // DB may not exist yet (first launch) — event bus will handle
@@ -88,6 +90,7 @@ class WallpaperScheduler {
   }
 
   static Future<void> registerPeriodic(int frequencyMinutes) async {
+    lastRegisteredFrequency = frequencyMinutes;
     await Workmanager().registerPeriodicTask(
       _taskUnique,
       _taskName,
