@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
-import 'package:vers_reminder/verses/domain/verse.dart';
+import 'package:vers_reminder/shared/domain/verse.dart';
 import 'package:vers_reminder/shared/domain/category.dart' as models;
 
 class DatabaseService {

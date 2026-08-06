@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vers_reminder/shared/domain/database_service.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/verses/domain/verse.dart';
+import 'package:vers_reminder/shared/domain/verse.dart';
 import 'package:vers_reminder/verses/widgets/verse_list_screen.dart';
 import 'package:vers_reminder/shared/widgets/verse_tile.dart';
 import 'package:vers_reminder/shared/widgets/confirm_delete_dialog.dart';

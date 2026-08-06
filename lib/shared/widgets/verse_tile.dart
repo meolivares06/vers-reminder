@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:vers_reminder/verses/domain/verse.dart';
+import 'package:vers_reminder/shared/domain/verse.dart';
 
 class VerseTile extends StatelessWidget {
   final Verse verse;

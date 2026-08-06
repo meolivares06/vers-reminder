@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:vers_reminder/shared/domain/database_service.dart';
-import 'package:vers_reminder/verses/domain/verse.dart';
+import 'package:vers_reminder/shared/domain/verse.dart';
 
 Future<Database> _createDb() async {
   return databaseFactoryFfi.openDatabase(':memory:',

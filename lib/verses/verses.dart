@@ -1,4 +1,4 @@
-export 'domain/verse.dart';
+export 'package:vers_reminder/shared/domain/verse.dart';
 export 'application/verse_provider.dart';
 export 'application/seed_loader.dart';
 export 'widgets/category_create_dialog.dart';

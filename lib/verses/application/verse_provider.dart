@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:vers_reminder/verses/domain/verse.dart';
+import 'package:vers_reminder/shared/domain/verse.dart';
 import 'package:vers_reminder/shared/domain/category.dart' as models;
 import 'package:vers_reminder/shared/domain/database_service.dart';
 import 'package:vers_reminder/verses/application/seed_loader.dart';

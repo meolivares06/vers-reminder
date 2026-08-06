@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/verses/domain/verse.dart';
+import 'package:vers_reminder/shared/domain/verse.dart';
 import 'package:vers_reminder/verses/application/verse_provider.dart';
 import 'package:vers_reminder/shared/application/locale_provider.dart';
 import 'package:vers_reminder/shared/widgets/verse_tile.dart';

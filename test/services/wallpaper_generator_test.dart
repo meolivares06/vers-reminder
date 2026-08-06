@@ -7,7 +7,7 @@ import 'package:image/image.dart' as img;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vers_reminder/wallpaper/domain/wallpaper_result.dart';
-import 'package:vers_reminder/verses/domain/verse.dart';
+import 'package:vers_reminder/shared/domain/verse.dart';
 import 'package:vers_reminder/wallpaper/infrastructure/wallpaper_generator.dart';
 
 /// Creates a small synthetic image in the system temp directory and returns
