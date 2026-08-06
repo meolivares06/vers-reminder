@@ -52,14 +52,29 @@ class WallpaperScheduler {
   static Future<void> init() async {
     await Workmanager().initialize(callbackDispatcher);
 
-    // Register the periodic task immediately if the scheduler was already
-    // enabled from a previous session. Otherwise it would only register on
-    // the next SchedulerToggled event (which never fires on cold start).
-    final prefs = await SharedPreferences.getInstance();
-    final wasEnabled = prefs.getBool('scheduler_enabled') ?? false;
-    if (wasEnabled) {
-      final freq = prefs.getInt('frequency_minutes') ?? 360;
-      await registerPeriodic(freq);
+    // Register the periodic task on cold start if the scheduler was
+    // already enabled in a previous session. Reads the same database
+    // table that SchedulerConfig writes to (NOT SharedPreferences).
+    try {
+      final dbPath = await getDatabasesPath();
+      final path = p.join(dbPath, 'vers_reminder.db');
+      final db = await openDatabase(path);
+      try {
+        final config = await db.query('app_config', where: 'id = 1');
+        if (config.isNotEmpty) {
+          final enabled = config.first['scheduler_enabled'] == 1;
+          if (enabled) {
+            final freq =
+                config.first['frequency_minutes'] as int? ?? 360;
+            await registerPeriodic(freq);
+          }
+        }
+      } finally {
+        await db.close();
+      }
+    } catch (_) {
+      // DB may not exist yet (first launch) — event bus will handle
+      // registration when the user enables the scheduler.
     }
 
     // Listen for runtime scheduler state changes via the event bus.
