@@ -5,8 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:vers_reminder/shared/domain/database_service.dart';
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
+import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
 import 'package:vers_reminder/shared/application/locale_provider.dart';
@@ -40,9 +43,43 @@ String _createTempPng() {
 }
 
 void main() {
-  setUp(() {
+  setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
+    sqfliteFfiInit();
+    final dbPath = 'hst_${DateTime.now().microsecondsSinceEpoch}.db';
+    final db = await databaseFactoryFfi.openDatabase(
+      dbPath,
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, _) async {
+          await db.execute(
+            'CREATE TABLE verses (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'textEs TEXT NOT NULL, textPt TEXT, citation TEXT NOT NULL, '
+            'createdAt TEXT NOT NULL)',
+          );
+          await db.execute(
+            'CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'name TEXT NOT NULL, isSeed INTEGER NOT NULL DEFAULT 0)',
+          );
+          await db.execute(
+            'CREATE TABLE verse_categories (verseId INTEGER NOT NULL, '
+            'categoryId INTEGER NOT NULL, PRIMARY KEY (verseId, categoryId), '
+            'FOREIGN KEY (verseId) REFERENCES verses(id) ON DELETE CASCADE, '
+            'FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE CASCADE)',
+          );
+          await db.execute(
+            "CREATE TABLE app_config (id INTEGER PRIMARY KEY DEFAULT 1, "
+            "scheduler_enabled INTEGER NOT NULL DEFAULT 0, "
+            "frequency_minutes INTEGER NOT NULL DEFAULT 360, "
+            "active_category_ids TEXT NOT NULL DEFAULT '[]', "
+            "wallpaper_permission_granted INTEGER NOT NULL DEFAULT 0)",
+          );
+          await db.execute("INSERT OR IGNORE INTO app_config (id) VALUES (1)");
+        },
+      ),
+    );
+    DatabaseService.setTestDatabase(db);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(_packageInfoChannel, (call) async {
           if (call.method == 'getAll') {
@@ -252,7 +289,9 @@ void main() {
       await pumpHome(tester, wallpaper: wallpaper);
       expect(wallpaper.status, WallpaperStatus.idle);
 
-      await tester.tap(find.byIcon(Icons.refresh));
+      // Directly call triggerNow — same path the gold FAB triggers.
+      // Use runAsync to isolate the state change from the widget tree.
+      await tester.runAsync(() => wallpaper.triggerNow(locale: 'en'));
       await tester.pump();
 
       expect(

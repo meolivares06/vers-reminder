@@ -6,17 +6,17 @@ import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/backup/infrastructure/wallpaper_backup_service.dart';
 
 void main() {
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    // Ensure init is called once (idempotent — safe to call in every setUp).
-    WallpaperBackupService.init();
-    // Force reset the static flag for test isolation.
-    // ignore: invalid_use_of_visible_for_testing_member
-    WallpaperBackupService.resetForTesting();
-    WallpaperBackupService.init();
-  });
+  group('WallpaperBackupService event integration', () {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      // Ensure init is called once (idempotent — safe to call in every setUp).
+      WallpaperBackupService.init();
+      // Force reset the static flag for test isolation.
+      // ignore: invalid_use_of_visible_for_testing_member
+      WallpaperBackupService.resetForTesting();
+      WallpaperBackupService.init();
+    });
 
-  group('WallpaperBackupService init', () {
     test('init subscribes and emits BackupRestored on BackupRequested backup',
         () async {
       BackupRestored? received;

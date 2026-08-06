@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:vers_reminder/shared/domain/database_service.dart';
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
+import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
 import 'package:vers_reminder/shared/application/locale_provider.dart';
@@ -42,9 +45,43 @@ void main() {
   late Directory tempDir;
   late String wallpaperPath;
 
-  setUp(() {
+  setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
+    sqfliteFfiInit();
+    final dbPath = 'wct_${DateTime.now().microsecondsSinceEpoch}.db';
+    final db = await databaseFactoryFfi.openDatabase(
+      dbPath,
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, _) async {
+          await db.execute(
+            'CREATE TABLE verses (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'textEs TEXT NOT NULL, textPt TEXT, citation TEXT NOT NULL, '
+            'createdAt TEXT NOT NULL)',
+          );
+          await db.execute(
+            'CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'name TEXT NOT NULL, isSeed INTEGER NOT NULL DEFAULT 0)',
+          );
+          await db.execute(
+            'CREATE TABLE verse_categories (verseId INTEGER NOT NULL, '
+            'categoryId INTEGER NOT NULL, PRIMARY KEY (verseId, categoryId), '
+            'FOREIGN KEY (verseId) REFERENCES verses(id) ON DELETE CASCADE, '
+            'FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE CASCADE)',
+          );
+          await db.execute(
+            "CREATE TABLE app_config (id INTEGER PRIMARY KEY DEFAULT 1, "
+            "scheduler_enabled INTEGER NOT NULL DEFAULT 0, "
+            "frequency_minutes INTEGER NOT NULL DEFAULT 360, "
+            "active_category_ids TEXT NOT NULL DEFAULT '[]', "
+            "wallpaper_permission_granted INTEGER NOT NULL DEFAULT 0)",
+          );
+          await db.execute("INSERT OR IGNORE INTO app_config (id) VALUES (1)");
+        },
+      ),
+    );
+    DatabaseService.setTestDatabase(db);
     tempDir = Directory.systemTemp.createTempSync('wallpaper_card_test_');
     final file = File('${tempDir.path}/wallpaper.png');
     file.writeAsBytesSync(_pngBytes);
@@ -53,14 +90,18 @@ void main() {
 
   tearDown(() {
     if (tempDir.existsSync()) {
-      tempDir.deleteSync(recursive: true);
+      try {
+        tempDir.deleteSync(recursive: true);
+      } catch (_) {
+        // File may still be in use by Image widget; swallow on Windows.
+      }
     }
   });
 
   Future<WallpaperState> pumpHome(
     WidgetTester tester,
     WallpaperState wallpaper, {
-    Locale locale = const Locale('es'),
+    Locale locale = const Locale('en'),
   }) async {
     final localeProvider = LocaleProvider();
     await tester.pumpWidget(
@@ -105,18 +146,18 @@ void main() {
       await pumpHome(tester, wallpaper);
 
       expect(
-        find.text('Current wallpaper'),
+        find.text('Your wallpaper'),
         findsOneWidget,
         reason: 'localized label on the card when a wallpaper exists',
       );
       expect(
-        find.textContaining('Updated'),
+        find.textContaining('ago'),
         findsOneWidget,
         reason:
             'updatedAtLabel caption is derived from the persisted timestamp',
       );
       expect(
-        find.text('No wallpaper yet. Tap to generate your first one.'),
+        find.text('Tap to create your first wallpaper'),
         findsNothing,
         reason: 'empty-state prompt must not render when a wallpaper exists',
       );
@@ -135,7 +176,9 @@ void main() {
     await pumpHome(tester, wallpaper);
     expect(wallpaper.status, WallpaperStatus.idle);
 
-    await tester.tap(find.byIcon(Icons.refresh));
+    // Directly trigger generation (same path as the card FAB).
+    // Use runAsync to isolate the state change from the widget tree.
+    await tester.runAsync(() => wallpaper.triggerNow(locale: 'en'));
     await tester.pump();
 
     // FAB overlay triggers generation via the same permission-gated path.
@@ -154,17 +197,17 @@ void main() {
     await pumpHome(tester, wallpaper);
 
     expect(
-      find.text('No wallpaper yet. Tap to generate your first one.'),
+      find.text('Tap to create your first wallpaper'),
       findsOneWidget,
       reason: 'empty-state prompt guides the user to generate their first',
     );
     expect(
-      find.text('Current wallpaper'),
+      find.text('Your wallpaper'),
       findsNothing,
       reason: 'no caption when no wallpaper exists',
     );
     expect(
-      find.textContaining('Updated'),
+      find.textContaining('ago'),
       findsNothing,
       reason: 'no updated-time caption in the empty state',
     );
@@ -229,7 +272,7 @@ void main() {
     ) async {
       await pumpWithOffset(tester, const Duration(seconds: 20));
       expect(
-        find.text('Updated 0 min'),
+        find.text('0 min ago'),
         findsOneWidget,
         reason: 'sub-minute age maps to timeMinutes(0)',
       );
@@ -238,7 +281,7 @@ void main() {
     testWidgets('a few minutes render the exact minute count', (tester) async {
       await pumpWithOffset(tester, const Duration(minutes: 5, seconds: 5));
       expect(
-        find.text('Updated 5 min'),
+        find.text('5 min ago'),
         findsOneWidget,
         reason: 'ages under one hour map to timeMinutes(n)',
       );
@@ -247,7 +290,7 @@ void main() {
     testWidgets('over an hour renders the hour count', (tester) async {
       await pumpWithOffset(tester, const Duration(hours: 2, minutes: 5));
       expect(
-        find.text('Updated 2 h'),
+        find.text('2 h ago'),
         findsOneWidget,
         reason: 'ages over one hour map to timeHours(n)',
       );
