@@ -220,5 +220,19 @@
     }
   },
   "offsetLabel": "Offset: {direction} {value}",
-  "disabledLabel": "Disabled"
+  "disabledLabel": "Disabled",
+  "nextInLessThanOneMinute": "Next in <1 min",
+  "@nextInLessThanOneMinute": {
+    "description": "Countdown caption on the Home wallpaper card when less than one minute remains"
+  },
+  "nextInApproximatelyMinutes": "Next in ~{minutes} min",
+  "@nextInApproximatelyMinutes": {
+    "description": "Countdown caption on the Home wallpaper card showing approximate minutes until next generation",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "25"
+      }
+    }
+  }
 }

@@ -1,6 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
+import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
 
@@ -366,4 +366,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get disabledLabel => 'Disabled';
+
+  @override
+  String get nextInLessThanOneMinute => 'Next in <1 min';
+
+  @override
+  String nextInApproximatelyMinutes(int minutes) {
+    return 'Next in ~$minutes min';
+  }
 }

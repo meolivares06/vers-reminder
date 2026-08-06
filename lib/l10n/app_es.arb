@@ -224,5 +224,19 @@
     }
   },
   "offsetLabel": "Desplazamiento: {direction} {value}",
-  "disabledLabel": "Desactivado"
+  "disabledLabel": "Desactivado",
+  "nextInLessThanOneMinute": "En <1 min",
+  "@nextInLessThanOneMinute": {
+    "description": "Leyenda de cuenta regresiva en la tarjeta de wallpaper cuando falta menos de un minuto"
+  },
+  "nextInApproximatelyMinutes": "En ~{minutes} min",
+  "@nextInApproximatelyMinutes": {
+    "description": "Leyenda de cuenta regresiva en la tarjeta de wallpaper mostrando minutos aproximados hasta la próxima generación",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "25"
+      }
+    }
+  }
 }

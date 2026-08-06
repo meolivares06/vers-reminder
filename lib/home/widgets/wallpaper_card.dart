@@ -105,8 +105,10 @@ class _WallpaperCardState extends State<WallpaperCard> {
                         ),
                         child: Text(
                           widget.nextInMinutes == 1
-                              ? 'Next in <1 min'
-                              : 'Next in ~${widget.nextInMinutes} min',
+                              ? l10n.nextInLessThanOneMinute
+                              : l10n.nextInApproximatelyMinutes(
+                                  widget.nextInMinutes!,
+                                ),
                           style: const TextStyle(
                             color: Colors.white70,
                             fontSize: 12,

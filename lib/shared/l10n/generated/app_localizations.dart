@@ -5,9 +5,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
-import 'package:vers_reminder/shared/l10n/generated/app_localizations_en.dart';
-import 'package:vers_reminder/shared/l10n/generated/app_localizations_es.dart';
-import 'package:vers_reminder/shared/l10n/generated/app_localizations_pt.dart';
+import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_pt.dart';
 
 // ignore_for_file: type=lint
 
@@ -765,6 +765,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Disabled'**
   String get disabledLabel;
+
+  /// Countdown caption on the Home wallpaper card when less than one minute remains
+  ///
+  /// In en, this message translates to:
+  /// **'Next in <1 min'**
+  String get nextInLessThanOneMinute;
+
+  /// Countdown caption on the Home wallpaper card showing approximate minutes until next generation
+  ///
+  /// In en, this message translates to:
+  /// **'Next in ~{minutes} min'**
+  String nextInApproximatelyMinutes(int minutes);
 }
 
 class _AppLocalizationsDelegate
