@@ -4,22 +4,26 @@ import 'package:flutter/material.dart';
 
 import 'package:vers_reminder/shared/shared.dart';
 
-/// Dumb widget — renders the current wallpaper with timestamp overlay and
+/// Dumb widget — renders the current wallpaper with countdown overlay and
 /// optional refresh FAB. All state is passed in via constructor parameters.
 class WallpaperCard extends StatefulWidget {
   final String? path;
   final DateTime? timestamp;
+  final int? nextInMinutes;
   final VoidCallback? onTap;
   final VoidCallback? onFabPressed;
   final bool wallpaperPermissionGranted;
+  final bool isGenerating;
 
   const WallpaperCard({
     super.key,
     this.path,
     this.timestamp,
+    this.nextInMinutes,
     this.onTap,
     this.onFabPressed,
     this.wallpaperPermissionGranted = false,
+    this.isGenerating = false,
   });
 
   @override
@@ -61,13 +65,6 @@ class _WallpaperCardState extends State<WallpaperCard> {
     }
   }
 
-  String _relativeTime(DateTime time, AppLocalizations l10n) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 1) return l10n.timeMinutes(0);
-    if (diff.inMinutes < 60) return l10n.timeMinutes(diff.inMinutes);
-    return l10n.timeHours(diff.inHours);
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -92,7 +89,7 @@ class _WallpaperCardState extends State<WallpaperCard> {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  if (widget.timestamp != null)
+                  if (widget.nextInMinutes != null)
                     Positioned(
                       bottom: 12,
                       left: 16,
@@ -106,28 +103,14 @@ class _WallpaperCardState extends State<WallpaperCard> {
                           color: Colors.black54,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              l10n.currentWallpaperLabel,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              l10n.updatedAtLabel(
-                                _relativeTime(widget.timestamp!, l10n),
-                              ),
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          widget.nextInMinutes == 1
+                              ? 'Next in <1 min'
+                              : 'Next in ~${widget.nextInMinutes} min',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ),
@@ -136,12 +119,22 @@ class _WallpaperCardState extends State<WallpaperCard> {
                       bottom: 12,
                       right: 12,
                       child: FloatingActionButton.small(
-                        onPressed: widget.onFabPressed,
+                        onPressed:
+                            widget.isGenerating ? null : widget.onFabPressed,
                         backgroundColor:
                             Theme.of(context).colorScheme.secondary,
                         foregroundColor: onGoldAccent,
-                        tooltip: l10n.changeNow,
-                        child: const Icon(Icons.refresh),
+                        tooltip:
+                            widget.isGenerating ? null : l10n.changeNow,
+                        child: widget.isGenerating
+                            ? SizedBox.square(
+                                dimension: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: onGoldAccent,
+                                ),
+                              )
+                            : const Icon(Icons.refresh),
                       ),
                     ),
                 ],

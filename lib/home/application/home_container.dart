@@ -5,6 +5,7 @@ import 'package:vers_reminder/shared/shared.dart';
 import 'package:vers_reminder/wallpaper/wallpaper.dart';
 import 'package:vers_reminder/verses/verses.dart';
 import 'package:vers_reminder/settings/settings.dart';
+import 'package:vers_reminder/scheduler/scheduler.dart';
 import 'package:vers_reminder/home/widgets/wallpaper_card.dart';
 
 /// Smart container — reads providers, handles FAB logic and permission dialog.
@@ -126,6 +127,16 @@ class _HomeContainerState extends State<HomeContainer> {
     final l10n = AppLocalizations.of(context)!;
     final wallpaper = context.watch<WallpaperState>();
     final localeProvider = context.watch<LocaleProvider>();
+    final scheduler = context.watch<SchedulerConfig>();
+
+    // Calculate time until next scheduled generation.
+    final lastTimestamp = wallpaper.lastWallpaperTimestamp;
+    int? nextInMinutes;
+    if (scheduler.isEnabled && lastTimestamp != null) {
+      final elapsed = DateTime.now().difference(lastTimestamp).inMinutes;
+      final remaining = scheduler.frequencyMinutes - elapsed;
+      nextInMinutes = remaining.clamp(1, scheduler.frequencyMinutes);
+    }
 
     if (_lastWallpaperError) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -162,7 +173,9 @@ class _HomeContainerState extends State<HomeContainer> {
           WallpaperCard(
             path: wallpaper.lastWallpaperPath,
             timestamp: wallpaper.lastWallpaperTimestamp,
+            nextInMinutes: nextInMinutes,
             wallpaperPermissionGranted: wallpaper.wallpaperPermissionGranted,
+            isGenerating: wallpaper.status == WallpaperStatus.generating,
             onTap: () {
               if (wallpaper.wallpaperPermissionGranted) {
                 try {
