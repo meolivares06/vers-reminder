@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:vers_reminder/shared/shared.dart';
+import 'package:vers_reminder/scheduler/scheduler.dart';
 import 'package:vers_reminder/settings/infrastructure/update_check_result.dart';
 import 'package:vers_reminder/settings/infrastructure/update_service.dart';
 
@@ -356,9 +358,19 @@ class _AboutScreenState extends State<AboutScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final scheduler = context.watch<SchedulerConfig>();
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.sectionAbout)),
+      appBar: AppBar(
+        title: Text(l10n.sectionAbout),
+        actions: [
+          if (scheduler.isEnabled)
+            const Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Icon(Icons.circle, size: 10, color: Colors.green),
+            ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

@@ -324,7 +324,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final locale = context.watch<LocaleProvider>().locale.languageCode;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settings)),
+      appBar: AppBar(
+          title: Text(l10n.settings),
+          actions: [
+            if (scheduler.isEnabled)
+              const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(Icons.circle, size: 10, color: Colors.green),
+              ),
+          ],
+        ),
       body: wallpaper.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
