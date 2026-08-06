@@ -15,6 +15,14 @@ class WallpaperGenerated {
   const WallpaperGenerated({required this.path, this.citation});
 }
 
+// Dormant — reserved for future use.
+// Home reads wallpaperPermissionGranted synchronously; no event bus needed yet.
+class PermissionGranted {
+  const PermissionGranted();
+}
+
+// Dormant — reserved for future use.
+// verse_provider is imported directly by 6 consumers; event bus over-engineering.
 class VerseAdded {
   final int? categoryId;
   const VerseAdded({this.categoryId});
@@ -23,10 +31,6 @@ class VerseAdded {
 class SettingChanged {
   final String key;
   const SettingChanged({required this.key});
-}
-
-class PermissionGranted {
-  const PermissionGranted();
 }
 
 class SchedulerToggled {
