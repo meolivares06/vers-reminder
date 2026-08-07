@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -44,26 +42,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  Timer? _previewTimer;
-  String? _previewImagePath;
-  /// Last-rendered preview as raw PNG bytes (~300 KB at default preview
-  /// width). Held in memory to avoid repeated re-renders on every settings
-  /// interaction. The size is acceptable because it is a single in-memory
-  /// buffer discarded on screen dispose — no persistent disk footprint.
-  Uint8List? _cachedPreview;
-  int _previewGeneration = 0;
-
-  /// True once a preview attempt produced nothing (no verse, no cached image,
-  /// or a render error). Lets the mini-preview settle into a placeholder
-  /// instead of showing an indeterminate spinner forever.
-  bool _previewUnavailable = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _schedulePreview();
-    });
     EventBus.instance.on<BackupRestored>((event) async {
       if (!mounted) return;
       if (event.operation == 'restore') {
@@ -82,86 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    _previewTimer?.cancel();
     super.dispose();
-  }
-
-  void _schedulePreview() {
-    _previewTimer?.cancel();
-    _previewTimer = Timer(const Duration(milliseconds: 300), () {
-      _updatePreview();
-    });
-  }
-
-  Future<void> _updatePreview() async {
-    final generation = ++_previewGeneration;
-
-    final verseProvider = context.read<VerseProvider>();
-    final appearance = context.read<AppearanceSettings>();
-    final locale = context.read<LocaleProvider>().locale.languageCode;
-
-    final allVerses = verseProvider.groupedVerses.values
-        .expand((list) => list)
-        .toList();
-    final verse = allVerses.isNotEmpty ? allVerses.first : null;
-
-    // No verse to render (e.g. empty library) — settle into the placeholder
-    // instead of leaving the indeterminate spinner running forever.
-    if (verse == null) {
-      if (mounted) {
-        setState(() {
-          _cachedPreview = null;
-          _previewUnavailable = true;
-        });
-      }
-      return;
-    }
-
-    // Capture width before async gap
-    final previewWidth = (MediaQuery.of(context).size.width * 0.8).round();
-
-    try {
-      _previewImagePath ??= await ImageCacheService.instance
-          .getNextRandomImage();
-
-      // No cached image to render against (empty cache on first run) — settle
-      // into the placeholder.
-      if (_previewImagePath == null) {
-        if (mounted) {
-          setState(() {
-            _cachedPreview = null;
-            _previewUnavailable = true;
-          });
-        }
-        return;
-      }
-
-      final bytes = await WallpaperGenerator.instance.renderPreview(
-        verse: verse,
-        locale: locale,
-        previewWidth: previewWidth,
-        previewHeight: 100,
-        horizontalOffset: appearance.horizontalOffset,
-        verticalAlignment: appearance.verticalAlignment,
-        fontScale: appearance.fontScale,
-        calibratedInset: appearance.calibratedInset,
-        previewImagePath: _previewImagePath,
-        useMyWallpaper: appearance.useMyWallpaper,
-      );
-
-      if (!mounted || generation != _previewGeneration) return;
-      setState(() {
-        _cachedPreview = bytes;
-        _previewUnavailable = false;
-      });
-    } catch (e) {
-      debugPrint('Wallpaper mini-preview generation failed: $e');
-      if (!mounted || generation != _previewGeneration) return;
-      setState(() {
-        _cachedPreview = null;
-        _previewUnavailable = true;
-      });
-    }
   }
 
   Future<void> _onMioSelected() async {
@@ -187,8 +90,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         await File(pickedImage.path).copy(destPath);
         await appearance.setUserBackgroundPath(destPath);
         await appearance.setUseMyWallpaper(true);
-        _previewImagePath = null;
-        _schedulePreview();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -212,8 +113,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } else {
       // Image already stored — just toggle
       await appearance.setUseMyWallpaper(true);
-      _previewImagePath = null;
-      _schedulePreview();
     }
   }
 
@@ -233,8 +132,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final destPath = '${appDir.path}/user_background.png';
       await File(pickedImage.path).copy(destPath);
       await appearance.setUserBackgroundPath(destPath);
-      _previewImagePath = null;
-      _schedulePreview();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -345,34 +242,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SectionHeader(
                   title: l10n.sectionAppearance,
                 ),
-                // Mini preview — shown at the top of the wallpaper section so
-                // the user sees the current composition before its params.
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    height: 100,
-                    width: double.infinity,
-                    child: _cachedPreview != null
-                        ? Image.memory(_cachedPreview!, fit: BoxFit.cover)
-                        : Container(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            // Settles into a placeholder when a preview can't
-                            // be produced (empty cache/offline first run) so
-                            // the spinner never spins forever.
-                            child: _previewUnavailable
-                                ? const Center(
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      size: 32,
-                                    ),
-                                  )
-                                : const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                          ),
-                  ),
+                // Text position schematic — shows where the verse text will land
+                // on the wallpaper without rendering the actual image.
+                _TextPositionSchematic(
+                  horizontalOffset: appearance.horizontalOffset,
+                  verticalAlignment: appearance.verticalAlignment,
                 ),
 
                 // Vertical alignment
@@ -393,7 +267,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     selected: {appearance.verticalAlignment},
                     onSelectionChanged: (sel) {
                       appearance.setVerticalAlignment(sel.first);
-                      _schedulePreview();
+
                     },
                   ),
                 ),
@@ -428,8 +302,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _onMioSelected();
                           } else {
                             appearance.setUseMyWallpaper(false);
-                            _previewImagePath = null;
-                            _schedulePreview();
+
                           }
                         },
                       ),
@@ -480,7 +353,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   label: appearance.horizontalOffset.toString(),
                   onChanged: (v) {
                     appearance.setHorizontalOffset(v.round());
-                    _schedulePreview();
                   },
                 ),
 
@@ -500,7 +372,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           appearance.setFontScale(
                             double.parse(v.toStringAsFixed(2)),
                           );
-                          _schedulePreview();
+    
                         },
                       ),
                     ),
@@ -663,6 +535,111 @@ class _SettingsScreenState extends State<SettingsScreen> {
               )
             : const Icon(Icons.wallpaper),
         label: Text(isGenerating ? l10n.generating : l10n.applyChanges),
+      ),
+    );
+  }
+}
+
+/// A lightweight schematic showing where the verse text will land on the
+/// wallpaper. Replaces the live [WallpaperGenerator.renderPreview] call so
+/// the settings screen stays fast and reactive.
+///
+/// The colored bar represents the wallpaper area. The shaded text block
+/// moves horizontally according to [horizontalOffset] and vertically
+/// according to [verticalAlignment], giving instant positional feedback.
+class _TextPositionSchematic extends StatelessWidget {
+  final int horizontalOffset;
+  final String verticalAlignment;
+
+  const _TextPositionSchematic({
+    required this.horizontalOffset,
+    required this.verticalAlignment,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final surface = theme.colorScheme.surfaceContainerHighest;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: SizedBox(
+          height: 72,
+          width: double.infinity,
+          child: ColoredBox(
+            color: surface,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Map horizontal offset (-20..20) to x position within the bar.
+                final maxW = constraints.maxWidth;
+                final textBlockW = maxW * 0.4; // ~40% of width
+                final centerX = (maxW - textBlockW) / 2;
+                final offsetX = (horizontalOffset / 20.0) *
+                    ((maxW - textBlockW) / 2);
+                final left = centerX + offsetX;
+
+                // Map vertical alignment to y position.
+                final maxH = constraints.maxHeight;
+                final textBlockH = 28.0;
+                final top = switch (verticalAlignment) {
+                  'top' => 8.0,
+                  'center' => (maxH - textBlockH) / 2,
+                  _ => maxH - textBlockH - 8, // bottom
+                };
+
+                return Stack(
+                  children: [
+                    // Text block — shaded region where the verse lands.
+                    Positioned(
+                      left: left,
+                      top: top,
+                      width: textBlockW,
+                      height: textBlockH,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary
+                              .withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: theme.colorScheme.primary
+                                .withValues(alpha: 0.4),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Aa',
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Horizontal offset indicator — small arrow showing direction.
+                    if (horizontalOffset != 0)
+                      Positioned(
+                        top: maxH / 2 - 6,
+                        left: horizontalOffset > 0
+                            ? left + textBlockW + 4
+                            : left - 16,
+                        child: Icon(
+                          horizontalOffset > 0
+                              ? Icons.arrow_forward_ios
+                              : Icons.arrow_back_ios,
+                          size: 12,
+                          color: theme.colorScheme.primary
+                              .withValues(alpha: 0.5),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
       ),
     );
   }
