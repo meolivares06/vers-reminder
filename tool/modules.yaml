@@ -23,11 +23,12 @@ modules:
 
   verses:
     path: lib/verses
-    deps: [shared]
+    deps: [shared, scheduler]
     barrel: lib/verses/verses.dart
     files:
       - application/verse_provider.dart
       - application/seed_loader.dart
+      - widgets/category_chip_bar.dart
       - widgets/category_create_dialog.dart
       - widgets/verse_form_screen.dart
       - widgets/verse_list_screen.dart

@@ -128,7 +128,7 @@ void main() {
   });
 
       testWidgets(
-      'Settings section order is Appearance, Rotation, Categories, then About '
+      'Settings section order is Appearance, Rotation, then About '
       'link', (tester) async {
     await tester.pumpWidget(
       MultiProvider(
@@ -156,7 +156,6 @@ void main() {
     for (final label in [
       'Appearance',
       'Rotation',
-      'Categories',
       'About',
     ]) {
       await tester.scrollUntilVisible(find.text(label), 150);

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:vers_reminder/shared/shared.dart';
+
+import 'package:vers_reminder/shared/shared.dart' hide Category;
+import 'package:vers_reminder/shared/domain/category.dart' as models;
+import 'package:vers_reminder/scheduler/scheduler.dart';
 import 'package:vers_reminder/verses/application/verse_provider.dart';
+import 'package:vers_reminder/verses/widgets/category_chip_bar.dart';
 import 'package:vers_reminder/verses/widgets/verse_form_screen.dart';
 
 class VerseListScreen extends StatefulWidget {
@@ -19,11 +23,11 @@ class _VerseListScreenState extends State<VerseListScreen> {
     final l10n = AppLocalizations.of(context)!;
     final localeProvider = context.watch<LocaleProvider>();
     final locale = localeProvider.locale.languageCode;
+    final scheduler = context.watch<SchedulerConfig>();
 
     // Reload verses when locale changes (watch above triggers rebuild)
     if (_currentLocale != locale) {
       _currentLocale = locale;
-      // Schedule after build to avoid calling async during build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.read<VerseProvider>().loadVerses(locale);
       });
@@ -36,22 +40,53 @@ class _VerseListScreenState extends State<VerseListScreen> {
         }
 
         if (provider.groupedVerses.isEmpty) {
-          return Center(child: Text(l10n.noVerses));
+          return Column(
+            children: [
+              const CategoryChipBar(),
+              Expanded(child: Center(child: Text(l10n.noVerses))),
+            ],
+          );
         }
 
-        return RefreshIndicator(
-          onRefresh: () => provider.loadVerses(locale),
-          child: ListView(
-            children: provider.groupedVerses.entries.map((entry) {
-              return _CategoryGroup(
-                categoryName: entry.key,
-                verses: entry.value,
-                onVerseTap: (verse) => _openForm(context, verse: verse),
-                onVerseDelete: (verse) =>
-                    _confirmDelete(context, provider, verse),
+        // Filter verses by active categories. When no categories are
+        // selected (all chips off), show all verses.
+        final activeIds = scheduler.activeCategoryIds;
+        final filtered = activeIds.isEmpty
+            ? provider.groupedVerses
+            : Map.fromEntries(
+                provider.groupedVerses.entries.where((entry) {
+                  final cat = provider.categories.cast<models.Category?>().firstWhere(
+                    (c) => c?.name == entry.key,
+                    orElse: () => null,
+                  );
+                  return cat != null && activeIds.contains(cat.id);
+                }),
               );
-            }).toList(),
-          ),
+
+        return Column(
+          children: [
+            const CategoryChipBar(),
+            const Divider(height: 1),
+            Expanded(
+              child: filtered.isEmpty
+                  ? Center(child: Text(l10n.noVerses))
+                  : RefreshIndicator(
+                      onRefresh: () => provider.loadVerses(locale),
+                      child: ListView(
+                        children: filtered.entries.map((entry) {
+                          return _CategoryGroup(
+                            categoryName: entry.key,
+                            verses: entry.value,
+                            onVerseTap: (verse) =>
+                                _openForm(context, verse: verse),
+                            onVerseDelete: (verse) =>
+                                _confirmDelete(context, provider, verse),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+            ),
+          ],
         );
       },
     );
@@ -63,7 +98,6 @@ class _VerseListScreenState extends State<VerseListScreen> {
         builder: (_) => VerseFormScreen(verse: verse),
       ),
     );
-    // Refresh verses when returning from form
     if (mounted) {
       context.read<VerseProvider>().loadVerses(_currentLocale);
     }

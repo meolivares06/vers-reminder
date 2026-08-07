@@ -434,47 +434,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             .toList(),
                       ),
                     ),
-                  ),
-
-                // ── Categories ──
-                const Divider(),
-                SectionHeader(
-                  title: l10n.categoriesLabel,
-                ),
-                // Select all / Clear all
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.select_all),
-                      tooltip: l10n.selectAll,
-                      onPressed: () {
-                        for (final cat in verseProvider.categories) {
-                          if (!scheduler.activeCategoryIds.contains(cat.id)) {
-                            scheduler.toggleCategory(cat.id!);
-                          }
-                        }
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.deselect),
-                      tooltip: l10n.clearAll,
-                      onPressed: () {
-                        for (final cat in verseProvider.categories) {
-                          if (scheduler.activeCategoryIds.contains(cat.id)) {
-                            scheduler.toggleCategory(cat.id!);
-                          }
-                        }
-                      },
-                    ),
-                  ],
-                ),
-                ...verseProvider.categories.map(
-                  (cat) => CheckboxListTile(
-                    title: Text(cat.name),
-                    value: scheduler.activeCategoryIds.contains(cat.id),
-                    onChanged: (_) => scheduler.toggleCategory(cat.id!),
-                  ),
                 ),
 
                 // ── About ──
