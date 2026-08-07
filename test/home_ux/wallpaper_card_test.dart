@@ -8,12 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
-import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
-import 'package:vers_reminder/scheduler/scheduler_config.dart';
-import 'package:vers_reminder/settings/appearance_settings.dart';
-import 'package:vers_reminder/verses/verse_provider.dart';
-import 'package:vers_reminder/home/home_screen.dart';
+import 'package:vers_reminder/shared/application/locale_provider.dart';
+import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/application/scheduler_config.dart';
+import 'package:vers_reminder/settings/application/appearance_settings.dart';
+import 'package:vers_reminder/verses/application/verse_provider.dart';
+import 'package:vers_reminder/home/application/home_container.dart';
 
 /// A minimal valid 1x1 PNG so [Image.file] can decode the wallpaper path.
 const List<int> _pngBytes = <int>[
@@ -81,7 +81,7 @@ void main() {
           locale: locale,
           supportedLocales: AppLocalizations.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
-          home: const HomeScreen(),
+          home: const HomeContainer(),
         ),
       ),
     );
@@ -257,23 +257,23 @@ void main() {
   // ── F6 RED: Async file check replaces existsSync in build ──
 
   group('F6 async file check (UX-HOME-001)', () {
-    test('F6-RED existsSync absent from _HomeTabState.build', () {
+    test('F6-RED existsSync absent from _WallpaperCardState.build', () {
       final source =
-          File('lib/home/home_screen.dart').readAsStringSync();
+          File('lib/home/widgets/wallpaper_card.dart').readAsStringSync();
 
-      // Locate the _HomeTabState.build() method.
+      // Locate the _WallpaperCardState.build() method.
       final buildStart = source.indexOf('Widget build(BuildContext context) {',
-          source.indexOf('class _HomeTabState'));
+          source.indexOf('class _WallpaperCardState'));
       expect(buildStart, greaterThan(0),
-          reason: '_HomeTabState.build method must exist');
+          reason: '_WallpaperCardState.build method must exist');
 
       // Find the closing brace of build() (scan forward from the method body).
       final buildEnd = _findMethodEnd(source, buildStart);
       final buildBody = source.substring(buildStart, buildEnd);
 
-      // RED: existsSync must NOT appear inside _HomeTabState.build().
+      // RED: existsSync must NOT appear inside _WallpaperCardState.build().
       expect(buildBody.contains('existsSync'), isFalse,
-          reason: '_HomeTabState.build() must not call File.existsSync() — '
+          reason: '_WallpaperCardState.build() must not call File.existsSync() — '
               'the existence check must use the cached _wallpaperFileExists '
               'flag updated asynchronously');
     });

@@ -12,7 +12,7 @@ import 'package:wallpaper_manager_flutter/wallpaper_manager_flutter.dart';
 
 import 'package:vers_reminder/verses/domain/verse.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_result.dart';
-import 'package:vers_reminder/wallpaper/image_cache_service.dart';
+import 'package:vers_reminder/wallpaper/infrastructure/image_cache_service.dart';
 
 /// Generates and optionally sets wallpapers composed of verse text
 /// over a background with dark overlay.

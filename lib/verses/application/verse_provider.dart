@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:vers_reminder/verses/domain/verse.dart';
-import 'package:vers_reminder/shared/category.dart' as models;
-import 'package:vers_reminder/shared/database_service.dart';
-import 'package:vers_reminder/verses/seed_loader.dart';
+import 'package:vers_reminder/shared/domain/category.dart' as models;
+import 'package:vers_reminder/shared/domain/database_service.dart';
+import 'package:vers_reminder/verses/application/seed_loader.dart';
 
 class VerseProvider extends ChangeNotifier {
   final DatabaseService _db = DatabaseService.instance;

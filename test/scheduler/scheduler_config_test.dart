@@ -4,10 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:vers_reminder/shared/database_service.dart';
+import 'package:vers_reminder/shared/domain/database_service.dart';
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/event_bus/events.dart';
-import 'package:vers_reminder/scheduler/scheduler_config.dart';
+import 'package:vers_reminder/scheduler/application/scheduler_config.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

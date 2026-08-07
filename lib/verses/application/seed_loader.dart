@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:vers_reminder/verses/domain/verse.dart';
-import 'package:vers_reminder/shared/database_service.dart';
+import 'package:vers_reminder/shared/domain/database_service.dart';
 
 class SeedLoader {
   final DatabaseService _db;

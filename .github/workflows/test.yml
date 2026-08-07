@@ -1,0 +1,38 @@
+name: Test
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches:
+      - main
+      - master
+      - 'refactor/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Needed for git diff / merge-base
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.x'
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests (impact on PR/refactor, full on main)
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] && { [ "${{ github.ref_name }}" = "main" ] || [ "${{ github.ref_name }}" = "master" ]; }; then
+            echo "Running full test suite on main/master..."
+            dart run tool/harness.dart test --all
+          else
+            echo "Running impact-based tests..."
+            dart run tool/harness.dart test --impact
+          fi

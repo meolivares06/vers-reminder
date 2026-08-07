@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/settings/update_check_result.dart';
-import 'package:vers_reminder/settings/update_service.dart';
+import 'package:vers_reminder/settings/infrastructure/update_check_result.dart';
+import 'package:vers_reminder/settings/infrastructure/update_service.dart';
 import 'package:vers_reminder/shared/widgets/app_version.dart';
 import 'package:vers_reminder/shared/widgets/async_action_button.dart';
 import 'package:vers_reminder/shared/widgets/section_header.dart';

@@ -8,17 +8,17 @@ import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
-import 'package:vers_reminder/scheduler/scheduler_config.dart';
-import 'package:vers_reminder/settings/appearance_settings.dart';
-import 'package:vers_reminder/verses/verse_provider.dart';
-import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/home/home_screen.dart';
-import 'package:vers_reminder/scheduler/wallpaper_scheduler.dart';
+import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/application/scheduler_config.dart';
+import 'package:vers_reminder/settings/application/appearance_settings.dart';
+import 'package:vers_reminder/verses/application/verse_provider.dart';
+import 'package:vers_reminder/shared/application/locale_provider.dart';
+import 'package:vers_reminder/home/application/home_container.dart';
+import 'package:vers_reminder/scheduler/infrastructure/wallpaper_scheduler.dart';
 import 'package:vers_reminder/shared/theme/app_theme.dart';
-import 'package:vers_reminder/wallpaper/image_cache_service.dart';
-import 'package:vers_reminder/notifications/notification_service.dart';
-import 'package:vers_reminder/wallpaper/temp_cleanup_service.dart';
+import 'package:vers_reminder/wallpaper/infrastructure/image_cache_service.dart';
+import 'package:vers_reminder/notifications/infrastructure/notification_service.dart';
+import 'package:vers_reminder/wallpaper/infrastructure/temp_cleanup_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -143,6 +143,6 @@ class _AppEntryState extends State<AppEntry> {
       );
     }
 
-    return HomeScreen();
+    return HomeContainer();
   }
 }

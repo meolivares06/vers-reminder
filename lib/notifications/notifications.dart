@@ -1,1 +1,1 @@
-export 'notification_service.dart';
+export 'infrastructure/notification_service.dart';

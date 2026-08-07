@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:vers_reminder/settings/update_cleanup_service.dart';
+import 'package:vers_reminder/settings/infrastructure/update_cleanup_service.dart';
 
 void main() {
   late Directory appSupport;

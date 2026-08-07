@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/verses/domain/verse.dart';
-import 'package:vers_reminder/verses/verse_provider.dart';
-import 'package:vers_reminder/shared/locale_provider.dart';
+import 'package:vers_reminder/verses/application/verse_provider.dart';
+import 'package:vers_reminder/shared/application/locale_provider.dart';
 import 'package:vers_reminder/shared/widgets/verse_tile.dart';
 import 'package:vers_reminder/shared/widgets/confirm_delete_dialog.dart';
-import 'package:vers_reminder/verses/verse_form_screen.dart';
+import 'package:vers_reminder/verses/widgets/verse_form_screen.dart';
 
 class VerseListScreen extends StatefulWidget {
   const VerseListScreen({super.key});

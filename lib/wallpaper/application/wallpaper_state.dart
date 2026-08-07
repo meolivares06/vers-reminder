@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:vers_reminder/shared/database_service.dart';
+import 'package:vers_reminder/shared/domain/database_service.dart';
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_result.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
-import 'package:vers_reminder/backup/wallpaper_backup_service.dart';
-import 'package:vers_reminder/wallpaper/wallpaper_generator.dart';
+import 'package:vers_reminder/backup/infrastructure/wallpaper_backup_service.dart';
+import 'package:vers_reminder/wallpaper/infrastructure/wallpaper_generator.dart';
 
 /// Manages wallpaper generation state and triggers.
 ///

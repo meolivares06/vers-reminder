@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:vers_reminder/shared/database_service.dart';
+import 'package:vers_reminder/shared/domain/database_service.dart';
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/verses/domain/verse.dart';
-import 'package:vers_reminder/verses/verse_list_screen.dart';
+import 'package:vers_reminder/verses/widgets/verse_list_screen.dart';
 import 'package:vers_reminder/shared/widgets/verse_tile.dart';
 import 'package:vers_reminder/shared/widgets/confirm_delete_dialog.dart';
-import 'package:vers_reminder/verses/category_create_dialog.dart';
+import 'package:vers_reminder/verses/widgets/category_create_dialog.dart';
 
 /// Helper: wraps a child widget in a MaterialApp with localization delegates.
 Widget wrapWithL10n(Widget child) {

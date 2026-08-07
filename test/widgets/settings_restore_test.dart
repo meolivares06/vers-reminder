@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
+import 'package:vers_reminder/shared/application/locale_provider.dart';
+import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
 import 'package:vers_reminder/shared/widgets/async_action_button.dart';
 
 /// Minimal widget that replicates the restore tile from SettingsScreen to
@@ -85,7 +85,7 @@ void main() {
 
     await tester.pumpWidget(MultiProvider(
       providers: [
-        ChangeNotifierProvider<SettingsProvider>.value(value: settingsProvider),
+        ChangeNotifierProvider<WallpaperState>.value(value: wallpaper),
         ChangeNotifierProvider<LocaleProvider>.value(value: localeProvider),
       ],
       child: MaterialApp(

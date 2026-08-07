@@ -9,19 +9,19 @@ import 'package:provider/provider.dart';
 
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
 import 'package:vers_reminder/wallpaper/domain/wallpaper_status.dart';
-import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
-import 'package:vers_reminder/scheduler/scheduler_config.dart';
-import 'package:vers_reminder/settings/appearance_settings.dart';
-import 'package:vers_reminder/verses/verse_provider.dart';
-import 'package:vers_reminder/wallpaper/image_cache_service.dart';
-import 'package:vers_reminder/settings/update_service.dart';
-import 'package:vers_reminder/backup/wallpaper_backup_service.dart';
-import 'package:vers_reminder/wallpaper/wallpaper_generator.dart';
+import 'package:vers_reminder/shared/application/locale_provider.dart';
+import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/application/scheduler_config.dart';
+import 'package:vers_reminder/settings/application/appearance_settings.dart';
+import 'package:vers_reminder/verses/application/verse_provider.dart';
+import 'package:vers_reminder/wallpaper/infrastructure/image_cache_service.dart';
+import 'package:vers_reminder/settings/infrastructure/update_service.dart';
+import 'package:vers_reminder/backup/infrastructure/wallpaper_backup_service.dart';
+import 'package:vers_reminder/wallpaper/infrastructure/wallpaper_generator.dart';
 import 'package:vers_reminder/shared/theme/app_theme.dart';
 import 'package:vers_reminder/shared/widgets/async_action_button.dart';
 import 'package:vers_reminder/shared/widgets/section_header.dart';
-import 'package:vers_reminder/settings/about_screen.dart';
+import 'package:vers_reminder/settings/infrastructure/about_screen.dart';
 
 /// Maps frequency minutes to the matching ARB key.
 String _frequencyLabel(int minutes, AppLocalizations l10n) {

@@ -4,12 +4,12 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vers_reminder/shared/l10n/generated/app_localizations.dart';
-import 'package:vers_reminder/shared/locale_provider.dart';
-import 'package:vers_reminder/settings/appearance_settings.dart';
-import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
-import 'package:vers_reminder/scheduler/scheduler_config.dart';
-import 'package:vers_reminder/verses/verse_provider.dart';
-import 'package:vers_reminder/settings/settings_screen.dart';
+import 'package:vers_reminder/shared/application/locale_provider.dart';
+import 'package:vers_reminder/settings/application/appearance_settings.dart';
+import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
+import 'package:vers_reminder/scheduler/application/scheduler_config.dart';
+import 'package:vers_reminder/verses/application/verse_provider.dart';
+import 'package:vers_reminder/settings/infrastructure/settings_screen.dart';
 
 void main() {
   Future<void> pumpSettings(WidgetTester tester, AppearanceSettings appearance) async {

@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/event_bus/events.dart';
-import 'package:vers_reminder/wallpaper/wallpaper_state.dart';
+import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
 
 /// Integration tests for Phase 2 event bus wiring.
 ///

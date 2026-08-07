@@ -1,1 +1,1 @@
-export 'wallpaper_backup_service.dart';
+export 'infrastructure/wallpaper_backup_service.dart';

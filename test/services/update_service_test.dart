@@ -9,8 +9,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:vers_reminder/settings/update_check_result.dart';
-import 'package:vers_reminder/settings/update_service.dart';
+import 'package:vers_reminder/settings/infrastructure/update_check_result.dart';
+import 'package:vers_reminder/settings/infrastructure/update_service.dart';
 
 /// A GitHub `/releases/latest`-shaped JSON body with a single arm64 APK asset.
 ///
