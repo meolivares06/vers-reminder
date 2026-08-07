@@ -89,33 +89,6 @@ class _WallpaperCardState extends State<WallpaperCard> {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  if (widget.nextInMinutes != null)
-                    Positioned(
-                      bottom: 12,
-                      left: 16,
-                      right: 16,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          widget.nextInMinutes == 1
-                              ? l10n.nextInLessThanOneMinute
-                              : l10n.nextInApproximatelyMinutes(
-                                  widget.nextInMinutes!,
-                                ),
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
                   if (widget.onFabPressed != null)
                     Positioned(
                       bottom: 12,

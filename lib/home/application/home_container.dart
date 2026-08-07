@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,6 +24,7 @@ class _HomeContainerState extends State<HomeContainer> {
   bool _lastWallpaperError = false;
   bool _lastWallpaperNoCategories = false;
   String? _lastErrorPayload;
+  Timer? _countdownTimer;
 
   @override
   void initState() {
@@ -50,6 +53,18 @@ class _HomeContainerState extends State<HomeContainer> {
       if (!mounted) return;
       setState(() {});
     });
+
+    // Live countdown — ticks every second so the "Next in ~MM:SS" stays
+    // current without rebuilding the heavyweight wallpaper card.
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _openVerseForm(BuildContext context) async {
@@ -129,13 +144,17 @@ class _HomeContainerState extends State<HomeContainer> {
     final localeProvider = context.watch<LocaleProvider>();
     final scheduler = context.watch<SchedulerConfig>();
 
-    // Calculate time until next scheduled generation.
+    // Live countdown — recalculated every second by the _countdownTimer.
     final lastTimestamp = wallpaper.lastWallpaperTimestamp;
-    int? nextInMinutes;
+    String? countdownText;
     if (scheduler.isEnabled && lastTimestamp != null) {
-      final elapsed = DateTime.now().difference(lastTimestamp).inMinutes;
-      final remaining = scheduler.frequencyMinutes - elapsed;
-      nextInMinutes = remaining.clamp(1, scheduler.frequencyMinutes);
+      final elapsed = DateTime.now().difference(lastTimestamp).inSeconds;
+      final remaining = scheduler.frequencyMinutes * 60 - elapsed;
+      if (remaining > 0) {
+        final mins = remaining ~/ 60;
+        final secs = remaining % 60;
+        countdownText = '~${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+      }
     }
 
     if (_lastWallpaperError) {
@@ -156,8 +175,25 @@ class _HomeContainerState extends State<HomeContainer> {
 
     return Scaffold(
       appBar: AppBar(
-        title:
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(_currentIndex == 0 ? 'Vers Reminder' : l10n.verseListTitle),
+            if (countdownText != null)
+              Text(
+                countdownText!,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.normal,
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.color
+                      ?.withValues(alpha: 0.7),
+                ),
+              ),
+          ],
+        ),
         actions: [
           if (scheduler.isEnabled)
             const Padding(
@@ -178,7 +214,6 @@ class _HomeContainerState extends State<HomeContainer> {
           WallpaperCard(
             path: wallpaper.lastWallpaperPath,
             timestamp: wallpaper.lastWallpaperTimestamp,
-            nextInMinutes: nextInMinutes,
             wallpaperPermissionGranted: wallpaper.wallpaperPermissionGranted,
             isGenerating: wallpaper.status == WallpaperStatus.generating,
             onTap: () {
