@@ -875,6 +875,10 @@ class WallpaperGenerator {
         DateTime.now().toIso8601String(),
       );
 
+      // Also persist the wallpaper path so the home card shows the current
+      // image — otherwise the card stays frozen on the last manual generation.
+      await prefs.setString('last_wallpaper_path', filePath);
+
       return true;
     } catch (e) {
       // ignore: avoid_print
