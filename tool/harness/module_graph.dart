@@ -8,10 +8,23 @@ class ModuleNode {
   final String path;
   final List<String> deps;
 
+  /// The module's public API surface — cross-module imports must use this path.
+  final String? barrel;
+
+  /// Source files belonging to this module, relative to [path].
+  final List<String> files;
+
+  /// Exception strings allowing specific cross-module imports to bypass
+  /// dependency and barrel checks.
+  final List<String> exceptions;
+
   const ModuleNode({
     required this.name,
     required this.path,
     required this.deps,
+    this.barrel,
+    this.files = const [],
+    this.exceptions = const [],
   });
 
   /// Convention: test directory mirrors source path (lib/ → test/).
@@ -65,6 +78,14 @@ class ModuleGraph {
         );
       }
 
+      final barrel = value['barrel']?.toString();
+      if (barrel != null && barrel.isEmpty) {
+        throw FormatException(
+          'Module "$name" has an empty "barrel" field.',
+          value,
+        );
+      }
+
       final depsYaml = value['deps'];
       final deps = <String>[];
       if (depsYaml is YamlList) {
@@ -73,7 +94,30 @@ class ModuleGraph {
         }
       }
 
-      nodes[name] = ModuleNode(name: name, path: path, deps: deps);
+      final filesYaml = value['files'];
+      final files = <String>[];
+      if (filesYaml is YamlList) {
+        for (final file in filesYaml) {
+          files.add(file.toString());
+        }
+      }
+
+      final exceptionsYaml = value['exceptions'];
+      final exceptions = <String>[];
+      if (exceptionsYaml is YamlList) {
+        for (final exc in exceptionsYaml) {
+          exceptions.add(exc.toString());
+        }
+      }
+
+      nodes[name] = ModuleNode(
+        name: name,
+        path: path,
+        deps: deps,
+        barrel: barrel,
+        files: files,
+        exceptions: exceptions,
+      );
     }
 
     return ModuleGraph(UnmodifiableMapView(nodes));

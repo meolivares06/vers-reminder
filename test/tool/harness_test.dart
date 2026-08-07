@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yaml/yaml.dart';
 
 // RED phase — these files do not exist yet
 import '../../tool/harness/module_graph.dart';
@@ -6,6 +7,7 @@ import '../../tool/harness/impact_calculator.dart';
 import '../../tool/harness/runner.dart';
 import '../../tool/harness/integration_runner.dart';
 import '../../tool/harness/cli.dart';
+import '../../tool/harness/decoupling_check.dart';
 
 const _testYaml = '''
 modules:
@@ -33,6 +35,32 @@ modules:
   shared:
     path: lib/shared
     deps: []
+''';
+
+const _testYamlWithDetails = '''
+modules:
+  wallpaper:
+    path: lib/wallpaper
+    deps: [shared, backup]
+    barrel: lib/wallpaper/wallpaper.dart
+    files:
+      - application/wallpaper_state.dart
+      - infrastructure/wallpaper_generator.dart
+    exceptions:
+      - "scheduler -> wallpaper/wallpaper_generator.dart (isolate)"
+  backup:
+    path: lib/backup
+    deps: [shared]
+    barrel: lib/backup/backup.dart
+    files:
+      - infrastructure/wallpaper_backup_service.dart
+events:
+  RefreshWallpaper:
+    emitters: [home]
+    receivers: [wallpaper/application/wallpaper_state]
+  PhantomEvent:
+    emitters: []
+    receivers: []
 ''';
 
 // ─── ModuleGraph Tests ────────────────────────────────────────────
@@ -86,6 +114,48 @@ modules:
         () => ModuleGraph.fromYaml('other: value'),
         throwsA(isA<ArgumentError>()),
       );
+    });
+
+    test('parses barrel field from YAML', () {
+      final graph = ModuleGraph.fromYaml(_testYamlWithDetails);
+
+      final wallpaper = graph.nodes['wallpaper']!;
+      expect(wallpaper.barrel, equals('lib/wallpaper/wallpaper.dart'));
+
+      final backup = graph.nodes['backup']!;
+      expect(backup.barrel, equals('lib/backup/backup.dart'));
+    });
+
+    test('parses files field from YAML', () {
+      final graph = ModuleGraph.fromYaml(_testYamlWithDetails);
+
+      final wallpaper = graph.nodes['wallpaper']!;
+      expect(wallpaper.files, containsAll([
+        'application/wallpaper_state.dart',
+        'infrastructure/wallpaper_generator.dart',
+      ]));
+      expect(wallpaper.files.length, equals(2));
+
+      final backup = graph.nodes['backup']!;
+      expect(backup.files, contains('infrastructure/wallpaper_backup_service.dart'));
+    });
+
+    test('parses exceptions field from YAML', () {
+      final graph = ModuleGraph.fromYaml(_testYamlWithDetails);
+
+      final wallpaper = graph.nodes['wallpaper']!;
+      expect(wallpaper.exceptions, contains(
+        'scheduler -> wallpaper/wallpaper_generator.dart (isolate)',
+      ));
+    });
+
+    test('barrel/files/exceptions default when absent from YAML', () {
+      final graph = ModuleGraph.fromYaml(_testYaml);
+
+      final wallpaper = graph.nodes['wallpaper']!;
+      expect(wallpaper.barrel, isNull);
+      expect(wallpaper.files, isEmpty);
+      expect(wallpaper.exceptions, isEmpty);
     });
   });
 
@@ -426,6 +496,212 @@ modules:
       expect(cli.allFlag, isFalse);
       expect(cli.integrationFlag, isFalse);
       expect(cli.isValid, isFalse);
+    });
+  });
+
+  decouplingCheckTests();
+}
+
+// ─── DecouplingCheck YAML Fixture ─────────────────────────────────
+
+const _decoupleTestYaml = '''
+modules:
+  alpha:
+    path: lib/alpha
+    deps: [beta]
+    barrel: lib/alpha/alpha.dart
+    files:
+      - alpha_file.dart
+    exceptions:
+      - "alpha -> gamma/excepted.dart (reason)"
+  beta:
+    path: lib/beta
+    deps: []
+    barrel: lib/beta/beta.dart
+    files:
+      - beta_file.dart
+  gamma:
+    path: lib/gamma
+    deps: []
+    barrel: lib/gamma/gamma.dart
+    files:
+      - gamma_file.dart
+events:
+  GoodEvent:
+    emitters: [alpha]
+    receivers: [beta]
+  PhantomEmitter:
+    emitters: []
+    receivers: [alpha]
+  PhantomReceiver:
+    emitters: [alpha]
+    receivers: []
+''';
+
+// ─── DecouplingCheck Tests ──────────────────────────────────────
+
+void decouplingCheckTests() {
+  group('DecouplingCheck.checkImport', () {
+    late ModuleGraph graph;
+    late YamlMap eventsSection;
+
+    setUp(() {
+      graph = ModuleGraph.fromYaml(_decoupleTestYaml);
+      final doc = loadYaml(_decoupleTestYaml) as YamlMap;
+      eventsSection = doc['events'] as YamlMap;
+    });
+
+    test('detects missing dependency', () {
+      final check = DecouplingCheck(graph: graph, eventsSection: eventsSection);
+      // alpha depends only on beta, importing from gamma → violation
+      final violations = check.checkImport(
+        'lib/alpha/alpha_file.dart',
+        'gamma/gamma_file.dart',
+      );
+      expect(violations, isNotEmpty);
+      expect(
+        violations.any((v) => v.contains('Missing dependency') && v.contains('gamma')),
+        isTrue,
+      );
+    });
+
+    test('detects barrel bypass', () {
+      final check = DecouplingCheck(graph: graph, eventsSection: eventsSection);
+      // alpha depends on beta, but imports beta/beta_internal.dart instead of barrel
+      final violations = check.checkImport(
+        'lib/alpha/alpha_file.dart',
+        'beta/beta_internal.dart',
+      );
+      expect(violations, isNotEmpty);
+      expect(
+        violations.any((v) => v.contains('Barrel bypass')),
+        isTrue,
+      );
+    });
+
+    test('allows declared dependency via barrel', () {
+      final check = DecouplingCheck(graph: graph, eventsSection: eventsSection);
+      final violations = check.checkImport(
+        'lib/alpha/alpha_file.dart',
+        'beta/beta.dart', // the barrel path
+      );
+      expect(violations, isEmpty);
+    });
+
+    test('allows intra-module import', () {
+      final check = DecouplingCheck(graph: graph, eventsSection: eventsSection);
+      final violations = check.checkImport(
+        'lib/alpha/alpha_file.dart',
+        'alpha/another_file.dart',
+      );
+      expect(violations, isEmpty);
+    });
+
+    test('exception bypasses missing-dep and barrel checks', () {
+      final check = DecouplingCheck(graph: graph, eventsSection: eventsSection);
+      // alpha doesn't depend on gamma, and gamma/barrel is not used,
+      // but the exception "alpha -> gamma/excepted.dart" bypasses both.
+      final violations = check.checkImport(
+        'lib/alpha/alpha_file.dart',
+        'gamma/excepted.dart',
+      );
+      expect(violations, isEmpty);
+    });
+
+    test('source outside any module returns empty', () {
+      final check = DecouplingCheck(graph: graph, eventsSection: eventsSection);
+      final violations = check.checkImport(
+        'lib/main.dart',
+        'beta/beta_file.dart',
+      );
+      expect(violations, isEmpty);
+    });
+
+    test('target not a known module returns empty', () {
+      final check = DecouplingCheck(graph: graph, eventsSection: eventsSection);
+      final violations = check.checkImport(
+        'lib/alpha/alpha_file.dart',
+        'unknown/file.dart',
+      );
+      expect(violations, isEmpty);
+    });
+
+    test('missing dep AND barrel bypass both reported', () {
+      final check = DecouplingCheck(graph: graph, eventsSection: eventsSection);
+      // alpha doesn't depend on gamma, and barrel isn't used
+      final violations = check.checkImport(
+        'lib/alpha/alpha_file.dart',
+        'gamma/gamma_file.dart',
+      );
+      expect(violations.length, greaterThanOrEqualTo(2));
+      expect(
+        violations.any((v) => v.contains('Missing dependency')),
+        isTrue,
+      );
+      expect(
+        violations.any((v) => v.contains('Barrel bypass')),
+        isTrue,
+      );
+    });
+  });
+
+  group('DecouplingCheck.checkPhantomEvents', () {
+    test('detects phantom emitter and receiver', () {
+      final doc = loadYaml(_decoupleTestYaml) as YamlMap;
+      final graph = ModuleGraph.fromYaml(_decoupleTestYaml);
+      final events = doc['events'] as YamlMap;
+      final check = DecouplingCheck(graph: graph, eventsSection: events);
+
+      final violations = check.checkPhantomEvents();
+      expect(violations.length, equals(2));
+      expect(
+        violations.any((v) => v.contains('PhantomEmitter') && v.contains('no emitters')),
+        isTrue,
+      );
+      expect(
+        violations.any((v) => v.contains('PhantomReceiver') && v.contains('no receivers')),
+        isTrue,
+      );
+    });
+
+    test('clean events produce no violations', () {
+      const cleanYaml = '''
+modules:
+  mod:
+    path: lib/mod
+    deps: []
+events:
+  GoodEvent:
+    emitters: [mod]
+    receivers: [mod]
+''';
+      final doc = loadYaml(cleanYaml) as YamlMap;
+      final graph = ModuleGraph.fromYaml(cleanYaml);
+      final events = doc['events'] as YamlMap;
+      final check = DecouplingCheck(graph: graph, eventsSection: events);
+
+      final violations = check.checkPhantomEvents();
+      expect(violations, isEmpty);
+    });
+
+    test('no events section produces no violations', () {
+      const noEventsYaml = '''
+modules:
+  mod:
+    path: lib/mod
+    deps: []
+''';
+      final doc = loadYaml(noEventsYaml) as YamlMap;
+      final graph = ModuleGraph.fromYaml(noEventsYaml);
+      final events = doc['events'];
+      // events may be null when the key is missing
+      final check = DecouplingCheck(
+        graph: graph,
+        eventsSection: (events is YamlMap) ? events : YamlMap(),
+      );
+
+      final violations = check.checkPhantomEvents();
+      expect(violations, isEmpty);
     });
   });
 }

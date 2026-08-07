@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:vers_reminder/shared/domain/database_service.dart';
 import 'package:vers_reminder/shared/event_bus/event_bus.dart';
 import 'package:vers_reminder/shared/event_bus/events.dart';
 import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
@@ -12,8 +14,42 @@ import 'package:vers_reminder/wallpaper/application/wallpaper_state.dart';
 /// can verify the full publish→subscribe flow without a database.
 
 void main() {
-  setUp(() {
+  setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    sqfliteFfiInit();
+    final dbPath = 'ebi_${DateTime.now().microsecondsSinceEpoch}.db';
+    final db = await databaseFactoryFfi.openDatabase(
+      dbPath,
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, _) async {
+          await db.execute(
+            'CREATE TABLE verses (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'textEs TEXT NOT NULL, textPt TEXT, citation TEXT NOT NULL, '
+            'createdAt TEXT NOT NULL)',
+          );
+          await db.execute(
+            'CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            'name TEXT NOT NULL, isSeed INTEGER NOT NULL DEFAULT 0)',
+          );
+          await db.execute(
+            'CREATE TABLE verse_categories (verseId INTEGER NOT NULL, '
+            'categoryId INTEGER NOT NULL, PRIMARY KEY (verseId, categoryId), '
+            'FOREIGN KEY (verseId) REFERENCES verses(id) ON DELETE CASCADE, '
+            'FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE CASCADE)',
+          );
+          await db.execute(
+            "CREATE TABLE app_config (id INTEGER PRIMARY KEY DEFAULT 1, "
+            "scheduler_enabled INTEGER NOT NULL DEFAULT 0, "
+            "frequency_minutes INTEGER NOT NULL DEFAULT 360, "
+            "active_category_ids TEXT NOT NULL DEFAULT '[]', "
+            "wallpaper_permission_granted INTEGER NOT NULL DEFAULT 0)",
+          );
+          await db.execute("INSERT OR IGNORE INTO app_config (id) VALUES (1)");
+        },
+      ),
+    );
+    DatabaseService.setTestDatabase(db);
   });
 
   group('RefreshWallpaper → WallpaperState flow', () {
