@@ -14,6 +14,12 @@ class VerseProvider extends ChangeNotifier {
   List<models.Category> get categories => _categories;
   bool get isLoading => _isLoading;
 
+  /// Test seam — injects categories without requiring database access.
+  void setCategoriesForTest(List<models.Category> cats) {
+    _categories = cats;
+    notifyListeners();
+  }
+
   Future<void> init({String locale = 'es'}) async {
     _currentLocale = locale;
     _isLoading = true;
